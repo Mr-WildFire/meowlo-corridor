@@ -31,6 +31,8 @@ import { MazeRenderer } from './MazeRenderer';
 import { PlayerController } from './PlayerController';
 import { HudView } from './HudView';
 import { ItemContext, ItemSystem } from './ItemSystem';
+import { ArtAssets, loadArtAssets } from './ArtAssets';
+import { CatView } from './CatView';
 import { makeNode, posKey } from './UiKit';
 
 const { ccclass } = _decorator;
@@ -50,6 +52,8 @@ export class DemoGame extends Component {
     private model!: MazeModel;
     private renderer!: MazeRenderer;
     private player!: PlayerController;
+    private catView: CatView | null = null;
+    private art: ArtAssets | null = null;
     private hud!: HudView;
     private readonly itemSystem = new ItemSystem();
     private itemContext!: ItemContext;
@@ -116,7 +120,8 @@ export class DemoGame extends Component {
         input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
     }
 
-    start(): void {
+    async start(): Promise<void> {
+        this.art = await loadArtAssets();
         this.build();
     }
 
@@ -133,6 +138,7 @@ export class DemoGame extends Component {
     update(dt: number): void {
         if (this.state !== 'playing' || this.finale) return;
 
+        this.catView?.update(dt);
         this.elapsed += dt;
         if (!this.timerStopped) {
             this.timeLeft = Math.max(0, this.timeLeft - dt);
@@ -202,8 +208,9 @@ export class DemoGame extends Component {
         this.fogShaderReady = false;
 
         this.demoRoot = makeNode('DemoRoot', this.node, 0, 0, this.screenW, this.screenH);
+        this.catView = null;
         this.renderer = new MazeRenderer();
-        this.renderer.build(this.demoRoot, this.model, this.screenW, this.screenH);
+        this.renderer.build(this.demoRoot, this.model, this.screenW, this.screenH, this.art);
 
         const occupied = new Set<string>();
         this.placeFragments(occupied);
@@ -214,13 +221,15 @@ export class DemoGame extends Component {
             (type, pos) => this.renderer.createItemNode(type, pos),
         );
 
+        const playerNode = this.renderer.createPlayerNode();
         this.player = new PlayerController(
-            this.renderer.createPlayerNode(),
+            playerNode,
             this.model,
             (p) => this.renderer.cellToLocal(p),
             (p) => this.onArrive(p),
             () => this.tone.click(),
         );
+        this.catView = this.art?.cat ? new CatView(playerNode, this.art.cat) : null;
         this.itemContext = this.makeItemContext();
 
         this.createFogAndGuide();
@@ -319,7 +328,10 @@ export class DemoGame extends Component {
     private async tryMove(dir: Dir): Promise<void> {
         if (this.state !== 'playing' || this.finale || this.player.moving) return;
         const actual: Dir = this.wine > 0 ? (((dir + 2) % 4) as Dir) : dir;
+        this.catView?.setDirection(actual);
+        this.catView?.setMoving(true);
         await this.player.move(actual, this.catStrip > 0 ? 2 : 1);
+        this.catView?.setMoving(false);
     }
 
     private onArrive(next: GridPos): boolean {

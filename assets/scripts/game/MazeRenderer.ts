@@ -1,4 +1,5 @@
-import { Color, Graphics, Node } from 'cc';
+import { Color, Graphics, Node, Sprite, UITransform } from 'cc';
+import { ArtAssets } from './ArtAssets';
 import { GridPos } from './MazeGenerator';
 import { MazeModel } from './MazeModel';
 import { ItemType } from './DemoTypes';
@@ -8,6 +9,7 @@ import { addGraphics, addLabel, makeNode, Theme } from './UiKit';
 /**
  * Owns static maze visuals and entity view nodes.
  * It does not know about timing, items or game state.
+ * ArtAssets is optional: each missing frame keeps the Graphics placeholder.
  */
 export class MazeRenderer {
     screenW = 1080;
@@ -21,11 +23,13 @@ export class MazeRenderer {
     demoRoot!: Node;
     boardRoot!: Node;
     private exitNode: Node | null = null;
+    private art: ArtAssets | null = null;
 
-    build(demoRoot: Node, model: MazeModel, screenW: number, screenH: number): void {
+    build(demoRoot: Node, model: MazeModel, screenW: number, screenH: number, art: ArtAssets | null): void {
         this.demoRoot = demoRoot;
         this.screenW = screenW;
         this.screenH = screenH;
+        this.art = art;
 
         this.cell = Math.min(
             64,
@@ -54,6 +58,17 @@ export class MazeRenderer {
     }
 
     createFragmentNode(pos: GridPos): Node {
+        if (this.art?.fragment) {
+            const n = makeNode('Fragment', this.boardRoot, 0, 0, this.cell * 0.9, this.cell * 0.9);
+            const s = n.addComponent(Sprite);
+            s.spriteFrame = this.art.fragment;
+            s.sizeMode = Sprite.SizeMode.CUSTOM;
+            s.type = Sprite.Type.SIMPLE;
+            s.trim = false;
+            n.setPosition(this.cellToLocal(pos).x, this.cellToLocal(pos).y, 0);
+            return n;
+        }
+
         const n = makeNode('Fragment', this.boardRoot, 0, 0, this.cell, this.cell);
         const g = n.addComponent(Graphics);
         g.fillColor = new Color(143, 211, 214, 45);
@@ -68,6 +83,17 @@ export class MazeRenderer {
     }
 
     createItemNode(type: ItemType, pos: GridPos): Node {
+        if (this.art?.items[type]) {
+            const n = makeNode('Item_' + type, this.boardRoot, 0, 0, this.cell * 0.78, this.cell * 0.78);
+            const s = n.addComponent(Sprite);
+            s.spriteFrame = this.art.items[type]!;
+            s.sizeMode = Sprite.SizeMode.CUSTOM;
+            s.type = Sprite.Type.SIMPLE;
+            s.trim = false;
+            n.setPosition(this.cellToLocal(pos).x, this.cellToLocal(pos).y, 0);
+            return n;
+        }
+
         const meta = ITEM_META[type];
         const n = makeNode('Item_' + type, this.boardRoot, 0, 0, this.cell, this.cell);
         const g = n.addComponent(Graphics);
@@ -83,6 +109,16 @@ export class MazeRenderer {
     }
 
     createPlayerNode(): Node {
+        if (this.art?.cat) {
+            const n = makeNode('Player', this.boardRoot, 0, 0, this.cell * 1.1, this.cell * 1.1);
+            const s = n.addComponent(Sprite);
+            s.spriteFrame = this.art.cat.down[0];
+            s.sizeMode = Sprite.SizeMode.CUSTOM;
+            s.type = Sprite.Type.SIMPLE;
+            s.trim = false;
+            return n;
+        }
+
         const n = makeNode('Player', this.boardRoot, 0, 0, this.cell, this.cell);
         const g = n.addComponent(Graphics);
         g.fillColor = Theme.amber;
@@ -123,15 +159,73 @@ export class MazeRenderer {
             this.boardH,
         );
 
-        const floor = addGraphics(this.boardRoot, 'Floor', 0, 0, this.boardW, this.boardH);
-        floor.fillColor = Theme.floor;
-        floor.rect(0, 0, this.boardW, this.boardH);
-        floor.fill();
-        floor.strokeColor = Theme.floorEdge;
-        floor.lineWidth = 2;
-        floor.rect(0, 0, this.boardW, this.boardH);
-        floor.stroke();
+        if (this.art?.floor) {
+            const floor = makeNode('Floor', this.boardRoot, 0, 0, this.boardW, this.boardH);
+            floor.getComponent(UITransform)!.setAnchorPoint(0, 0);
+            const s = floor.addComponent(Sprite);
+            s.spriteFrame = this.art.floor;
+            s.sizeMode = Sprite.SizeMode.CUSTOM;
+            s.type = Sprite.Type.SIMPLE;
+            s.trim = false;
+        } else {
+            const floor = addGraphics(this.boardRoot, 'Floor', 0, 0, this.boardW, this.boardH);
+            floor.fillColor = Theme.floor;
+            floor.rect(0, 0, this.boardW, this.boardH);
+            floor.fill();
+            floor.strokeColor = Theme.floorEdge;
+            floor.lineWidth = 2;
+            floor.rect(0, 0, this.boardW, this.boardH);
+            floor.stroke();
+        }
 
+        if (this.art?.wall) {
+            this.createWallSprites(model);
+        } else {
+            this.createFallbackWalls(model);
+        }
+
+        // Thin frame stays above floor/walls in both paths.
+        const border = addGraphics(this.boardRoot, 'Border', 0, 0, this.boardW, this.boardH);
+        border.strokeColor = Theme.floorEdge;
+        border.lineWidth = 2;
+        border.rect(0, 0, this.boardW, this.boardH);
+        border.stroke();
+
+        addLabel(
+            this.boardRoot,
+            'Entry',
+            '入口',
+            12,
+            Theme.dim,
+            this.cell * 0.5,
+            this.cell * 0.5,
+            this.cell,
+            this.cell,
+        );
+
+        const exit = makeNode('Exit', this.boardRoot, 0, 0, this.cell * 1.2, this.cell * 1.2);
+        if (this.art?.exit) {
+            const s = exit.addComponent(Sprite);
+            s.spriteFrame = this.art.exit;
+            s.sizeMode = Sprite.SizeMode.CUSTOM;
+            s.type = Sprite.Type.SIMPLE;
+            s.trim = false;
+        } else {
+            const eg = exit.addComponent(Graphics);
+            eg.fillColor = new Color(143, 211, 214, 60);
+            eg.circle(0, 0, this.cell * 0.38);
+            eg.fill();
+            eg.strokeColor = Theme.cyan;
+            eg.lineWidth = 3;
+            eg.circle(0, 0, this.cell * 0.3);
+            eg.stroke();
+            addLabel(exit, 'ExitLabel', '门', 16, Theme.cyan, 0, 0, this.cell, this.cell);
+        }
+        exit.active = false;
+        this.exitNode = exit;
+    }
+
+    private createFallbackWalls(model: MazeModel): void {
         const walls = addGraphics(this.boardRoot, 'Walls', 0, 0, this.boardW, this.boardH);
         walls.strokeColor = Theme.wall;
         walls.lineWidth = 6;
@@ -157,30 +251,29 @@ export class MazeRenderer {
             }
         }
         walls.stroke();
+    }
 
-        addLabel(
-            this.boardRoot,
-            'Entry',
-            '入口',
-            12,
-            Theme.dim,
-            this.cell * 0.5,
-            this.cell * 0.5,
-            this.cell,
-            this.cell,
-        );
+    private createWallSprites(model: MazeModel): void {
+        const thickness = Math.max(10, Math.round(this.cell * 0.18));
 
-        const exit = makeNode('Exit', this.boardRoot, 0, 0, this.cell, this.cell);
-        const eg = exit.addComponent(Graphics);
-        eg.fillColor = new Color(143, 211, 214, 60);
-        eg.circle(0, 0, this.cell * 0.38);
-        eg.fill();
-        eg.strokeColor = Theme.cyan;
-        eg.lineWidth = 3;
-        eg.circle(0, 0, this.cell * 0.3);
-        eg.stroke();
-        addLabel(exit, 'ExitLabel', '门', 16, Theme.cyan, 0, 0, this.cell, this.cell);
-        exit.active = false;
-        this.exitNode = exit;
+        for (const cell of model.data.cells) {
+            const x = cell.x * this.cell;
+            const y = cell.y * this.cell;
+            if (cell.walls[0]) this.addWall(x + this.cell * 0.5, y + this.cell, 0, thickness);
+            if (cell.walls[1]) this.addWall(x + this.cell, y + this.cell * 0.5, 90, thickness);
+            if (cell.walls[2]) this.addWall(x + this.cell * 0.5, y, 0, thickness);
+            if (cell.walls[3]) this.addWall(x, y + this.cell * 0.5, 90, thickness);
+        }
+    }
+
+    private addWall(cx: number, cy: number, angle: number, thickness: number): void {
+        if (!this.art?.wall) return;
+        const n = makeNode('Wall', this.boardRoot, cx, cy, this.cell, thickness);
+        const s = n.addComponent(Sprite);
+        s.spriteFrame = this.art.wall;
+        s.sizeMode = Sprite.SizeMode.CUSTOM;
+        s.type = Sprite.Type.SIMPLE;
+        s.trim = false;
+        n.angle = angle;
     }
 }

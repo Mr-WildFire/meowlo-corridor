@@ -1,7 +1,7 @@
 # 喵音回廊 · 玩法骨架 Demo
 
-Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0（迷宫整体游戏）**。
-当前不依赖任何美术/音频资源，直接用 `Graphics + Label` 生成可玩画面；浏览器预览时用 WebAudio 合成占位音效。
+Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（迷宫整体 + 可玩骨架补强）**。
+当前美术是脚本生成的**扁平占位 PNG**（老八、地板、墙、碎片、道具、出口），HUD 仍用 `Graphics + Label`；浏览器预览时用 WebAudio 合成占位音效。没有使用任何外部美术/音频素材。
 
 ## 运行
 
@@ -22,7 +22,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0（迷�
 | `C` | 测试用：直接收集全部碎片（触发 1 秒静默 + 出口） |
 | `T` | 测试用：剩余时间 -30 秒 |
 
-## 已实现（M0 骨架）
+## 已实现（M0/M0.5 + 占位美术）
 
 - [x] 13×17 随机完美迷宫（DFS + 5% 环路），同种子可复现
 - [x] 2 格视野：全屏 Shader 柔边遮罩，跟随玩家平滑移动；加载失败自动回退格子遮罩
@@ -31,6 +31,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0（迷�
 - [x] 倒计时 4:00（Demo 缩短；正式版标准 7:00），超时主人抱走并强制结束
 - [x] 蝴蝶（10 步寻路）、萤火虫（4 格 10s）、鲜花酒（反向 10s）、猫条（2 格 10s）、下水道（随机传送）
 - [x] 小鱼干（+20s）、毛线球（15s 路径记忆）
+- [x] 占位美术：老八四方向 4 帧行走、地板、墙、碎片、8 种道具、出口；`ArtAssets` 加载失败时回退 Graphics
 - [x] HUD：音轨进度、倒计时、步数、效果、种子
 - [x] 键盘 + 滑动 + 鼠标拖动 + 屏幕方向键；暂停按钮、重开、超时/通关结算
 - [x] 浏览器占位合成音（每块碎片加一个音；无音频资源）
@@ -38,8 +39,8 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0（迷�
 ## 尚未实现（后续阶段）
 
 - 正式 6 层 OGG 音乐、高潮/音效、AudioDirector
-- 2D 美术资源绑定、角色动画、正式 UI
-- 8 种道具的完整美术/音效/教学
+- 正式 2D 美术（替换当前扁平占位图）、正式 UI、超时/结局演出
+- 道具的正式音效/教学内容
 - 鸿蒙 HAP 构建与真机适配（按文档放在 M3）
 - 存档、设置、演示模式
 
@@ -50,6 +51,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0（迷�
 - Cocos Creator 3.8.8 `web-desktop` 构建成功，场景 `Main` 正确注册并运行 `DemoGame`。
 - 浏览器实测：场景加载无异常；走一步、集齐 4 碎片、1 秒终局、出口生成、进入出口通关、超时结算均可触发。
 - 遮罩 Shader 已实际加载并出图（柔边圆形视野）；萤火虫 4 格半径切换、屏幕方向键事件均已验证。
+- 占位美术已实际加载：老八 16 帧、地板/墙、碎片、8 种道具、出口均正常显示；老八移动时切换方向与行走帧。
 - 构建产物在 `build-demo/web-desktop`（本地打开需 HTTP 服务；日常开发直接使用 Cocos 预览即可）。
 
 ## 代码结构
@@ -57,7 +59,12 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0（迷�
 ```text
 assets/
 ├─ scenes/Main.scene              # 只挂一个 DemoGame 组件
-├─ resources/effects/fog.effect   # 2 格柔边遮罩 Shader
+├─ resources/
+│  ├─ effects/fog.effect          # 2 格柔边遮罩 Shader
+│  └─ art/                        # 脚本生成的占位 PNG
+│     ├─ cat/                     # 老八 4 方向 × 4 帧
+│     ├─ board/                   # floor.png / wall.png
+│     └─ props/                   # 碎片/道具/出口
 └─ scripts/
    ├─ core/
    │  ├─ Rng.ts                   # 确定性随机
@@ -69,15 +76,20 @@ assets/
       ├─ UiKit.ts                 # 颜色、节点/Graphics/Label 工厂
       ├─ MazeRenderer.ts          # 棋盘、墙、碎片/道具/角色/出口视图
       ├─ PlayerController.ts      # 逐格移动、Tween、步数、传送
+      ├─ CatView.ts               # 老八四方向行走帧动画
+      ├─ ArtAssets.ts             # resources 占位图异步加载 + 回退
       ├─ HudView.ts               # HUD、Toast、结算层、方向键/暂停
       ├─ ItemSystem.ts            # 道具落点与效果分发
       └─ DemoGame.ts              # 编排：状态、计时、碎片、终局、输入
 ```
 
+占位图由 `tools/gen_placeholder_art.py` 生成，可重复执行；正式美术到位后按同名路径替换 PNG 即可。
+
 ## 说明
 
-- `DemoGame` 现在是编排层；场景本身仍很轻，运行时生成全部节点。M1 再替换为 Prefab/正式场景与美术资源。
-- 已从单文件拆出 `MazeRenderer / PlayerController / HudView / ItemSystem`，后续新增道具/UI/移动表现不需要继续堆在 `DemoGame` 里。
+- `DemoGame` 现在是编排层；场景本身仍很轻，运行时生成全部节点。M1 后续替换为 Prefab/正式场景。
+- 已从单文件拆出 `MazeRenderer / PlayerController / HudView / ItemSystem`，并新增 `ArtAssets / CatView`；后续新增道具/UI/移动表现不需要继续堆在 `DemoGame` 里。
+- 占位图不是最终美术，只用于把 Sprite/动画/资源加载管线跑通；正式图到位后按 `assets/resources/art/` 同名路径替换即可。
 - 遮罩优先使用 `resources/effects/fog.effect` 的 Shader；如果设备/构建不支持自定义材质，会自动回退到格子遮罩，保证仍可玩。
 - 音频只在浏览器预览中发声（`AudioContext`）；鸿蒙真机暂时静音，M2 接入 OGG 分轨后替换。
 - 场景通过脚本 UUID 绑定组件：`assets/scripts/game/DemoGame.ts.meta` 中的 UUID 与 `Main.scene` 里的压缩 UUID 必须保持一致；不要手动改其中一个。
