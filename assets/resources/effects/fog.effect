@@ -1,0 +1,55 @@
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: vs:vert
+      frag: fs:frag
+      depthStencilState:
+        depthTest: false
+        depthWrite: false
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: one
+          blendDst: one_minus_src_alpha
+          blendSrcAlpha: one
+          blendDstAlpha: one_minus_src_alpha
+      rasterizerState:
+        cullMode: none
+      properties:
+        u_player: { value: [0.0, 0.0, 64.0, 2.0] }
+        u_dark: { value: [0.02, 0.015, 0.04, 0.6] }
+}%
+
+CCProgram vs %{
+  precision highp float;
+  #include <builtin/uniforms/cc-global>
+  #include <builtin/uniforms/cc-local>
+
+  in vec3 a_position;
+  out vec2 v_pos;
+
+  vec4 vert () {
+    v_pos = a_position.xy;
+    vec4 pos = vec4(a_position, 1.0);
+    pos = cc_matViewProj * cc_matWorld * pos;
+    return pos;
+  }
+}%
+
+CCProgram fs %{
+  precision highp float;
+
+  in vec2 v_pos;
+
+  uniform UBO {
+    vec4 u_player; // xy = player pos, z = cell size, w = radius
+    vec4 u_dark;   // rgb = fog color, a = softness in cells
+  };
+
+  vec4 frag () {
+    float d = distance(v_pos, u_player.xy) / max(u_player.z, 1.0);
+    float a = smoothstep(u_player.w, u_player.w + u_dark.a, d);
+    vec4 o = vec4(u_dark.rgb * a, a); // premultiplied alpha
+    return o;
+  }
+}%

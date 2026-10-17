@@ -1,0 +1,83 @@
+# 喵音回廊 · 玩法骨架 Demo
+
+Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0（迷宫整体游戏）**。
+当前不依赖任何美术/音频资源，直接用 `Graphics + Label` 生成可玩画面；浏览器预览时用 WebAudio 合成占位音效。
+
+## 运行
+
+1. 用 Cocos Creator 3.8.8 打开本目录（`D:\Projects\MusicCat`）。
+2. 打开场景 `assets/scenes/Main.scene`。
+3. 点击编辑器顶部的 **预览**（浏览器预览即可）。
+4. 推荐预览分辨率：**1080 × 1920 竖屏**；Demo 使用 `SHOW_ALL`，非竖屏窗口会自动留黑边。
+
+## 操作
+
+| 输入 | 行为 |
+|---|---|
+| `WASD` / 方向键 / 屏幕滑动 / 鼠标拖动 | 移动一格 |
+| 屏幕右下角方向键 | 移动一格（手机/鼠标皆可） |
+| 屏幕左上角 `Ⅱ` | 暂停 / 继续 |
+| `P` | 暂停 / 继续 |
+| `R` | 重开一局（新种子） |
+| `C` | 测试用：直接收集全部碎片（触发 1 秒静默 + 出口） |
+| `T` | 测试用：剩余时间 -30 秒 |
+
+## 已实现（M0 骨架）
+
+- [x] 13×17 随机完美迷宫（DFS + 5% 环路），同种子可复现
+- [x] 2 格视野：全屏 Shader 柔边遮罩，跟随玩家平滑移动；加载失败自动回退格子遮罩
+- [x] 四块“音轨碎片”，集齐后 1 秒静默 → 播放高潮占位音 → 出生点周边 3–5 步生成出口
+- [x] 出口光柱穿透遮罩，终局可发现
+- [x] 倒计时 4:00（Demo 缩短；正式版标准 7:00），超时主人抱走并强制结束
+- [x] 蝴蝶（10 步寻路）、萤火虫（4 格 10s）、鲜花酒（反向 10s）、猫条（2 格 10s）、下水道（随机传送）
+- [x] 小鱼干（+20s）、毛线球（15s 路径记忆）
+- [x] HUD：音轨进度、倒计时、步数、效果、种子
+- [x] 键盘 + 滑动 + 鼠标拖动 + 屏幕方向键；暂停按钮、重开、超时/通关结算
+- [x] 浏览器占位合成音（每块碎片加一个音；无音频资源）
+
+## 尚未实现（后续阶段）
+
+- 正式 6 层 OGG 音乐、高潮/音效、AudioDirector
+- 2D 美术资源绑定、角色动画、正式 UI
+- 8 种道具的完整美术/音效/教学
+- 鸿蒙 HAP 构建与真机适配（按文档放在 M3）
+- 存档、设置、演示模式
+
+## 已验证
+
+- TypeScript 以 Cocos 3.8.8 类型声明编译通过（`skipLibCheck`，无业务代码错误）。
+- 1000 个种子的迷宫连通性/路径测试通过。
+- Cocos Creator 3.8.8 `web-desktop` 构建成功，场景 `Main` 正确注册并运行 `DemoGame`。
+- 浏览器实测：场景加载无异常；走一步、集齐 4 碎片、1 秒终局、出口生成、进入出口通关、超时结算均可触发。
+- 遮罩 Shader 已实际加载并出图（柔边圆形视野）；萤火虫 4 格半径切换、屏幕方向键事件均已验证。
+- 构建产物在 `build-demo/web-desktop`（本地打开需 HTTP 服务；日常开发直接使用 Cocos 预览即可）。
+
+## 代码结构
+
+```text
+assets/
+├─ scenes/Main.scene              # 只挂一个 DemoGame 组件
+├─ resources/effects/fog.effect   # 2 格柔边遮罩 Shader
+└─ scripts/
+   ├─ core/
+   │  ├─ Rng.ts                   # 确定性随机
+   │  └─ ToneSynth.ts             # 浏览器占位音效（非最终音频方案）
+   └─ game/
+      ├─ MazeGenerator.ts         # 纯逻辑：DFS、BFS、路径、死路
+      ├─ MazeModel.ts             # 迷宫查询封装
+      ├─ DemoTypes.ts             # 碎片/道具/状态类型
+      ├─ UiKit.ts                 # 颜色、节点/Graphics/Label 工厂
+      ├─ MazeRenderer.ts          # 棋盘、墙、碎片/道具/角色/出口视图
+      ├─ PlayerController.ts      # 逐格移动、Tween、步数、传送
+      ├─ HudView.ts               # HUD、Toast、结算层、方向键/暂停
+      ├─ ItemSystem.ts            # 道具落点与效果分发
+      └─ DemoGame.ts              # 编排：状态、计时、碎片、终局、输入
+```
+
+## 说明
+
+- `DemoGame` 现在是编排层；场景本身仍很轻，运行时生成全部节点。M1 再替换为 Prefab/正式场景与美术资源。
+- 已从单文件拆出 `MazeRenderer / PlayerController / HudView / ItemSystem`，后续新增道具/UI/移动表现不需要继续堆在 `DemoGame` 里。
+- 遮罩优先使用 `resources/effects/fog.effect` 的 Shader；如果设备/构建不支持自定义材质，会自动回退到格子遮罩，保证仍可玩。
+- 音频只在浏览器预览中发声（`AudioContext`）；鸿蒙真机暂时静音，M2 接入 OGG 分轨后替换。
+- 场景通过脚本 UUID 绑定组件：`assets/scripts/game/DemoGame.ts.meta` 中的 UUID 与 `Main.scene` 里的压缩 UUID 必须保持一致；不要手动改其中一个。
