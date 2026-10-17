@@ -19,6 +19,8 @@ export interface HudStats {
     seed: number;
     cols: number;
     rows: number;
+    levelLabel: string;
+    timeLimit: number;
 }
 
 /**
@@ -49,9 +51,9 @@ export class HudView {
         this.root = makeNode('HudRoot', parent, 0, 0, screenW, screenH);
         const top = screenH * 0.5;
 
-        addLabel(this.root, 'Title', '喵音回廊 · 玩法骨架', 32, Theme.cream, 0, top - 45, 980, 60);
+        addLabel(this.root, 'Title', '喵音回廊', 32, Theme.cream, 0, top - 45, 980, 60);
         this.hudLabel = addLabel(this.root, 'HudTrack', '音轨 0/4　出口未开启', 26, Theme.cream, 0, top - 100, 1000, 50);
-        this.timerLabel = addLabel(this.root, 'HudTimer', '剩余 04:00', 32, Theme.cream, 0, top - 145, 900, 55);
+        this.timerLabel = addLabel(this.root, 'HudTimer', '剩余 07:00', 32, Theme.cream, 0, top - 145, 900, 55);
         this.stepLabel = addLabel(this.root, 'HudSteps', '步数 0　用时 00:00', 19, Theme.dim, 0, top - 185, 900, 40);
         this.effectLabel = addLabel(this.root, 'HudEffects', '无道具效果', 17, Theme.mint, 0, top - 218, 1000, 40);
         this.seedLabel = addLabel(this.root, 'HudSeed', '', 13, Theme.dim, 0, top - 248, 1000, 30);
@@ -59,7 +61,7 @@ export class HudView {
         addLabel(
             this.root,
             'Help',
-            'WASD / 方向键 / 滑动移动　P 暂停　R 重开　C 测试集齐　T 扣 30 秒',
+            'WASD / 方向键 / 滑动移动　P 暂停　R 重开　M 难度　C 测试集齐　T 扣 30 秒',
             15,
             Theme.dim,
             0,
@@ -102,7 +104,7 @@ export class HudView {
 
         this.stepLabel.string = `步数 ${stats.steps}　用时 ${timeText(stats.elapsed)}`;
         this.effectLabel.string = stats.effects;
-        this.seedLabel.string = `种子 ${stats.seed} · ${stats.cols}×${stats.rows} · Demo 4:00`;
+        this.seedLabel.string = `种子 ${stats.seed} · ${stats.levelLabel} · ${stats.cols}×${stats.rows} · ${timeText(stats.timeLimit)}`;
     }
 
     toast(text: string, duration = 2): void {

@@ -11,7 +11,7 @@ export type ItemType =
     | 'yarn'
     | 'feather';
 
-export type DemoState = 'playing' | 'paused' | 'finale' | 'won' | 'timeout';
+export type DemoState = 'menu' | 'playing' | 'paused' | 'finale' | 'won' | 'timeout';
 
 export interface FragmentView {
     pos: GridPos;

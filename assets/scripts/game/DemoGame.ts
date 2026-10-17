@@ -33,18 +33,15 @@ import { HudView } from './HudView';
 import { ItemContext, ItemSystem } from './ItemSystem';
 import { ArtAssets, loadArtAssets } from './ArtAssets';
 import { CatView } from './CatView';
+import { Difficulty, LEVELS, LevelConfig } from './LevelConfig';
+import { MenuView } from './MenuView';
 import { makeNode, posKey } from './UiKit';
 
 const { ccclass } = _decorator;
 
-const COLS = 13;
-const ROWS = 17;
-const FRAGMENT_COUNT = 4;
-const TIME_LIMIT = 240; // Demo 4:00; production normal = 7:00.
-
 @ccclass('DemoGame')
 export class DemoGame extends Component {
-    private state: DemoState = 'playing';
+    private state: DemoState = 'menu';
     private finale = false;
 
     private seed = 0;
@@ -57,6 +54,9 @@ export class DemoGame extends Component {
     private hud!: HudView;
     private readonly itemSystem = new ItemSystem();
     private itemContext!: ItemContext;
+    private difficulty: Difficulty = 'normal';
+    private level: LevelConfig = LEVELS.normal;
+    private menu: MenuView | null = null;
 
     private screenW = 1080;
     private screenH = 1920;
@@ -73,9 +73,11 @@ export class DemoGame extends Component {
     private items: ItemView[] = [];
 
     private collected = 0;
-    private timeLeft = TIME_LIMIT;
+    private timeLeft = 0;
     private elapsed = 0;
     private timerStopped = false;
+    private warned60 = false;
+    private warned30 = false;
 
     private firefly = 0;
     private wine = 0;
@@ -127,6 +129,30 @@ export class DemoGame extends Component {
             console.warn('[DemoGame] art load failed, using Graphics placeholders', e);
             this.art = null;
         }
+        this.openMenu();
+    }
+
+    private openMenu(): void {
+        this.state = 'menu';
+        this.finale = false;
+        this.unscheduleAllCallbacks();
+        Tween.stopAll();
+        if (this.menu) this.menu.dispose();
+        this.menu = new MenuView(
+            this.node,
+            this.screenW,
+            this.screenH,
+            (difficulty) => this.startLevel(difficulty),
+        );
+    }
+
+    private startLevel(difficulty: Difficulty): void {
+        this.difficulty = difficulty;
+        this.level = LEVELS[difficulty];
+        if (this.menu) {
+            this.menu.dispose();
+            this.menu = null;
+        }
         this.build();
     }
 
@@ -136,12 +162,13 @@ export class DemoGame extends Component {
         input.off(Input.EventType.TOUCH_END, this.onTouchEnd, this);
         input.off(Input.EventType.MOUSE_DOWN, this.onMouseDown, this);
         input.off(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+        if (this.menu) this.menu.dispose();
         this.tone.dispose();
         Tween.stopAll();
     }
 
     update(dt: number): void {
-        if (this.state !== 'playing' || this.finale) return;
+        if (this.state !== 'playing' || this.finale || !this.hud) return;
 
         this.catView?.update(dt);
         this.elapsed += dt;
@@ -150,6 +177,14 @@ export class DemoGame extends Component {
             if (this.timeLeft <= 0) {
                 this.timeout();
                 return;
+            }
+            if (!this.warned60 && this.timeLeft <= 60) {
+                this.warned60 = true;
+                if (this.timeLeft > 30) this.hud.toast('还剩 1 分钟。', 2.2);
+            }
+            if (!this.warned30 && this.timeLeft <= 30) {
+                this.warned30 = true;
+                this.hud.toast('只剩 30 秒，门还没开。', 2.4);
             }
         }
 
@@ -192,14 +227,16 @@ export class DemoGame extends Component {
         this.screenH = view.getVisibleSize().height;
         this.seed = nowSeed();
         this.rng = new Rng(this.seed);
-        this.model = new MazeModel(generateMaze(COLS, ROWS, this.seed, 0.05));
+        this.model = new MazeModel(generateMaze(this.level.cols, this.level.rows, this.seed, 0.05));
 
         this.state = 'playing';
         this.finale = false;
         this.collected = 0;
-        this.timeLeft = TIME_LIMIT;
+        this.timeLeft = this.level.timeLimit;
         this.elapsed = 0;
         this.timerStopped = false;
+        this.warned60 = false;
+        this.warned30 = false;
         this.firefly = 0;
         this.wine = 0;
         this.catStrip = 0;
@@ -223,6 +260,7 @@ export class DemoGame extends Component {
             this.model,
             this.rng,
             occupied,
+            this.level.itemCounts,
             (type, pos) => this.renderer.createItemNode(type, pos),
         );
 
@@ -252,7 +290,7 @@ export class DemoGame extends Component {
         this.refreshFog();
         this.refreshGuide();
         this.refreshHud();
-        this.hud.toast('找到 4 块碎片。集齐后音乐完整，出口才会出现。', 3.2);
+        this.hud.toast(`找到 ${this.level.fragments} 块碎片。集齐后音乐完整，出口才会出现。`, 3.2);
     }
 
     private placeFragments(occupied: Set<string>): void {
@@ -265,11 +303,11 @@ export class DemoGame extends Component {
             .sort((a, b) => this.model.distance(start, b) - this.model.distance(start, a));
 
         for (const p of dead) {
-            if (picks.length >= FRAGMENT_COUNT) break;
+            if (picks.length >= this.level.fragments) break;
             if (picks.every((q) => this.model.distance(p, q) >= 3)) picks.push(p);
         }
 
-        while (picks.length < FRAGMENT_COUNT) {
+        while (picks.length < this.level.fragments) {
             let p = this.model.randomCell(
                 this.rng,
                 (q) =>
@@ -379,10 +417,10 @@ export class DemoGame extends Component {
         f.node.active = false;
         this.collected++;
         this.tone.pickup(this.collected - 1);
-        this.hud.toast(`音轨 ${this.collected}/${FRAGMENT_COUNT} · 音乐更完整了`, 2.2);
+        this.hud.toast(`音轨 ${this.collected}/${this.level.fragments} · 音乐更完整了`, 2.2);
         this.refreshHud();
 
-        if (this.collected >= FRAGMENT_COUNT) this.startFinale();
+        if (this.collected >= this.level.fragments) this.startFinale();
     }
 
     private startFinale(): void {
@@ -409,7 +447,7 @@ export class DemoGame extends Component {
         const candidates: GridPos[] = [];
 
         for (const cell of this.model.data.cells) {
-            const d = dist.get(cell.y * COLS + cell.x);
+            const d = dist.get(cell.y * this.model.data.cols + cell.x);
             if (d === undefined || d < 3 || d > 5) continue;
             const p = { x: cell.x, y: cell.y };
             if (!this.isBlockedForExit(p)) candidates.push(p);
@@ -417,7 +455,7 @@ export class DemoGame extends Component {
 
         if (candidates.length === 0) {
             for (const cell of this.model.data.cells) {
-                const d = dist.get(cell.y * COLS + cell.x);
+                const d = dist.get(cell.y * this.model.data.cols + cell.x);
                 if (d === undefined || d < 6 || d > 8) continue;
                 const p = { x: cell.x, y: cell.y };
                 if (!this.isBlockedForExit(p)) candidates.push(p);
@@ -510,7 +548,7 @@ export class DemoGame extends Component {
 
     private addTime(seconds: number): void {
         if (this.timerStopped) return;
-        this.timeLeft = Math.max(0, Math.min(TIME_LIMIT + 20, this.timeLeft + seconds));
+        this.timeLeft = Math.max(0, Math.min(this.level.timeLimit + 20, this.timeLeft + seconds));
         if (this.timeLeft <= 0) this.timeout();
     }
 
@@ -641,7 +679,7 @@ export class DemoGame extends Component {
 
         this.hud.setStats({
             collected: this.collected,
-            total: FRAGMENT_COUNT,
+            total: this.level.fragments,
             exitOpen: !!this.exitPos,
             timeLeft: this.timeLeft,
             elapsed: this.elapsed,
@@ -649,8 +687,10 @@ export class DemoGame extends Component {
             effects: effects.length > 0 ? effects.join('　') : '无道具效果',
             timerStopped: this.timerStopped,
             seed: this.seed,
-            cols: COLS,
-            rows: ROWS,
+            cols: this.level.cols,
+            rows: this.level.rows,
+            levelLabel: this.level.label,
+            timeLimit: this.level.timeLimit,
         });
     }
 
@@ -664,9 +704,9 @@ export class DemoGame extends Component {
         this.finale = false;
         this.tone.timeout();
         this.hud.showOverlay(
-            '被主人抱回家',
-            `音轨 ${this.collected}/${FRAGMENT_COUNT}　用时 ${this.timeText(this.elapsed)}\n主人循着猫叫找到了回廊深处。`,
-            '按 R 或点击屏幕，再试一次',
+            '被主人抱回家  ☆☆☆',
+            `音轨 ${this.collected}/${this.level.fragments}　用时 ${this.timeText(this.elapsed)}\n主人循着猫叫找到了回廊深处。`,
+            '按 R 重开　M 选难度　或点击屏幕再试一次',
         );
     }
 
@@ -675,10 +715,15 @@ export class DemoGame extends Component {
         this.state = 'won';
         this.finale = false;
         this.tone.climax();
+
+        const ratio = this.timeLeft / this.level.timeLimit;
+        const stars = ratio >= 0.4 ? 3 : ratio >= 0.15 ? 2 : 1;
+        const starText = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+
         this.hud.showOverlay(
-            '带回家了',
-            `音轨 ${this.collected}/${FRAGMENT_COUNT}　步数 ${this.player.steps}　用时 ${this.timeText(this.elapsed)}\n主人把 CD 放进了唱机。`,
-            '按 R 或点击屏幕，再走一次',
+            `带回家了  ${starText}`,
+            `音轨 ${this.collected}/${this.level.fragments}　步数 ${this.player.steps}　用时 ${this.timeText(this.elapsed)}\n主人把 CD 放进了唱机。`,
+            '按 R 重开　M 选难度　或点击屏幕再走一次',
         );
     }
 
@@ -706,7 +751,7 @@ export class DemoGame extends Component {
             this.tone.pickup(this.collected - 1);
         }
         this.refreshHud();
-        if (this.collected >= FRAGMENT_COUNT) this.startFinale();
+        if (this.collected >= this.level.fragments) this.startFinale();
     }
 
     private debugSubtractTime(): void {
@@ -728,6 +773,7 @@ export class DemoGame extends Component {
     // ---------------------------------------------------------------------
 
     private handleDirection(dir: Dir): void {
+        if (this.state === 'menu') return;
         if (this.state === 'won' || this.state === 'timeout') {
             this.restart();
             return;
@@ -743,6 +789,18 @@ export class DemoGame extends Component {
 
     private onKeyDown(event: EventKeyboard): void {
         const key = event.keyCode;
+
+        if (this.state === 'menu') {
+            if (key === KeyCode.DIGIT_1 || key === KeyCode.NUM_1) this.startLevel('easy');
+            else if (key === KeyCode.DIGIT_2 || key === KeyCode.NUM_2) this.startLevel('normal');
+            else if (key === KeyCode.DIGIT_3 || key === KeyCode.NUM_3) this.startLevel('hard');
+            return;
+        }
+
+        if (key === KeyCode.KEY_M) {
+            this.openMenu();
+            return;
+        }
         if (key === KeyCode.KEY_R) {
             this.restart();
             return;

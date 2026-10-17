@@ -39,18 +39,14 @@ export class ItemSystem {
         model: MazeModel,
         rng: Rng,
         occupied: Set<string>,
+        counts: Partial<Record<ItemType, number>>,
         createNode: (type: ItemType, pos: GridPos) => Node,
     ): ItemView[] {
-        const types: ItemType[] = [
-            'butterfly',
-            'firefly',
-            'wine',
-            'catStrip',
-            'sewer',
-            'sewer',
-            'fish',
-            'yarn',
-        ];
+        const types: ItemType[] = [];
+        for (const type of Object.keys(counts) as ItemType[]) {
+            const count = counts[type] ?? 0;
+            for (let i = 0; i < count; i++) types.push(type);
+        }
         rng.shuffle(types);
 
         const items: ItemView[] = [];
