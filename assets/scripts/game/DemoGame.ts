@@ -17,8 +17,10 @@ import {
     ResolutionPolicy,
     resources,
     sys,
+    tween,
     Tween,
     Vec2,
+    Vec3,
     Vec4,
     view,
 } from 'cc';
@@ -26,7 +28,7 @@ import { nowSeed, Rng } from '../core/Rng';
 import { ToneSynth } from '../core/ToneSynth';
 import { Dir, generateMaze, GridPos, samePos } from './MazeGenerator';
 import { MazeModel } from './MazeModel';
-import { DemoState, FragmentView, ItemView } from './DemoTypes';
+import { DemoState, FragmentView, ItemType, ItemView } from './DemoTypes';
 import { MazeRenderer } from './MazeRenderer';
 import { PlayerController } from './PlayerController';
 import { HudView } from './HudView';
@@ -43,6 +45,7 @@ const { ccclass } = _decorator;
 export class DemoGame extends Component {
     private state: DemoState = 'menu';
     private finale = false;
+    private ending = false;
 
     private seed = 0;
     private rng!: Rng;
@@ -78,6 +81,7 @@ export class DemoGame extends Component {
     private timerStopped = false;
     private warned60 = false;
     private warned30 = false;
+    private readonly seenItems = new Set<ItemType>();
 
     private firefly = 0;
     private wine = 0;
@@ -135,6 +139,7 @@ export class DemoGame extends Component {
     private openMenu(): void {
         this.state = 'menu';
         this.finale = false;
+        this.ending = false;
         this.unscheduleAllCallbacks();
         Tween.stopAll();
         if (this.menu) this.menu.dispose();
@@ -231,6 +236,7 @@ export class DemoGame extends Component {
 
         this.state = 'playing';
         this.finale = false;
+        this.ending = false;
         this.collected = 0;
         this.timeLeft = this.level.timeLimit;
         this.elapsed = 0;
@@ -538,6 +544,14 @@ export class DemoGame extends Component {
             },
             teleport: () => self.teleport(),
             toast: (text) => self.hud.toast(text, 2.2),
+            showTutorial: (type, text) => {
+                if (self.seenItems.has(type)) {
+                    self.hud.toast(text, 2.2);
+                    return;
+                }
+                self.seenItems.add(type);
+                self.hud.showTutorial(type, text);
+            },
             refreshAll: () => {
                 self.refreshFog();
                 self.refreshGuide();
@@ -702,12 +716,26 @@ export class DemoGame extends Component {
         if (this.state === 'won' || this.state === 'timeout') return;
         this.state = 'timeout';
         this.finale = false;
+        this.ending = true;
+        this.timerStopped = true;
         this.tone.timeout();
-        this.hud.showOverlay(
-            '被主人抱回家  ☆☆☆',
-            `音轨 ${this.collected}/${this.level.fragments}　用时 ${this.timeText(this.elapsed)}\n主人循着猫叫找到了回廊深处。`,
-            '按 R 重开　M 选难度　或点击屏幕再试一次',
-        );
+        this.refreshHud();
+        this.hud.toast('主人推门进来了……', 1.2);
+
+        // Placeholder timeout beat: the cat is lifted up, then the result card appears.
+        tween(this.player.node)
+            .by(1.4, { position: new Vec3(0, 160, 0) }, { easing: 'sineIn' })
+            .start();
+
+        this.scheduleOnce(() => {
+            if (this.state !== 'timeout') return;
+            this.ending = false;
+            this.hud.showOverlay(
+                '被主人抱回家  ☆☆☆',
+                `音轨 ${this.collected}/${this.level.fragments}　用时 ${this.timeText(this.elapsed)}\n主人循着猫叫找到了回廊深处。`,
+                '按 R 重开　M 选难度　或点击屏幕再试一次',
+            );
+        }, 1.5);
     }
 
     private win(): void {
@@ -728,6 +756,7 @@ export class DemoGame extends Component {
     }
 
     private togglePause(): void {
+        if (this.ending) return;
         if (this.state === 'playing' && !this.finale) {
             this.state = 'paused';
             this.hud.showOverlay('暂停', '倒计时与道具效果已冻结。', '按 P 继续　R 重开');
@@ -773,7 +802,7 @@ export class DemoGame extends Component {
     // ---------------------------------------------------------------------
 
     private handleDirection(dir: Dir): void {
-        if (this.state === 'menu') return;
+        if (this.ending || this.state === 'menu') return;
         if (this.state === 'won' || this.state === 'timeout') {
             this.restart();
             return;
@@ -796,6 +825,7 @@ export class DemoGame extends Component {
             else if (key === KeyCode.DIGIT_3 || key === KeyCode.NUM_3) this.startLevel('hard');
             return;
         }
+        if (this.ending) return;
 
         if (key === KeyCode.KEY_M) {
             this.openMenu();
@@ -849,6 +879,7 @@ export class DemoGame extends Component {
     }
 
     private handlePointerEnd(start: Vec2, end: Vec2): void {
+        if (this.ending) return;
         if (this.state === 'won' || this.state === 'timeout') {
             this.restart();
             return;

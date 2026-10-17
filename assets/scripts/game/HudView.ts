@@ -1,4 +1,6 @@
 import { Color, EventMouse, EventTouch, Graphics, Label, Node } from 'cc';
+import { ItemType } from './DemoTypes';
+import { ITEM_META } from './ItemSystem';
 import { Dir } from './MazeGenerator';
 import { Theme, addLabel, makeNode, timeText } from './UiKit';
 
@@ -35,6 +37,11 @@ export class HudView {
     private readonly seedLabel: Label;
     private readonly toastNode: Node;
     private readonly toastLabel: Label;
+    private readonly tutorialNode: Node;
+    private readonly tutorialIcon: Label;
+    private readonly tutorialTitle: Label;
+    private readonly tutorialBody: Label;
+    private tutorialToken = 0;
     private readonly overlayRoot: Node;
     private readonly overlayTitle: Label;
     private readonly overlayBody: Label;
@@ -73,6 +80,29 @@ export class HudView {
         this.toastNode = makeNode('Toast', this.root, 0, -screenH * 0.5 + 125, 980, 50);
         this.toastLabel = addLabel(this.toastNode, 'ToastLabel', '', 21, Theme.cream, 0, 0, 960, 50);
         this.toastNode.active = false;
+
+        this.tutorialNode = makeNode('Tutorial', this.root, 0, -screenH * 0.5 + 430, 760, 120);
+        const tutorialBg = this.tutorialNode.addComponent(Graphics);
+        tutorialBg.fillColor = new Color(30, 23, 40, 245);
+        tutorialBg.strokeColor = new Color(216, 178, 122, 200);
+        tutorialBg.lineWidth = 2;
+        tutorialBg.roundRect(-380, -60, 760, 120, 18);
+        tutorialBg.fill();
+        tutorialBg.stroke();
+
+        const iconNode = makeNode('TutorialIcon', this.tutorialNode, -310, 0, 72, 72);
+        const iconG = iconNode.addComponent(Graphics);
+        iconG.fillColor = new Color(242, 179, 92, 70);
+        iconG.circle(0, 0, 34);
+        iconG.fill();
+        iconG.strokeColor = Theme.amber;
+        iconG.lineWidth = 2;
+        iconG.circle(0, 0, 34);
+        iconG.stroke();
+        this.tutorialIcon = addLabel(iconNode, 'TutorialIconLabel', '?', 22, Theme.cream, 0, 0, 72, 72);
+        this.tutorialTitle = addLabel(this.tutorialNode, 'TutorialTitle', '', 19, Theme.cream, -100, 25, 500, 34);
+        this.tutorialBody = addLabel(this.tutorialNode, 'TutorialBody', '', 15, Theme.dim, -100, -20, 500, 34);
+        this.tutorialNode.active = false;
 
         this.createControls();
 
@@ -117,6 +147,20 @@ export class HudView {
         }, duration);
     }
 
+    showTutorial(type: ItemType, text: string): void {
+        const meta = ITEM_META[type];
+        this.tutorialToken++;
+        const token = this.tutorialToken;
+        this.tutorialIcon.string = meta.label;
+        this.tutorialIcon.color = meta.color;
+        this.tutorialTitle.string = `第一次遇到 · ${meta.label}`;
+        this.tutorialBody.string = text;
+        this.tutorialNode.active = true;
+        this.scheduleOnce(() => {
+            if (token === this.tutorialToken) this.tutorialNode.active = false;
+        }, 2.8);
+    }
+
     showOverlay(title: string, body: string, hint: string): void {
         this.overlayTitle.string = title;
         this.overlayBody.string = body;
@@ -130,6 +174,7 @@ export class HudView {
 
     dispose(): void {
         this.toastToken++;
+        this.tutorialToken++;
     }
 
     private createControls(): void {

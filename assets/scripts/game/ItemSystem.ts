@@ -27,8 +27,20 @@ export interface ItemContext {
     setYarn(seconds: number): void;
     teleport(): void;
     toast(text: string): void;
+    showTutorial(type: ItemType, text: string): void;
     refreshAll(): void;
 }
+
+export const ITEM_TUTORIALS: Record<ItemType, string> = {
+    butterfly: '蝴蝶会为你指路 10 步。',
+    firefly: '萤火虫把视野扩大到 4 格，持续 10 秒。',
+    wine: '鲜花酒让你方向颠倒 10 秒。',
+    catStrip: '猫条让你每次移动 2 格，持续 10 秒。',
+    sewer: '下水道会把你随机冲走。',
+    fish: '小鱼干增加 20 秒倒计时。',
+    yarn: '毛线球记住走过的路，持续 15 秒。',
+    feather: '蝙蝠黑羽会减少 10 秒倒计时。',
+};
 
 /**
  * Item placement + effect dispatch.
@@ -73,42 +85,32 @@ export class ItemSystem {
         if (item.used) return;
         item.used = true;
         item.node.active = false;
+        ctx.showTutorial(item.type, ITEM_TUTORIALS[item.type]);
 
         switch (item.type) {
             case 'butterfly':
                 ctx.setButterfly(10);
-                ctx.toast('蝴蝶：跟着我，十步。');
                 break;
             case 'firefly':
                 ctx.setFirefly(10);
-                ctx.toast('萤火虫：视野扩大到 4 格，10 秒。');
                 break;
             case 'wine':
                 ctx.setWine(10);
-                ctx.toast('鲜花酒：方向颠倒 10 秒。');
                 break;
             case 'catStrip':
                 ctx.setCatStrip(10);
-                ctx.toast('猫条：每次移动 2 格，10 秒。');
                 break;
             case 'sewer':
                 ctx.teleport();
                 break;
             case 'fish':
-                if (!ctx.isTimerStopped()) {
-                    ctx.addTime(20);
-                    ctx.toast('小鱼干：时间 +20 秒。');
-                }
+                if (!ctx.isTimerStopped()) ctx.addTime(20);
                 break;
             case 'yarn':
                 ctx.setYarn(15);
-                ctx.toast('毛线球：记住走过的路，15 秒。');
                 break;
             case 'feather':
-                if (!ctx.isTimerStopped()) {
-                    ctx.addTime(-10);
-                    ctx.toast('蝙蝠黑羽：时间 -10 秒。');
-                }
+                if (!ctx.isTimerStopped()) ctx.addTime(-10);
                 break;
         }
         ctx.refreshAll();
