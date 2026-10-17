@@ -121,7 +121,12 @@ export class DemoGame extends Component {
     }
 
     async start(): Promise<void> {
-        this.art = await loadArtAssets();
+        try {
+            this.art = await loadArtAssets();
+        } catch (e) {
+            console.warn('[DemoGame] art load failed, using Graphics placeholders', e);
+            this.art = null;
+        }
         this.build();
     }
 
