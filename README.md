@@ -33,7 +33,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - [x] 难度同时改变迷宫规模、环路比例（8%/5%/0%）、道具数量（6/8/12）与干扰密度
 - [x] 碎片按四象限 + 最小 BFS 间距分散；出口距离 3–5 / 4–6 / 6–9 步
 - [x] 2 格视野：全屏 Shader 柔边遮罩，跟随玩家平滑移动；加载失败自动回退格子遮罩
-- [x] 按难度生成 3/4/5 块“音轨碎片”，集齐后 1 秒静默 → 播放高潮占位音 → 出生点周边 3–5 步生成出口
+- [x] 按难度生成 3/4/5 块“音轨碎片”，集齐后播放 CD 拼合演出：碎片飞向中心 → CD 成型 → 1 秒静默 → 高潮 → 出口
 - [x] 出口光柱穿透遮罩，终局可发现
 - [x] 倒计时 5:00/7:00/9:00；60s/30s 提醒；超时主人抱走并强制结束
 - [x] 难度选择菜单、时间星级结算（3/2/1 星）、M 键返回难度菜单
@@ -70,6 +70,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - 困难 19×23 地板完整覆盖棋盘，墙体/碎片/道具随格子尺寸正确缩放。
 - 困难碎片不再扎堆：12 个种子中任意两块最小 BFS 距离 48–79，四象限均有分布；出口 6–9 步。
 - 首次道具教学卡、超时 1.5 秒演出与延迟结算已实际验证。
+- CD 拼合终局：最后一块碎片后碎片飞向中心、CD 成型、1 秒静音、高潮、出口生成，全流程实际跑通。
 - `FogView / GuideView / InputRouter` 拆分后，遮罩、蝴蝶路径、移动与菜单流程回归通过。
 - 6 个 WAV 音轨成功加载为 AudioSource；用户手势后同时播放，6 路时间差 < 1ms；1 秒静音→高潮流程实际跑通。
 - 5 个 SFX WAV 成功加载到 `SfxDirector`；菜单选择/拾取/通关/超时会触发对应 AudioSource 音效；通关 CD、超时主人插画显示正常。
@@ -78,7 +79,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - 设置页滑条实际改变主音量并同步 AudioSource 音量；关闭设置后继续游戏。
 - 语言切换后菜单/HUD/教学/结算全部切换为 English；震动开关在浏览器触发 `navigator.vibrate`；重置记录二次确认后清空最佳成绩。
 - 构建产物在 `build-demo/web-desktop`（本地打开需 HTTP 服务；日常开发直接使用 Cocos 预览即可）。
-- **HarmonyOS HAP 已成功构建**：Cocos `harmonyos-next` → OHOS NDK native 编译 → ArkTS 编译 → `hvigor assembleHap` 成功；产物 `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（45,316,286 字节，约 43.2 MB，内含新菜单背景/CD/主人/5 个 SFX）。当前未签名，签名与真机安装步骤见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
+- **HarmonyOS HAP 已成功构建**：Cocos `harmonyos-next` → OHOS NDK native 编译 → ArkTS 编译 → `hvigor assembleHap` 成功；产物 `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（45,324,360 字节，约 43.2 MB，内含新菜单背景/CD/主人/5 个 SFX/CD 拼合终局）。当前未签名，签名与真机安装步骤见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
 
 ## 代码结构
 
@@ -119,6 +120,7 @@ assets/
       ├─ LevelConfig.ts           # 三档难度：尺寸/碎片/时间/道具数量
       ├─ MenuView.ts              # 难度选择菜单 + 最佳记录 + 设置入口
       ├─ SettingsView.ts          # 音量 / 静音 / 语言 / 震动 / 重置记录
+      ├─ FinaleView.ts            # 碎片拼 CD、静音/高潮/出口三段式终局
       ├─ HudView.ts               # HUD、Toast、结算层、方向键/暂停
       ├─ ItemSystem.ts            # 道具落点与效果分发
       └─ DemoGame.ts              # 编排：状态、计时、碎片、终局、输入
@@ -137,4 +139,5 @@ docs/鸿蒙HAP构建.md                # 工具链、构建、签名与真机步
 - 遮罩优先使用 `resources/effects/fog.effect` 的 Shader；如果设备/构建不支持自定义材质，会自动回退到格子遮罩，保证仍可玩。
 - 音乐与 SFX 均走 `AudioSource`，HAP 内已打包；鸿蒙真机的 WAV 解码/延迟/音频焦点仍未验证。
 - 场景通过脚本 UUID 绑定组件：`assets/scripts/game/DemoGame.ts.meta` 中的 UUID 与 `Main.scene` 里的压缩 UUID 必须保持一致；不要手动改其中一个。
+
 

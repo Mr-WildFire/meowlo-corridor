@@ -27,6 +27,7 @@ import { HudView } from './HudView';
 import { ItemContext, ItemSystem } from './ItemSystem';
 import { ArtAssets, loadArtAssets } from './ArtAssets';
 import { CatView } from './CatView';
+import { FinaleView } from './FinaleView';
 import { FogView } from './FogView';
 import { GuideView } from './GuideView';
 import { InputRouter } from './InputRouter';
@@ -94,6 +95,7 @@ export class DemoGame extends Component {
     private volume = 0.7;
     private settings: SettingsView | null = null;
     private settingsWasPlaying = false;
+    private finaleView: FinaleView | null = null;
 
     onLoad(): void {
         // Demo uses SHOW_ALL so the portrait board is fully visible in any preview window.
@@ -167,6 +169,7 @@ export class DemoGame extends Component {
     }
 
     private openMenu(): void {
+        if (this.state === 'finale') return;
         if (this.state === 'menu' && this.menu) return;
         if (this.settings) {
             this.settings.dispose();
@@ -208,6 +211,8 @@ export class DemoGame extends Component {
         this.inputRouter?.dispose();
         this.settings?.dispose();
         this.settings = null;
+        this.finaleView?.dispose();
+        this.finaleView = null;
         this.fog?.dispose();
         this.guide?.dispose();
         if (this.menu) this.menu.dispose();
@@ -266,6 +271,10 @@ export class DemoGame extends Component {
         if (this.settings) {
             this.settings.dispose();
             this.settings = null;
+        }
+        if (this.finaleView) {
+            this.finaleView.dispose();
+            this.finaleView = null;
         }
         this.unscheduleAllCallbacks();
         Tween.stopAll();
@@ -540,19 +549,41 @@ export class DemoGame extends Component {
         this.finale = true;
         this.timerStopped = true;
         this.state = 'finale';
-        this.music.silence(1.0);
-        this.hud.toast(locale.t('game.finaleLast'), 1.0);
 
-        this.scheduleOnce(() => {
-            if (this.state !== 'finale') return;
-            this.music.climax();
-            this.clearTemporaryEffects();
-            this.spawnExit();
-            this.state = 'playing';
-            this.finale = false;
-            this.hud.toast(locale.t('game.finaleDone'), 3.0);
-            this.refreshHud();
-        }, 1.0);
+        const shardPositions = this.fragments
+            .filter((f) => f.collected)
+            .map((f) => {
+                const p = f.node.worldPosition;
+                return new Vec3(p.x - this.screenW * 0.5, p.y - this.screenH * 0.5, 0);
+            });
+
+        this.finaleView = new FinaleView(
+            this.node,
+            this.screenW,
+            this.screenH,
+            this.art?.cd ?? null,
+            () => {
+                if (this.state !== 'finale') return;
+                // Keep this second completely silent: no SFX over the music gap.
+                this.music.silence(1.0);
+            },
+            () => {
+                if (this.state !== 'finale') return;
+                this.music.climax();
+                this.clearTemporaryEffects();
+                this.spawnExit();
+                this.refreshHud();
+            },
+            () => {
+                if (this.state !== 'finale') return;
+                this.finaleView = null;
+                this.state = 'playing';
+                this.finale = false;
+                this.hud.toast(locale.t('game.finaleDone'), 3.0);
+                this.refreshHud();
+            },
+        );
+        this.finaleView.play(shardPositions, this.level.fragments);
     }
 
     private spawnExit(): void {
@@ -824,6 +855,7 @@ export class DemoGame extends Component {
     private openSettings(): void {
         if (this.settings) return;
         if (this.state === 'finale' || this.ending) return;
+        // Finale is a short cinematic; settings/pause are intentionally ignored.
         this.settingsWasPlaying = this.state === 'playing';
         if (this.settingsWasPlaying) {
             this.state = 'paused';
@@ -890,7 +922,7 @@ export class DemoGame extends Component {
     }
 
     private togglePause(): void {
-        if (this.settings || this.ending) return;
+        if (this.settings || this.ending || this.state === 'finale') return;
         if (this.state === 'playing' && !this.finale) {
             this.state = 'paused';
             this.music.pause();
@@ -907,7 +939,7 @@ export class DemoGame extends Component {
     }
 
     private restart(): void {
-        if (this.settings || this.state === 'menu') return;
+        if (this.settings || this.state === 'menu' || this.state === 'finale') return;
         this.build();
     }
 
