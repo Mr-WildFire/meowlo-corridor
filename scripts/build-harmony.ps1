@@ -105,7 +105,8 @@ $libDst = Join-Path $native 'entry\oh_modules\libcocos.so'
 New-Item -ItemType Directory -Force -Path $libDst | Out-Null
 Copy-Item (Join-Path $libSrc '*') $libDst -Recurse -Force
 
-$icon = Join-Path $Project 'tools\harmony_icon.png'
+$icon = Join-Path $Project 'tools\icon\icon-512.png'
+if (-not (Test-Path $icon)) { $icon = Join-Path $Project 'tools\harmony_icon.png' }
 if (Test-Path $icon) {
     Copy-Item $icon (Join-Path $native 'AppScope\resources\base\media\app_icon.png') -Force
     Copy-Item $icon (Join-Path $native 'entry\src\main\resources\base\media\icon.png') -Force

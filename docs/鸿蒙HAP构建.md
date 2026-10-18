@@ -11,13 +11,35 @@
 | ArkTS 编译 | 成功（API 26 仅有 `globalThis`/弃用 API 警告） |
 | HAP 打包 | 成功 |
 | HAP 签名 | ✅ **Release signed**（AGC 发布证书 + `app_gallery` Release Profile） |
-| 当前通用产物 | `build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（25,055,494 字节，约 23.9 MB） |
-| Release SHA-256 | `7761F5922C65AEAB737048A6498D8A16D17FB85CA920EDCAA0A8BC18F6B25193` |
+| 当前通用产物 | `build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（25,780,490 字节，约 24.6 MB） |
+| Release SHA-256 | `40A721D6C90F02A2D5308AA6F18776BBDD5F6ADD0CCF9214B842ABCFC8DEA131` |
 | 应用名 | `喵音回廊`（已修复之前的乱码） |
+| 长屏适配 | `FIXED_WIDTH` + `sys.getSafeAreaRect()`；HUD/D-pad 使用安全区 |
 | 调试 unsigned 产物 | `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（45,324,360 字节，保留作对比） |
 | 真机安装 | 未执行（当前没有连接 HarmonyOS 设备） |
 
 > **通用包已产出**：Release Profile 不绑定单台设备 UDID；但 Profile 的 `app-distribution-type` 是 `app_gallery`，安装方式需要走 AGC 内测/应用市场，或先在目标设备验证能否直接 `hdc install`。签名材料路径在 `D:\Projects\MusicCat\cer`。
+
+> **2026-10-19 图标更新**：应用图标替换为「唱片环 + 布偶猫 + 碎 CD 裂光」版本，`tools/icon/icon-512.png` 为唯一源文件（512×512 RGBA；`tools/harmony_icon.png` 为兼容副本），构建脚本会把它复制到 `AppScope/.../app_icon.png` 与 `entry/.../icon.png`。本次 `-SkipCocos -Release` 增量重打，`@SignHap` 成功；HAP 内两张图标与源文件 SHA-256 一致（`0DEEBA78…D6E8544`），`resources.index` 仍含 `喵音回廊`。体积因此从 25,055,494 增至 25,780,490 字节；随后又合入长屏 `FIXED_WIDTH` + SafeArea 适配。
+
+## 1.1 上架包 `.app`（AGC 上传用）
+
+`.hap` 是**模块包**，只能 `hdc install` 到设备；AGC / 应用市场侧要求的是 **App Pack `.app`**（内含一个或多个 HAP）。把 HAP 直接上传会报：`您所上传的软件包不是HarmonyOS应用后缀.app，请重新上传。`
+
+```powershell
+cd native\engine\harmonyos-next
+hvigorw assembleApp --mode project -p product=default -p buildMode=release --no-daemon
+```
+
+| 项目 | 结果 |
+|---|---|
+| 原始输出 | `native/engine/harmonyos-next/build/outputs/default/harmonyos-next-default-signed.app` |
+| 归档副本 | `build-harmony/MeowloCorridor-1.0.0-release.app`（10,521,847 字节，约 10.0 MB） |
+| SHA-256 | `C4B537E1533E57FF3B9C103555D3977AACB3077F4FB3F2721347DABE397282CB` |
+| 内容 | `pac.json`、`pack.info`、`entry-default.hap`（25,586,193 字节） |
+
+构建耗时约 15.5 秒（`PackageApp` + `SignApp`），签名沿用 `build-profile.json5` 里的 `default_release` 配置。
+
 
 ## 2. 工具链
 
@@ -34,6 +56,8 @@ hvigorw --version
 ohpm --version
 # 26.0.0.630
 ```
+
+> **本机路径提醒**：这台机器上 CLT 实际解压在 `D:\Projects\MusicCat\temp\ohos-clt\extract\command-line-tools`，`C:\command-line-tools` 并不存在。`scripts/build-harmony.ps1` 的默认 `-CltPath` 是 `C:\command-line-tools`，直接跑会报 "Command Line Tools not found"，需显式传 `-CltPath 'D:\Projects\MusicCat\temp\ohos-clt\extract\command-line-tools'`。
 
 工具链版本：
 
@@ -318,5 +342,6 @@ hdc install MeowloCorridor-1.0.0-release-signed.hap
 4. 重新打 release HAP，并检查 HAP 内 `resources.index` 包含 UTF-8 的 `喵音回廊`。
 
 当前产物已修复，桌面名应为 **喵音回廊**。
+
 
 

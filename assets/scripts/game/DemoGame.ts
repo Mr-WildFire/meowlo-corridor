@@ -63,6 +63,8 @@ export class DemoGame extends Component {
 
     private screenW = 1080;
     private screenH = 1920;
+    private safeTop = 0;
+    private safeBottom = 0;
     private demoRoot: Node | null = null;
 
     private exitPos: GridPos | null = null;
@@ -98,10 +100,10 @@ export class DemoGame extends Component {
     private finaleView: FinaleView | null = null;
 
     onLoad(): void {
-        // Demo uses SHOW_ALL so the portrait board is fully visible in any preview window.
-        // Production build should use FIXED_WIDTH + SafeArea.
-        if (sys.isBrowser) view.setFrameSize(1080, 1920);
-        view.setDesignResolutionSize(1080, 1920, ResolutionPolicy.SHOW_ALL);
+        // Landscape/16:9 would letterbox; tall phones need the extra height,
+        // otherwise the board/HUD are cropped. FIXED_WIDTH keeps the 1080
+        // design width and lets the visible height grow with the device.
+        view.setDesignResolutionSize(1080, 1920, ResolutionPolicy.FIXED_WIDTH);
         try {
             profiler.hideStats();
         } catch (e) {
@@ -111,6 +113,14 @@ export class DemoGame extends Component {
         const size = view.getVisibleSize();
         this.screenW = size.width;
         this.screenH = size.height;
+        try {
+            const safe = sys.getSafeAreaRect();
+            this.safeBottom = Math.max(0, safe.y);
+            this.safeTop = Math.max(0, this.screenH - (safe.y + safe.height));
+        } catch {
+            this.safeTop = 0;
+            this.safeBottom = 0;
+        }
         const canvasUT = this.node.getComponent('cc.UITransform') as any;
         if (canvasUT) canvasUT.setContentSize(this.screenW, this.screenH);
         this.node.setPosition(this.screenW * 0.5, this.screenH * 0.5, 0);
@@ -344,6 +354,8 @@ export class DemoGame extends Component {
             this.demoRoot,
             this.screenW,
             this.screenH,
+            this.safeTop,
+            this.safeBottom,
             {
                 onDirection: (dir) => this.handleDirection(dir),
                 onPause: () => this.togglePause(),

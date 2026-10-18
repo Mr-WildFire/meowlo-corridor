@@ -25,6 +25,7 @@ node_modules/
 # Local demo build / logs
 build-demo/
 build-harmony/
+AppTest/
 *.log
 
 # HarmonyOS signing material (never commit private keys / profiles)

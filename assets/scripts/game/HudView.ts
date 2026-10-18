@@ -57,11 +57,14 @@ export class HudView {
         parent: Node,
         private readonly screenW: number,
         private readonly screenH: number,
+        private readonly safeTop: number,
+        private readonly safeBottom: number,
         private readonly callbacks: HudCallbacks,
         private readonly scheduleOnce: (cb: () => void, delay: number) => void,
     ) {
         this.root = makeNode('HudRoot', parent, 0, 0, screenW, screenH);
-        const top = screenH * 0.5;
+        const top = screenH * 0.5 - safeTop;
+        const bottom = -screenH * 0.5 + safeBottom;
 
         addLabel(this.root, 'Title', locale.t('hud.title'), 32, Theme.cream, 0, top - 45, 980, 60);
         this.hudLabel = addLabel(
@@ -97,16 +100,16 @@ export class HudView {
             15,
             Theme.dim,
             0,
-            -screenH * 0.5 + 42,
+            bottom + 42,
             1040,
             34,
         );
 
-        this.toastNode = makeNode('Toast', this.root, 0, -screenH * 0.5 + 125, 980, 50);
+        this.toastNode = makeNode('Toast', this.root, 0, bottom + 125, 980, 50);
         this.toastLabel = addLabel(this.toastNode, 'ToastLabel', '', 21, Theme.cream, 0, 0, 960, 50);
         this.toastNode.active = false;
 
-        this.tutorialNode = makeNode('Tutorial', this.root, 0, -screenH * 0.5 + 430, 760, 120);
+        this.tutorialNode = makeNode('Tutorial', this.root, 0, bottom + 430, 760, 120);
         const tutorialBg = this.tutorialNode.addComponent(Graphics);
         tutorialBg.fillColor = new Color(30, 23, 40, 245);
         tutorialBg.strokeColor = new Color(216, 178, 122, 200);
@@ -239,14 +242,14 @@ export class HudView {
         const size = 64;
         const gap = 8;
         const baseX = this.screenW * 0.5 - 190;
-        const baseY = -this.screenH * 0.5 + 190;
+        const baseY = -this.screenH * 0.5 + this.safeBottom + 190;
 
         this.createDirectionButton(0, '↑', baseX, baseY + size + gap, size);
         this.createDirectionButton(2, '↓', baseX, baseY - size - gap, size);
         this.createDirectionButton(3, '←', baseX - size - gap, baseY, size);
         this.createDirectionButton(1, '→', baseX + size + gap, baseY, size);
 
-        const pause = makeNode('PauseButton', this.root, -this.screenW * 0.5 + 66, this.screenH * 0.5 - 78, 54, 54);
+        const pause = makeNode('PauseButton', this.root, -this.screenW * 0.5 + 66, this.screenH * 0.5 - this.safeTop - 78, 54, 54);
         const pg = pause.addComponent(Graphics);
         pg.fillColor = new Color(40, 31, 54, 220);
         pg.strokeColor = new Color(170, 158, 145, 180);
@@ -263,7 +266,7 @@ export class HudView {
         pause.on(Node.EventType.TOUCH_END, pausePress, this);
         pause.on(Node.EventType.MOUSE_UP, pausePress, this);
 
-        const mute = makeNode('MuteButton', this.root, this.screenW * 0.5 - 66, this.screenH * 0.5 - 78, 54, 54);
+        const mute = makeNode('MuteButton', this.root, this.screenW * 0.5 - 66, this.screenH * 0.5 - this.safeTop - 78, 54, 54);
         const mg = mute.addComponent(Graphics);
         mg.fillColor = new Color(40, 31, 54, 220);
         mg.strokeColor = new Color(170, 158, 145, 180);
@@ -280,7 +283,7 @@ export class HudView {
         mute.on(Node.EventType.TOUCH_END, mutePress, this);
         mute.on(Node.EventType.MOUSE_UP, mutePress, this);
 
-        const settings = makeNode('SettingsButton', this.root, this.screenW * 0.5 - 132, this.screenH * 0.5 - 78, 54, 54);
+        const settings = makeNode('SettingsButton', this.root, this.screenW * 0.5 - 132, this.screenH * 0.5 - this.safeTop - 78, 54, 54);
         const sg = settings.addComponent(Graphics);
         sg.fillColor = new Color(40, 31, 54, 220);
         sg.strokeColor = new Color(170, 158, 145, 180);
