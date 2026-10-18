@@ -1,4 +1,5 @@
 import { Color, EventMouse, EventTouch, Graphics, Label, Node } from 'cc';
+import { locale } from '../core/Locale';
 import type { BestRecord } from '../core/ProgressStore';
 import { DIFFICULTY_ORDER, Difficulty, LEVELS, LevelConfig } from './LevelConfig';
 import { Theme, addLabel, makeNode, timeText } from './UiKit';
@@ -27,8 +28,8 @@ export class MenuView {
         bg.rect(-screenW * 0.5, -screenH * 0.5, screenW, screenH);
         bg.fill();
 
-        addLabel(this.root, 'MenuTitle', '喵音回廊', 58, Theme.cream, 0, screenH * 0.5 - 190, 900, 80);
-        addLabel(this.root, 'MenuSub', '选择难度', 24, Theme.cyan, 0, screenH * 0.5 - 255, 900, 44);
+        addLabel(this.root, 'MenuTitle', locale.t('menu.title'), 58, Theme.cream, 0, screenH * 0.5 - 190, 900, 80);
+        addLabel(this.root, 'MenuSub', locale.t('menu.subtitle'), 24, Theme.cyan, 0, screenH * 0.5 - 255, 900, 44);
 
         DIFFICULTY_ORDER.forEach((id, index) => {
             this.addButton(LEVELS[id], 80 - index * 132);
@@ -37,7 +38,7 @@ export class MenuView {
         addLabel(
             this.root,
             'MenuHint',
-            '点击难度开始　·　1 / 2 / 3 也可选择',
+            locale.t('menu.hint'),
             17,
             Theme.dim,
             0,
@@ -54,7 +55,17 @@ export class MenuView {
         mg.circle(0, 0, 25);
         mg.fill();
         mg.stroke();
-        this.muteLabel = addLabel(mute, 'MenuMuteLabel', muted ? '静' : '音', 19, Theme.cream, 0, 0, 50, 50);
+        this.muteLabel = addLabel(
+            mute,
+            'MenuMuteLabel',
+            muted ? locale.t('menu.muted') : locale.t('menu.sound'),
+            19,
+            Theme.cream,
+            0,
+            0,
+            50,
+            50,
+        );
 
         const press = (event: EventTouch | EventMouse): void => {
             event.propagationStopped = true;
@@ -71,7 +82,7 @@ export class MenuView {
         sg.circle(0, 0, 25);
         sg.fill();
         sg.stroke();
-        addLabel(settings, 'MenuSettingsLabel', '设', 18, Theme.cream, 0, 0, 50, 50);
+        addLabel(settings, 'MenuSettingsLabel', locale.t('menu.settings'), 18, Theme.cream, 0, 0, 50, 50);
         const settingsPress = (event: EventTouch | EventMouse): void => {
             event.propagationStopped = true;
             this.onSettings();
@@ -85,7 +96,7 @@ export class MenuView {
     }
 
     private setMuted(muted: boolean): void {
-        this.muteLabel.string = muted ? '静' : '音';
+        this.muteLabel.string = muted ? locale.t('menu.muted') : locale.t('menu.sound');
         this.muteLabel.color = muted ? Theme.rose : Theme.cream;
     }
 
@@ -99,11 +110,26 @@ export class MenuView {
         g.fill();
         g.stroke();
 
-        addLabel(node, 'MenuLabel', `${level.label} · ${level.subtitle}`, 22, Theme.cream, 0, 30, 520, 36);
+        addLabel(
+            node,
+            'MenuLabel',
+            `${locale.difficultyName(level.id)} · ${locale.difficultySubtitle(level.id)}`,
+            22,
+            Theme.cream,
+            0,
+            30,
+            520,
+            36,
+        );
         addLabel(
             node,
             'MenuDesc',
-            `${level.cols}×${level.rows} · ${level.fragments} 块碎片 · ${timeText(level.timeLimit)}`,
+            locale.t('menu.meta', {
+                cols: level.cols,
+                rows: level.rows,
+                fragments: level.fragments,
+                time: timeText(level.timeLimit),
+            }),
             15,
             Theme.dim,
             0,
@@ -114,8 +140,11 @@ export class MenuView {
 
         const rec = this.best[level.id];
         const bestText = rec
-            ? `最佳 ${'★'.repeat(rec.stars)}${'☆'.repeat(3 - rec.stars)} · ${timeText(rec.elapsed)}`
-            : '最佳 —';
+            ? locale.t('menu.best', {
+                  stars: `${'★'.repeat(rec.stars)}${'☆'.repeat(3 - rec.stars)}`,
+                  time: timeText(rec.elapsed),
+              })
+            : locale.t('menu.bestNone');
         addLabel(node, 'MenuBest', bestText, 13, rec ? Theme.amber : Theme.dim, 0, -34, 520, 24);
 
         const press = (event: EventTouch | EventMouse): void => {

@@ -1,4 +1,5 @@
 import { sys } from 'cc';
+import type { Language } from './Locale';
 import { Difficulty } from '../game/LevelConfig';
 
 export interface BestRecord {
@@ -10,6 +11,8 @@ interface SaveData {
     best: Partial<Record<Difficulty, BestRecord>>;
     muted: boolean;
     volume: number;
+    language: Language;
+    vibration: boolean;
 }
 
 const KEY = 'meowlo.progress.v1';
@@ -19,7 +22,7 @@ const KEY = 'meowlo.progress.v1';
  * Uses Cocos localStorage so it works in browser and native WebView.
  */
 export class ProgressStore {
-    private data: SaveData = { best: {}, muted: false, volume: 0.7 };
+    private data: SaveData = { best: {}, muted: false, volume: 0.7, language: 'zh', vibration: true };
 
     constructor() {
         this.load();
@@ -40,6 +43,29 @@ export class ProgressStore {
 
     setVolume(volume: number): void {
         this.data.volume = Math.max(0, Math.min(1, volume));
+        this.save();
+    }
+
+    get language(): Language {
+        return this.data.language;
+    }
+
+    setLanguage(language: Language): void {
+        this.data.language = language;
+        this.save();
+    }
+
+    get vibration(): boolean {
+        return this.data.vibration;
+    }
+
+    setVibration(enabled: boolean): void {
+        this.data.vibration = enabled;
+        this.save();
+    }
+
+    resetRecords(): void {
+        this.data.best = {};
         this.save();
     }
 
@@ -70,9 +96,11 @@ export class ProgressStore {
                 this.data.best = parsed.best ?? {};
                 this.data.muted = !!parsed.muted;
                 this.data.volume = Math.max(0, Math.min(1, Number(parsed.volume ?? 0.7)));
+                this.data.language = parsed.language === 'en' ? 'en' : 'zh';
+                this.data.vibration = parsed.vibration !== false;
             }
         } catch {
-            this.data = { best: {}, muted: false, volume: 0.7 };
+            this.data = { best: {}, muted: false, volume: 0.7, language: 'zh', vibration: true };
         }
     }
 

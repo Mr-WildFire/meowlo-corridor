@@ -1,4 +1,5 @@
 import { Color, Node } from 'cc';
+import { locale } from '../core/Locale';
 import { Rng } from '../core/Rng';
 import { GridPos, samePos } from './MazeGenerator';
 import { MazeModel } from './MazeModel';
@@ -31,16 +32,7 @@ export interface ItemContext {
     refreshAll(): void;
 }
 
-export const ITEM_TUTORIALS: Record<ItemType, string> = {
-    butterfly: '蝴蝶会为你指路 10 步。',
-    firefly: '萤火虫把视野扩大到 4 格，持续 10 秒。',
-    wine: '鲜花酒让你方向颠倒 10 秒。',
-    catStrip: '猫条让你每次移动 2 格，持续 10 秒。',
-    sewer: '下水道会把你随机冲走。',
-    fish: '小鱼干增加 20 秒倒计时。',
-    yarn: '毛线球记住走过的路，持续 15 秒。',
-    feather: '蝙蝠黑羽会减少 10 秒倒计时。',
-};
+
 
 /**
  * Item placement + effect dispatch.
@@ -85,7 +77,7 @@ export class ItemSystem {
         if (item.used) return;
         item.used = true;
         item.node.active = false;
-        ctx.showTutorial(item.type, ITEM_TUTORIALS[item.type]);
+        ctx.showTutorial(item.type, locale.itemTutorial(item.type));
 
         switch (item.type) {
             case 'butterfly':

@@ -1,4 +1,5 @@
 import { Color, EventMouse, EventTouch, Graphics, Label, Node } from 'cc';
+import { locale } from '../core/Locale';
 import { ItemType } from './DemoTypes';
 import { ITEM_META } from './ItemSystem';
 import { Dir } from './MazeGenerator';
@@ -61,17 +62,37 @@ export class HudView {
         this.root = makeNode('HudRoot', parent, 0, 0, screenW, screenH);
         const top = screenH * 0.5;
 
-        addLabel(this.root, 'Title', '喵音回廊', 32, Theme.cream, 0, top - 45, 980, 60);
-        this.hudLabel = addLabel(this.root, 'HudTrack', '音轨 0/4　出口未开启', 26, Theme.cream, 0, top - 100, 1000, 50);
-        this.timerLabel = addLabel(this.root, 'HudTimer', '剩余 07:00', 32, Theme.cream, 0, top - 145, 900, 55);
-        this.stepLabel = addLabel(this.root, 'HudSteps', '步数 0　用时 00:00', 19, Theme.dim, 0, top - 185, 900, 40);
-        this.effectLabel = addLabel(this.root, 'HudEffects', '无道具效果', 17, Theme.mint, 0, top - 218, 1000, 40);
+        addLabel(this.root, 'Title', locale.t('hud.title'), 32, Theme.cream, 0, top - 45, 980, 60);
+        this.hudLabel = addLabel(
+            this.root,
+            'HudTrack',
+            locale.t('hud.track', { n: 0, total: 4 }),
+            26,
+            Theme.cream,
+            0,
+            top - 100,
+            1000,
+            50,
+        );
+        this.timerLabel = addLabel(this.root, 'HudTimer', '07:00', 32, Theme.cream, 0, top - 145, 900, 55);
+        this.stepLabel = addLabel(
+            this.root,
+            'HudSteps',
+            locale.t('hud.steps', { steps: 0, time: '00:00' }),
+            19,
+            Theme.dim,
+            0,
+            top - 185,
+            900,
+            40,
+        );
+        this.effectLabel = addLabel(this.root, 'HudEffects', locale.t('hud.none'), 17, Theme.mint, 0, top - 218, 1000, 40);
         this.seedLabel = addLabel(this.root, 'HudSeed', '', 13, Theme.dim, 0, top - 248, 1000, 30);
 
         addLabel(
             this.root,
             'Help',
-            'WASD / 滑动移动　P 暂停　R 重开　M 难度　V 静音　O 设置',
+            locale.t('hud.help'),
             15,
             Theme.dim,
             0,
@@ -122,11 +143,14 @@ export class HudView {
     }
 
     setStats(stats: HudStats): void {
-        this.hudLabel.string = stats.exitOpen
-            ? `音轨 ${stats.collected}/${stats.total}　出口已开启`
-            : `音轨 ${stats.collected}/${stats.total}　出口未开启`;
+        this.hudLabel.string = locale.t(stats.exitOpen ? 'hud.trackOpen' : 'hud.track', {
+            n: stats.collected,
+            total: stats.total,
+        });
 
-        this.timerLabel.string = stats.timerStopped ? '音乐完整' : `剩余 ${timeText(stats.timeLeft)}`;
+        this.timerLabel.string = stats.timerStopped
+            ? locale.t('hud.musicComplete')
+            : locale.t('hud.timeLeft', { time: timeText(stats.timeLeft) });
         this.timerLabel.color = stats.timerStopped
             ? Theme.cyan
             : stats.timeLeft <= 30
@@ -135,9 +159,15 @@ export class HudView {
                 ? Theme.amber
                 : Theme.cream;
 
-        this.stepLabel.string = `步数 ${stats.steps}　用时 ${timeText(stats.elapsed)}`;
+        this.stepLabel.string = locale.t('hud.steps', { steps: stats.steps, time: timeText(stats.elapsed) });
         this.effectLabel.string = stats.effects;
-        this.seedLabel.string = `种子 ${stats.seed} · ${stats.levelLabel} · ${stats.cols}×${stats.rows} · ${timeText(stats.timeLimit)}`;
+        this.seedLabel.string = locale.t('hud.seed', {
+            seed: stats.seed,
+            level: stats.levelLabel,
+            cols: stats.cols,
+            rows: stats.rows,
+            time: timeText(stats.timeLimit),
+        });
     }
 
     toast(text: string, duration = 2): void {
@@ -154,9 +184,9 @@ export class HudView {
         const meta = ITEM_META[type];
         this.tutorialToken++;
         const token = this.tutorialToken;
-        this.tutorialIcon.string = meta.label;
+        this.tutorialIcon.string = locale.itemShort(type);
         this.tutorialIcon.color = meta.color;
-        this.tutorialTitle.string = `第一次遇到 · ${meta.label}`;
+        this.tutorialTitle.string = locale.t('hud.tutorial', { name: locale.itemName(type) });
         this.tutorialBody.string = text;
         this.tutorialNode.active = true;
         this.scheduleOnce(() => {
@@ -177,7 +207,7 @@ export class HudView {
 
     setMuted(muted: boolean): void {
         if (!this.muteLabel) return;
-        this.muteLabel.string = muted ? '静' : '音';
+        this.muteLabel.string = muted ? locale.t('hud.mute') : locale.t('hud.sound');
         this.muteLabel.color = muted ? Theme.rose : Theme.cream;
     }
 
@@ -222,7 +252,7 @@ export class HudView {
         mg.roundRect(-27, -27, 54, 54, 14);
         mg.fill();
         mg.stroke();
-        this.muteLabel = addLabel(mute, 'MuteLabel', '音', 20, Theme.cream, 0, 0, 54, 54);
+        this.muteLabel = addLabel(mute, 'MuteLabel', locale.t('hud.sound'), 18, Theme.cream, 0, 0, 54, 54);
 
         const mutePress = (event: EventTouch | EventMouse): void => {
             event.propagationStopped = true;
@@ -239,7 +269,7 @@ export class HudView {
         sg.roundRect(-27, -27, 54, 54, 14);
         sg.fill();
         sg.stroke();
-        addLabel(settings, 'SettingsLabel', '设', 19, Theme.cream, 0, 0, 54, 54);
+        addLabel(settings, 'SettingsLabel', locale.t('hud.settings'), 16, Theme.cream, 0, 0, 54, 54);
 
         const settingsPress = (event: EventTouch | EventMouse): void => {
             event.propagationStopped = true;

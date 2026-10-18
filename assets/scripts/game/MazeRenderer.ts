@@ -1,4 +1,5 @@
 import { Color, Graphics, Node, Sprite, SpriteFrame, UITransform } from 'cc';
+import { locale } from '../core/Locale';
 import { ArtAssets } from './ArtAssets';
 import { GridPos } from './MazeGenerator';
 import { MazeModel } from './MazeModel';
@@ -73,7 +74,7 @@ export class MazeRenderer {
         g.fillColor = Theme.cyan;
         g.circle(0, 0, this.cell * 0.2);
         g.fill();
-        addLabel(n, 'FragmentLabel', '音', 12, Theme.ink, 0, 0, this.cell, this.cell);
+        addLabel(n, 'FragmentLabel', locale.t('maze.fragment'), 12, Theme.ink, 0, 0, this.cell, this.cell);
         n.setPosition(this.cellToLocal(pos).x, this.cellToLocal(pos).y, 0);
         return n;
     }
@@ -95,7 +96,7 @@ export class MazeRenderer {
         g.fillColor = meta.color;
         g.circle(0, 0, this.cell * 0.17);
         g.fill();
-        addLabel(n, 'ItemLabel', meta.label, 11, Theme.ink, 0, 0, this.cell, this.cell);
+        addLabel(n, 'ItemLabel', locale.itemShort(type), 11, Theme.ink, 0, 0, this.cell, this.cell);
         n.setPosition(this.cellToLocal(pos).x, this.cellToLocal(pos).y, 0);
         return n;
     }
@@ -116,7 +117,7 @@ export class MazeRenderer {
         g.lineWidth = 2;
         g.circle(0, 0, this.cell * 0.28);
         g.stroke();
-        addLabel(n, 'PlayerLabel', '八', 14, Theme.ink, 0, 0, this.cell, this.cell);
+        addLabel(n, 'PlayerLabel', locale.t('maze.player'), 14, Theme.ink, 0, 0, this.cell, this.cell);
         return n;
     }
 
@@ -178,7 +179,7 @@ export class MazeRenderer {
         addLabel(
             this.boardRoot,
             'Entry',
-            '入口',
+            locale.t('maze.entry'),
             12,
             Theme.dim,
             this.cell * 0.5,
@@ -199,7 +200,7 @@ export class MazeRenderer {
             eg.lineWidth = 3;
             eg.circle(0, 0, this.cell * 0.3);
             eg.stroke();
-            addLabel(exit, 'ExitLabel', '门', 16, Theme.cyan, 0, 0, this.cell, this.cell);
+            addLabel(exit, 'ExitLabel', locale.t('maze.exit'), 16, Theme.cyan, 0, 0, this.cell, this.cell);
         }
         exit.active = false;
         this.exitNode = exit;

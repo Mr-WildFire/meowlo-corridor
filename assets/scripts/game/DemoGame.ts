@@ -12,8 +12,10 @@ import {
     view,
 } from 'cc';
 import { AudioDirector } from '../core/AudioDirector';
+import { locale, Language } from '../core/Locale';
 import { ProgressStore } from '../core/ProgressStore';
 import { nowSeed, Rng } from '../core/Rng';
+import { VibrationService } from '../core/VibrationService';
 import { ToneSynth } from '../core/ToneSynth';
 import { Dir, generateMaze, GridPos, samePos } from './MazeGenerator';
 import { MazeModel } from './MazeModel';
@@ -84,6 +86,8 @@ export class DemoGame extends Component {
     private readonly tone = new ToneSynth();
     private readonly music = new AudioDirector();
     private readonly progress = new ProgressStore();
+    private readonly vibration = new VibrationService();
+    private language: Language = 'zh';
     private muted = false;
     private volume = 0.7;
     private settings: SettingsView | null = null;
@@ -145,6 +149,9 @@ export class DemoGame extends Component {
         }
         this.muted = this.progress.muted;
         this.volume = this.progress.volume;
+        this.language = this.progress.language;
+        locale.setLanguage(this.language);
+        this.vibration.setEnabled(this.progress.vibration);
         this.music.setMuted(this.muted);
         this.music.setVolume(this.volume);
         this.tone.setMuted(this.muted);
@@ -214,11 +221,11 @@ export class DemoGame extends Component {
             }
             if (!this.warned60 && this.timeLeft <= 60) {
                 this.warned60 = true;
-                if (this.timeLeft > 30) this.hud.toast('还剩 1 分钟。', 2.2);
+                if (this.timeLeft > 30) this.hud.toast(locale.t('game.warn60'), 2.2);
             }
             if (!this.warned30 && this.timeLeft <= 30) {
                 this.warned30 = true;
-                this.hud.toast('只剩 30 秒，门还没开。', 2.4);
+                this.hud.toast(locale.t('game.warn30'), 2.4);
             }
         }
 
@@ -333,7 +340,7 @@ export class DemoGame extends Component {
         this.refreshFog();
         this.refreshGuide();
         this.refreshHud();
-        this.hud.toast(`找到 ${this.level.fragments} 块碎片。集齐后音乐完整，出口才会出现。`, 3.2);
+        this.hud.toast(locale.t('game.fragmentHint', { n: this.level.fragments }), 3.2);
         this.music.start();
     }
 
@@ -511,8 +518,9 @@ export class DemoGame extends Component {
         f.node.active = false;
         this.collected++;
         this.tone.pickup(this.collected - 1);
+        this.vibration.pickup();
         this.music.setUnlocked(this.collected);
-        this.hud.toast(`音轨 ${this.collected}/${this.level.fragments} · 音乐更完整了`, 2.2);
+        this.hud.toast(locale.t('game.fragmentProgress', { n: this.collected, total: this.level.fragments }), 2.2);
         this.refreshHud();
 
         if (this.collected >= this.level.fragments) this.startFinale();
@@ -524,7 +532,7 @@ export class DemoGame extends Component {
         this.timerStopped = true;
         this.state = 'finale';
         this.music.silence(1.0);
-        this.hud.toast('最后一段……', 1.0);
+        this.hud.toast(locale.t('game.finaleLast'), 1.0);
 
         this.scheduleOnce(() => {
             if (this.state !== 'finale') return;
@@ -533,7 +541,7 @@ export class DemoGame extends Component {
             this.spawnExit();
             this.state = 'playing';
             this.finale = false;
-            this.hud.toast('整首歌回来了。门开了。', 3.0);
+            this.hud.toast(locale.t('game.finaleDone'), 3.0);
             this.refreshHud();
         }, 1.0);
     }
@@ -561,7 +569,7 @@ export class DemoGame extends Component {
 
         const pos = candidates.length > 0 ? this.rng.pick(candidates) : null;
         if (!pos) {
-            this.hud.toast('出口找不到位置，请重开一局', 3);
+            this.hud.toast(locale.t('game.exitNoPos'), 3);
             return;
         }
 
@@ -590,7 +598,7 @@ export class DemoGame extends Component {
                 !this.isBlockedForExit(p),
         );
         if (!target) {
-            this.hud.toast('下水道堵住了。', 2);
+            this.hud.toast(locale.t('game.sewerBlocked'), 2);
             return;
         }
 
@@ -599,7 +607,7 @@ export class DemoGame extends Component {
         this.refreshFog();
         this.refreshGuide();
         this.refreshHud();
-        this.hud.toast('下水道：被冲到了别处。', 2.2);
+        this.hud.toast(locale.t('game.sewerTeleport'), 2.2);
     }
 
     // ---------------------------------------------------------------------
@@ -694,11 +702,11 @@ export class DemoGame extends Component {
         if (!this.hud) return;
 
         const effects: string[] = [];
-        if (this.firefly > 0) effects.push(`萤火虫 ${this.firefly.toFixed(0)}s`);
-        if (this.wine > 0) effects.push(`鲜花酒 ${this.wine.toFixed(0)}s 反向`);
-        if (this.catStrip > 0) effects.push(`猫条 ${this.catStrip.toFixed(0)}s ×2`);
-        if (this.yarn > 0) effects.push(`毛线球 ${this.yarn.toFixed(0)}s`);
-        if (this.butterflySteps > 0) effects.push(`蝴蝶 ${this.butterflySteps}步`);
+        if (this.firefly > 0) effects.push(locale.t('hud.firefly', { n: this.firefly.toFixed(0) }));
+        if (this.wine > 0) effects.push(locale.t('hud.wine', { n: this.wine.toFixed(0) }));
+        if (this.catStrip > 0) effects.push(locale.t('hud.catStrip', { n: this.catStrip.toFixed(0) }));
+        if (this.yarn > 0) effects.push(locale.t('hud.yarn', { n: this.yarn.toFixed(0) }));
+        if (this.butterflySteps > 0) effects.push(locale.t('hud.butterfly', { n: this.butterflySteps }));
 
         this.hud.setStats({
             collected: this.collected,
@@ -707,12 +715,12 @@ export class DemoGame extends Component {
             timeLeft: this.timeLeft,
             elapsed: this.elapsed,
             steps: this.player.steps,
-            effects: effects.length > 0 ? effects.join('　') : '无道具效果',
+            effects: effects.length > 0 ? effects.join('　') : locale.t('hud.none'),
             timerStopped: this.timerStopped,
             seed: this.seed,
             cols: this.level.cols,
             rows: this.level.rows,
-            levelLabel: this.level.label,
+            levelLabel: locale.difficultyName(this.level.id),
             timeLimit: this.level.timeLimit,
         });
     }
@@ -729,8 +737,9 @@ export class DemoGame extends Component {
         this.timerStopped = true;
         this.music.stop();
         this.tone.timeout();
+        this.vibration.timeout();
         this.refreshHud();
-        this.hud.toast('主人推门进来了……', 1.2);
+        this.hud.toast(locale.t('game.ownerDoor'), 1.2);
 
         // Placeholder timeout beat: the cat is lifted up, then the result card appears.
         tween(this.player.node)
@@ -741,9 +750,13 @@ export class DemoGame extends Component {
             if (this.state !== 'timeout') return;
             this.ending = false;
             this.hud.showOverlay(
-                '被主人抱回家  ☆☆☆',
-                `音轨 ${this.collected}/${this.level.fragments}　用时 ${this.timeText(this.elapsed)}\n主人循着猫叫找到了回廊深处。`,
-                '按 R 重开　M 选难度　或点击屏幕再试一次',
+                locale.t('game.timeoutTitle'),
+                locale.t('game.timeoutBody', {
+                    n: this.collected,
+                    total: this.level.fragments,
+                    time: this.timeText(this.elapsed),
+                }),
+                locale.t('game.timeoutHint'),
             );
         }, 1.5);
     }
@@ -761,9 +774,15 @@ export class DemoGame extends Component {
         const newBest = this.progress.submitWin(this.level.id, stars, this.elapsed);
 
         this.hud.showOverlay(
-            `带回家了  ${starText}`,
-            `音轨 ${this.collected}/${this.level.fragments}　步数 ${this.player.steps}　用时 ${this.timeText(this.elapsed)}${newBest ? '　新纪录！' : ''}\n主人把 CD 放进了唱机。`,
-            '按 R 重开　M 选难度　或点击屏幕再走一次',
+            locale.t('game.winTitle', { stars: starText }),
+            locale.t('game.winBody', {
+                n: this.collected,
+                total: this.level.fragments,
+                steps: this.player.steps,
+                time: this.timeText(this.elapsed),
+                best: newBest ? locale.t('game.newRecord') : '',
+            }),
+            locale.t('game.winHint'),
         );
     }
 
@@ -775,7 +794,7 @@ export class DemoGame extends Component {
         this.hud?.setMuted(this.muted);
         this.settings?.setMuted(this.muted);
         if (this.hud && this.state === 'playing') {
-            this.hud.toast(this.muted ? '已静音' : '声音已恢复', 1.4);
+            this.hud.toast(this.muted ? locale.t('game.muted') : locale.t('game.unmuted'), 1.4);
         }
         return this.muted;
     }
@@ -801,21 +820,58 @@ export class DemoGame extends Component {
             this.screenH,
             this.volume,
             this.muted,
+            this.progress.vibration,
             (v) => this.setVolume(v),
             () => this.toggleMute(),
+            () => this.toggleLanguage(),
+            () => this.toggleVibration(),
+            () => this.progress.resetRecords(),
             () => this.closeSettings(),
         );
     }
 
     private closeSettings(): void {
         if (!this.settings) return;
+        const fromMenu = this.state === 'menu';
         this.settings.dispose();
         this.settings = null;
         if (this.settingsWasPlaying && this.state === 'paused') {
             this.state = 'playing';
             this.music.resume();
+        } else if (fromMenu && this.menu) {
+            // Rebuild so best records / mute labels reflect changes made here.
+            this.menu.dispose();
+            this.menu = null;
+            this.openMenu();
         }
         this.settingsWasPlaying = false;
+    }
+
+    private toggleLanguage(): void {
+        const next: Language = locale.language === 'zh' ? 'en' : 'zh';
+        locale.setLanguage(next);
+        this.language = next;
+        this.progress.setLanguage(next);
+
+        if (this.settings) {
+            this.settings.dispose();
+            this.settings = null;
+        }
+        if (this.menu) {
+            this.menu.dispose();
+            this.menu = null;
+        }
+        this.settingsWasPlaying = false;
+        this.state = 'menu';
+        this.ending = false;
+        this.openMenu();
+    }
+
+    private toggleVibration(): boolean {
+        const enabled = !this.progress.vibration;
+        this.progress.setVibration(enabled);
+        this.vibration.setEnabled(enabled);
+        return enabled;
     }
 
     private togglePause(): void {
@@ -823,7 +879,11 @@ export class DemoGame extends Component {
         if (this.state === 'playing' && !this.finale) {
             this.state = 'paused';
             this.music.pause();
-            this.hud.showOverlay('暂停', '倒计时与道具效果已冻结。', '按 P 继续　R 重开　V 静音');
+            this.hud.showOverlay(
+                locale.t('game.pauseTitle'),
+                locale.t('game.pauseBody'),
+                locale.t('game.pauseHint'),
+            );
         } else if (this.state === 'paused') {
             this.state = 'playing';
             this.music.resume();
@@ -854,7 +914,7 @@ export class DemoGame extends Component {
         if (this.state !== 'playing') return;
         this.timeLeft = Math.max(0, this.timeLeft - 30);
         if (this.timeLeft <= 0) this.timeout();
-        else this.hud.toast('调试：剩余时间 -30 秒', 1.5);
+        else this.hud.toast(locale.t('game.debugTime'), 1.5);
     }
 
     private timeText(seconds: number): string {

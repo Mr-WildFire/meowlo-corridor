@@ -38,7 +38,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - [x] 倒计时 5:00/7:00/9:00；60s/30s 提醒；超时主人抱走并强制结束
 - [x] 难度选择菜单、时间星级结算（3/2/1 星）、M 键返回难度菜单
 - [x] 最佳星级/用时按难度保存；菜单显示“最佳 ★★☆ · 03:12”；静音设置持久化
-- [x] 设置页：主音量滑条 0–100%、静音开关、关闭；音量和静音都持久化
+- [x] 设置页：主音量滑条、静音、语言（中文/English）、震动开关、清除最佳记录；设置持久化
 - [x] 每种道具第一次拾取显示教学卡，重复拾取改为短提示
 - [x] 超时 1.5 秒占位演出（主人推门 → 老八被抱起）后再弹出结算
 - [x] 蝴蝶（10 步寻路）、萤火虫（4 格 10s）、鲜花酒（反向 10s）、猫条（2 格 10s）、下水道（随机传送）
@@ -76,6 +76,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - WAV 缺失时回退程序化音乐；原生端无 WebAudio 时静音但不影响玩法。
 - 最佳成绩/静音/音量写入 localStorage，刷新页面后仍保留；菜单、设置页与 HUD 静音按钮状态同步。
 - 设置页滑条实际改变主音量并同步 AudioSource 音量；关闭设置后继续游戏。
+- 语言切换后菜单/HUD/教学/结算全部切换为 English；震动开关在浏览器触发 `navigator.vibrate`；重置记录二次确认后清空最佳成绩。
 - 构建产物在 `build-demo/web-desktop`（本地打开需 HTTP 服务；日常开发直接使用 Cocos 预览即可）。
 
 ## 代码结构
@@ -95,7 +96,9 @@ assets/
    │  ├─ Rng.ts                   # 确定性随机
    │  ├─ AudioDirector.ts         # 6 层 AudioSource 音乐 + 静音/高潮
    │  ├─ MusicDirector.ts         # WAV 加载失败时的程序化回退
-   │  ├─ ProgressStore.ts         # 最佳星级/用时 + 静音设置持久化
+   │  ├─ ProgressStore.ts         # 最佳记录 / 音量 / 静音 / 语言 / 震动
+   │  ├─ Locale.ts                # 中文/English 文案与难度/道具名
+   │  ├─ VibrationService.ts      # 浏览器震动（原生暂 no-op）
    │  └─ ToneSynth.ts             # 浏览器占位音效（非最终音频方案）
    └─ game/
       ├─ MazeGenerator.ts         # 纯逻辑：DFS、BFS、路径、死路
@@ -111,7 +114,7 @@ assets/
       ├─ ArtAssets.ts             # resources 占位图异步加载 + 回退
       ├─ LevelConfig.ts           # 三档难度：尺寸/碎片/时间/道具数量
       ├─ MenuView.ts              # 难度选择菜单 + 最佳记录 + 设置入口
-      ├─ SettingsView.ts          # 音量滑条 / 静音设置页
+      ├─ SettingsView.ts          # 音量 / 静音 / 语言 / 震动 / 重置记录
       ├─ HudView.ts               # HUD、Toast、结算层、方向键/暂停
       ├─ ItemSystem.ts            # 道具落点与效果分发
       └─ DemoGame.ts              # 编排：状态、计时、碎片、终局、输入
