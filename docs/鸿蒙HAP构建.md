@@ -242,7 +242,7 @@ build-harmony/MeowloCorridor-1.0.0-release-signed.hap
 - ArkTS `globalThis` 不支持：Cocos 原生模板自身用法，API 26 仅警告，编译通过。
 - `px2vp` / `getContext` 已弃用：Cocos 模板 API 兼容层警告。
 - `targetSdkVersion` 未显式设置：hvigor 建议补，当前不阻塞。
-- 未签名：HAP 可打包但不可正常安装。
+- Release 包已签名；unsigned 包仅保留作对比。
 
 ## 8. 复现脚本
 
@@ -260,5 +260,42 @@ build-harmony/MeowloCorridor-1.0.0-release-signed.hap
 `-Sign` 需要 `devecocli` 已安装并执行过 `devecocli auth login`；脚本会输出 `build-harmony/MeowloCorridor-1.0.0-signed.hap`。
 
 脚本只修改生成目录 `native/engine/harmonyos-next`，不会改 `assets/` 业务代码；`native/` 与 `build-harmony/` 都在 `.gitignore` 中。
+
+## 9. 官方模拟器实测（2026-10-18）
+
+本机用 CLT 自带模拟器验证过：
+
+```powershell
+$clt = 'D:\Projects\MusicCat\temp\ohos-clt\extract\command-line-tools'
+
+# 已下载并创建
+Emulator.bat -install -deviceType phone -osVersion 'HarmonyOS 6.0.1(21)'
+Emulator.bat -create MeowloTest -deviceType phone -osVersion 'HarmonyOS 6.0.1(21)'
+Emulator.bat -start MeowloTest -noWindow
+
+hdc list targets
+# 127.0.0.1:5555
+```
+
+安装 arm64 release HAP：
+
+```text
+hdc install MeowloCorridor-1.0.0-release-signed.hap
+→ 9568347 install parse native so failed
+→ Abi type supported by the device does not match the C++ project
+```
+
+原因：
+
+- 官方 Windows 模拟器镜像是 **x86_64**
+- 当前 HAP 的 native 库是 **arm64-v8a**
+- Cocos 3.8.8 的 OpenHarmony 预编译库只带 `arm64-v8a / armeabi-v7a`
+- 尝试切 x86_64 构建时，缺少 `libmbedtls.a` 等 x86_64 预编译库，无法直接编译
+
+结论：**官方模拟器不能直接跑这个 Cocos 原生 HAP**，除非移植/重编 Cocos 的 OHOS 依赖。当前没有鸿蒙手机时，优先用：
+
+1. **AGC 云测试/云真机**（真实 arm64 设备）
+2. 借一台比赛用 HarmonyOS 手机
+3. 浏览器 Web 版做玩法预览（不能验证 HAP/原生音频）
 
 
