@@ -1,4 +1,4 @@
-﻿# 喵音回廊 · HarmonyOS HAP 构建记录
+# 喵音回廊 · HarmonyOS HAP 构建记录
 
 > 记录日期：2026-10-18　|　Cocos Creator 3.8.8　|　HarmonyOS Command Line Tools 26.0.0.821（API 26）
 
@@ -11,7 +11,8 @@
 | ArkTS 编译 | 成功（API 26 仅有 `globalThis`/弃用 API 警告） |
 | HAP 打包 | 成功 |
 | HAP 签名 | **未完成**：当前环境没有登录华为开发者账号，无法生成 AGC 调试/发布签名 |
-| 当前产物 | `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（约 43 MB，unsigned） |
+| 当前产物 | `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（45,316,286 字节，约 43.2 MB，unsigned） |
+| SHA-256 | `68CF4CAF5305D8A77CE45338490C00115855D24E3FA967A7D3D2B2BF066CD4C6` |
 | 真机安装 | 未执行（需签名 + HarmonyOS 设备/模拟器） |
 
 > 这是一个**已成功构建的 unsigned HAP**，不是“可安装比赛包”。签名步骤见 §5；签名后才能 `hdc install`。
@@ -146,6 +147,7 @@ hdc install entry/build/default/outputs/default/entry-default-signed.hap
 | 设备 | `phone` |
 | 权限 | 仅 `ohos.permission.VIBRATE` |
 | 图标 | 猫头 + 声波环，`tools/harmony_icon.png` |
+| 新增资源 | 菜单背景、CD/主人插画、5 个 SFX 已打入 HAP（v2.5） |
 
 ## 7. 已知警告（不阻塞）
 
@@ -165,3 +167,4 @@ hdc install entry/build/default/outputs/default/entry-default-signed.hap
 ```
 
 脚本只修改生成目录 `native/engine/harmonyos-next`，不会改 `assets/` 业务代码；`native/` 与 `build-harmony/` 都在 `.gitignore` 中。
+

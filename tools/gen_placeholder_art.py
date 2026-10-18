@@ -335,6 +335,77 @@ def make_exit() -> None:
     save(img, "props/exit.png")
 
 
+
+def make_menu_bg() -> None:
+    w, h = 1080, 1920
+    img = Image.new("RGBA", (w, h), (7, 5, 13, 255))
+    d = ImageDraw.Draw(img, "RGBA")
+    for y in range(h):
+        t = y / (h - 1)
+        c = (int(7 + 13 * t), int(5 + 9 * t), int(13 + 16 * t), 255)
+        d.line((0, y, w, y), fill=c)
+    vanish = (540, 700)
+    for i in range(-7, 8):
+        x = vanish[0] + i * 150
+        d.line((vanish[0] + i * 16, vanish[1], x, h), fill=(31, 23, 43, 255), width=2)
+    for y in (700, 850, 1030, 1250, 1510, 1810):
+        d.line((100, y, 980, y), fill=(28, 21, 39, 255), width=2)
+    for y in (1160, 1198, 1236, 1274, 1312):
+        d.line((90, y, 990, y), fill=(40, 30, 50, 255), width=2)
+    rng = random.Random(21)
+    for _ in range(14):
+        x = rng.randrange(130, 950)
+        y = rng.randrange(1040, 1460)
+        r = rng.randrange(8, 15)
+        d.ellipse((x - r, y - r * 0.7, x + r, y + r * 0.7), fill=(86, 70, 100, 255))
+        d.line((x + r, y - r, x + r, y - 36), fill=(72, 58, 86, 255), width=3)
+        d.line((x + r, y - 36, x + r + 20, y - 28), fill=(72, 58, 86, 255), width=3)
+    # Keep the menu background quiet; the title and cards carry the focus.
+    # Cat silhouette at the bottom.
+    cat = Image.open(OUT / "cat" / "cat_down_0.png").convert("RGBA")
+    cat.thumbnail((300, 300), Image.Resampling.LANCZOS)
+    dark = Image.new("RGBA", cat.size, (4, 3, 8, 0))
+    dark.putalpha(cat.getchannel("A").point(lambda a: int(a * 0.45)))
+    img.alpha_composite(dark, ((w - cat.width) // 2, h - cat.height + 40))
+    save(img, "ui/menu_bg.png")
+
+
+def make_cd() -> None:
+    size = 512
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img, "RGBA")
+    glow(d, 256, 256, 236, CYAN[:3], layers=12)
+    d.ellipse((38, 38, 474, 474), fill=(18, 22, 30, 255), outline=(196, 230, 236, 255), width=6)
+    for r in range(70, 225, 9):
+        d.arc((256 - r, 256 - r, 256 + r, 256 + r), 0, 360, fill=(100, 125, 145, 70), width=2)
+    for i, col in enumerate(((255, 120, 150), (255, 196, 110), (140, 230, 190), (130, 190, 255), (205, 150, 255))):
+        r = 214 - i * 12
+        d.arc((256 - r, 256 - r, 256 + r, 256 + r), 200 + i * 8, 340 - i * 8, fill=(*col, 190), width=7)
+    d.ellipse((196, 196, 316, 316), fill=(8, 12, 18, 255), outline=(225, 240, 242, 255), width=5)
+    d.ellipse((232, 232, 280, 280), fill=(5, 7, 10, 255), outline=(120, 190, 200, 255), width=3)
+    # Center highlight.
+    d.arc((70, 70, 442, 442), 205, 290, fill=(255, 255, 255, 150), width=5)
+    save(img, "props/cd.png")
+
+
+def make_owner() -> None:
+    size = 512
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img, "RGBA")
+    glow(d, 256, 300, 220, (242, 179, 92), layers=9)
+    # Warm doorway behind the owner.
+    d.rounded_rectangle((126, 28, 386, 500), radius=120, fill=(94, 58, 48, 120), outline=(242, 179, 92, 80), width=4)
+    # Silhouette: head, shoulders, arms reaching in.
+    d.ellipse((206, 82, 306, 198), fill=(18, 14, 20, 255))
+    d.polygon([(168, 190), (344, 190), (392, 512), (120, 512)], fill=(18, 14, 20, 255))
+    d.line([(178, 250), (70, 340), (38, 300)], fill=(18, 14, 20, 255), width=54, joint="curve")
+    d.line([(334, 250), (442, 340), (474, 300)], fill=(18, 14, 20, 255), width=54, joint="curve")
+    # Rim light.
+    d.arc((198, 74, 314, 206), 190, 330, fill=(255, 210, 150, 200), width=4)
+    d.line([(168, 194), (120, 500)], fill=(255, 190, 130, 120), width=3)
+    d.line([(344, 194), (392, 500)], fill=(255, 190, 130, 120), width=3)
+    save(img, "props/owner.png")
+
 def main() -> None:
     ensure_dir(OUT)
     for direction in ("down", "up", "left", "right"):
@@ -355,6 +426,9 @@ def main() -> None:
     make_yarn()
     make_feather()
     make_exit()
+    make_menu_bg()
+    make_cd()
+    make_owner()
     print(f"placeholder art written to {OUT}")
 
 

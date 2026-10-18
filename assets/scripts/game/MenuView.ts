@@ -1,4 +1,4 @@
-import { Color, EventMouse, EventTouch, Graphics, Label, Node } from 'cc';
+import { Color, EventMouse, EventTouch, Graphics, Label, Node, resources, Sprite, SpriteFrame, UITransform } from 'cc';
 import { locale } from '../core/Locale';
 import type { BestRecord } from '../core/ProgressStore';
 import { DIFFICULTY_ORDER, Difficulty, LEVELS, LevelConfig } from './LevelConfig';
@@ -27,6 +27,18 @@ export class MenuView {
         bg.fillColor = new Color(5, 3, 10, 250);
         bg.rect(-screenW * 0.5, -screenH * 0.5, screenW, screenH);
         bg.fill();
+
+        // Optional illustrated corridor background; labels stay above it.
+        const bgNode = makeNode('MenuBg', this.root, 0, 0, screenW, screenH);
+        bgNode.setSiblingIndex(0);
+        const bgSprite = bgNode.addComponent(Sprite);
+        bgSprite.sizeMode = Sprite.SizeMode.CUSTOM;
+        bgSprite.trim = false;
+        resources.load('art/ui/menu_bg/spriteFrame', SpriteFrame, (err, frame) => {
+            if (err || !frame || !bgNode.isValid) return;
+            bgSprite.spriteFrame = frame;
+            bgNode.getComponent(UITransform)!.setContentSize(screenW, screenH);
+        });
 
         addLabel(this.root, 'MenuTitle', locale.t('menu.title'), 58, Theme.cream, 0, screenH * 0.5 - 190, 900, 80);
         addLabel(this.root, 'MenuSub', locale.t('menu.subtitle'), 24, Theme.cyan, 0, screenH * 0.5 - 255, 900, 44);

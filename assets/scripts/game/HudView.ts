@@ -1,4 +1,4 @@
-import { Color, EventMouse, EventTouch, Graphics, Label, Node } from 'cc';
+import { Color, EventMouse, EventTouch, Graphics, Label, Node, Sprite, SpriteFrame, UITransform } from 'cc';
 import { locale } from '../core/Locale';
 import { ItemType } from './DemoTypes';
 import { ITEM_META } from './ItemSystem';
@@ -49,6 +49,7 @@ export class HudView {
     private readonly overlayTitle: Label;
     private readonly overlayBody: Label;
     private readonly overlayHint: Label;
+    private readonly overlayArt: Sprite;
     private muteLabel!: Label;
     private toastToken = 0;
 
@@ -136,6 +137,12 @@ export class HudView {
         overlayBg.rect(-screenW * 0.5, -screenH * 0.5, screenW, screenH);
         overlayBg.fill();
 
+        const artNode = makeNode('OverlayArt', this.overlayRoot, 0, 300, 240, 240);
+        this.overlayArt = artNode.addComponent(Sprite);
+        this.overlayArt.sizeMode = Sprite.SizeMode.CUSTOM;
+        this.overlayArt.trim = false;
+        artNode.active = false;
+
         this.overlayTitle = addLabel(this.overlayRoot, 'OverlayTitle', '', 46, Theme.cream, 0, 110, 980, 80);
         this.overlayBody = addLabel(this.overlayRoot, 'OverlayBody', '', 24, Theme.cream, 0, 20, 980, 80);
         this.overlayHint = addLabel(this.overlayRoot, 'OverlayHint', '', 18, Theme.dim, 0, -70, 980, 60);
@@ -194,11 +201,23 @@ export class HudView {
         }, 2.8);
     }
 
-    showOverlay(title: string, body: string, hint: string): void {
+    showOverlay(title: string, body: string, hint: string, art: SpriteFrame | null = null): void {
         this.overlayTitle.string = title;
         this.overlayBody.string = body;
         this.overlayHint.string = hint;
+        this.setOverlayArt(art);
         this.overlayRoot.active = true;
+    }
+
+    setOverlayArt(frame: SpriteFrame | null): void {
+        const node = this.overlayArt.node;
+        if (!frame) {
+            node.active = false;
+            return;
+        }
+        this.overlayArt.spriteFrame = frame;
+        node.getComponent(UITransform)!.setContentSize(240, 240);
+        node.active = true;
     }
 
     hideOverlay(): void {

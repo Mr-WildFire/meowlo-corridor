@@ -15,6 +15,7 @@ import { AudioDirector } from '../core/AudioDirector';
 import { locale, Language } from '../core/Locale';
 import { ProgressStore } from '../core/ProgressStore';
 import { nowSeed, Rng } from '../core/Rng';
+import { SfxDirector } from '../core/SfxDirector';
 import { VibrationService } from '../core/VibrationService';
 import { ToneSynth } from '../core/ToneSynth';
 import { Dir, generateMaze, GridPos, samePos } from './MazeGenerator';
@@ -87,6 +88,7 @@ export class DemoGame extends Component {
     private readonly music = new AudioDirector();
     private readonly progress = new ProgressStore();
     private readonly vibration = new VibrationService();
+    private sfx: SfxDirector | null = null;
     private language: Language = 'zh';
     private muted = false;
     private volume = 0.7;
@@ -152,6 +154,11 @@ export class DemoGame extends Component {
         this.language = this.progress.language;
         locale.setLanguage(this.language);
         this.vibration.setEnabled(this.progress.vibration);
+        this.sfx = new SfxDirector(this.node);
+        this.sfx.setMuted(this.muted);
+        this.sfx.setVolume(this.volume);
+        void this.sfx.load();
+
         this.music.setMuted(this.muted);
         this.music.setVolume(this.volume);
         this.tone.setMuted(this.muted);
@@ -187,6 +194,7 @@ export class DemoGame extends Component {
     }
 
     private startLevel(difficulty: Difficulty): void {
+        this.sfx?.click();
         this.difficulty = difficulty;
         this.level = LEVELS[difficulty];
         if (this.menu) {
@@ -518,6 +526,7 @@ export class DemoGame extends Component {
         f.node.active = false;
         this.collected++;
         this.tone.pickup(this.collected - 1);
+        this.sfx?.pickup();
         this.vibration.pickup();
         this.music.setUnlocked(this.collected);
         this.hud.toast(locale.t('game.fragmentProgress', { n: this.collected, total: this.level.fragments }), 2.2);
@@ -737,6 +746,7 @@ export class DemoGame extends Component {
         this.timerStopped = true;
         this.music.stop();
         this.tone.timeout();
+        this.sfx?.timeout();
         this.vibration.timeout();
         this.refreshHud();
         this.hud.toast(locale.t('game.ownerDoor'), 1.2);
@@ -757,6 +767,7 @@ export class DemoGame extends Component {
                     time: this.timeText(this.elapsed),
                 }),
                 locale.t('game.timeoutHint'),
+                this.art?.owner ?? null,
             );
         }, 1.5);
     }
@@ -767,6 +778,7 @@ export class DemoGame extends Component {
         this.finale = false;
         this.music.stop();
         this.tone.climax();
+        this.sfx?.win();
 
         const ratio = this.timeLeft / this.level.timeLimit;
         const stars = ratio >= 0.4 ? 3 : ratio >= 0.15 ? 2 : 1;
@@ -783,6 +795,7 @@ export class DemoGame extends Component {
                 best: newBest ? locale.t('game.newRecord') : '',
             }),
             locale.t('game.winHint'),
+            this.art?.cd ?? null,
         );
     }
 
@@ -791,6 +804,7 @@ export class DemoGame extends Component {
         this.progress.setMuted(this.muted);
         this.music.setMuted(this.muted);
         this.tone.setMuted(this.muted);
+        this.sfx?.setMuted(this.muted);
         this.hud?.setMuted(this.muted);
         this.settings?.setMuted(this.muted);
         if (this.hud && this.state === 'playing') {
@@ -804,6 +818,7 @@ export class DemoGame extends Component {
         this.progress.setVolume(this.volume);
         this.music.setVolume(this.volume);
         this.tone.setVolume(this.volume);
+        this.sfx?.setVolume(this.volume);
     }
 
     private openSettings(): void {

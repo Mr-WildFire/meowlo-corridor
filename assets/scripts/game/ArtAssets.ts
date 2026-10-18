@@ -11,6 +11,8 @@ export interface ArtAssets {
     wall: SpriteFrame | null;
     fragment: SpriteFrame | null;
     exit: SpriteFrame | null;
+    cd: SpriteFrame | null;
+    owner: SpriteFrame | null;
     items: Partial<Record<ItemType, SpriteFrame>>;
 }
 
@@ -68,11 +70,13 @@ export async function loadArtAssets(): Promise<ArtAssets> {
           }
         : null;
 
-    const [floor, wall, fragment, exit] = await Promise.all([
+    const [floor, wall, fragment, exit, cd, owner] = await Promise.all([
         loadSprite('art/board/floor/spriteFrame'),
         loadSprite('art/board/wall/spriteFrame'),
         loadSprite('art/props/fragment/spriteFrame'),
         loadSprite('art/props/exit/spriteFrame'),
+        loadSprite('art/props/cd/spriteFrame'),
+        loadSprite('art/props/owner/spriteFrame'),
     ]);
 
     const itemEntries = await Promise.all(
@@ -87,13 +91,15 @@ export async function loadArtAssets(): Promise<ArtAssets> {
         if (frame) items[type] = frame;
     }
 
-    const result: ArtAssets = { cat, floor, wall, fragment, exit, items };
+    const result: ArtAssets = { cat, floor, wall, fragment, exit, cd, owner, items };
     console.log('[ArtAssets] loaded', {
         cat: !!cat,
         floor: !!floor,
         wall: !!wall,
         fragment: !!fragment,
         exit: !!exit,
+        cd: !!cd,
+        owner: !!owner,
         items: Object.keys(items).length,
     });
     return result;

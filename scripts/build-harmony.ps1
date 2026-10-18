@@ -23,6 +23,9 @@ if (-not $SkipCocos) {
     Write-Host '[1/4] Cocos harmonyos-next build...'
     $env:ELECTRON_RUN_AS_NODE = $null
     $buildArg = 'platform=harmonyos-next;debug=true;startScene=2f49f9e3-9684-4fe5-b3ad-af39aedccc7c;buildPath=project://build-harmony'
+    # Cocos tries to replace build-harmony/harmonyos-next/assets with a symlink;
+    # Windows fails if the old output is still present.
+    Remove-Item (Join-Path $Project 'build-harmony\harmonyos-next') -Recurse -Force -ErrorAction SilentlyContinue
     $oldEap = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
     & $CocosCreator --project $Project --build $buildArg 2>&1 | Out-Host

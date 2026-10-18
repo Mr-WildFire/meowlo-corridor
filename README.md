@@ -43,18 +43,18 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - [x] 超时 1.5 秒占位演出（主人推门 → 老八被抱起）后再弹出结算
 - [x] 蝴蝶（10 步寻路）、萤火虫（4 格 10s）、鲜花酒（反向 10s）、猫条（2 格 10s）、下水道（随机传送）
 - [x] 小鱼干（+20s）、毛线球（15s 路径记忆）
-- [x] 占位美术：老八四方向 4 帧行走、地板、墙、碎片、8 种道具、出口；`ArtAssets` 加载失败时回退 Graphics
+- [x] 占位美术：老八四方向 4 帧行走、地板、墙、碎片、8 种道具、出口；菜单背景、完整 CD、主人剪影；`ArtAssets` 加载失败时回退 Graphics
 - [x] HUD：音轨进度、倒计时、步数、效果、种子、难度/时间上限
 - [x] 键盘 + 滑动 + 鼠标拖动 + 屏幕方向键；暂停按钮、重开、超时/通关结算
 - [x] 6 层占位 WAV 音乐（AudioSource）：底轨 + 每块碎片解锁一层 + 1 秒静音 + 高潮；暂停/继续/切难度会停/恢复
-- [x] WAV 加载失败时回退到 WebAudio 程序化音乐；浏览器占位音效：拾取、脚步、超时
+- [x] WAV 加载失败时回退到 WebAudio 程序化音乐；文件式 SFX（AudioSource）：点击、拾取、通关、超时、脚步，原生 HAP 也可用
 - [x] 正式 OGG 音频仍未接入，后续按同名资源替换 WAV 即可
 
 ## 尚未实现（后续阶段）
 
-- 正式 6 层 OGG 音乐、高潮/音效（当前是程序化占位版）
+- 正式 6 层 OGG 音乐、高潮/音效（当前是占位 WAV / 文件式 SFX）
 - 正式 2D 美术（替换当前扁平占位图）、正式 UI、主人/结局正式演出
-- 道具的正式音效（教学卡目前是占位版）
+- 道具的正式音效（当前是文件式占位 SFX）
 - 鸿蒙 **签名 HAP** 与真机安装/触摸/音频验证（unsigned HAP 已构建，见下）
 - 正式存档、演示模式
 
@@ -65,19 +65,20 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - Cocos Creator 3.8.8 `web-desktop` 构建成功，场景 `Main` 正确注册并运行 `DemoGame`。
 - 浏览器实测：场景加载无异常；走一步、集齐 3/4/5 碎片、1 秒终局、出口生成、进入出口通关、超时结算均可触发。
 - 遮罩 Shader 已实际加载并出图（柔边圆形视野）；萤火虫 4 格半径切换、屏幕方向键事件均已验证。
-- 占位美术已实际加载：老八 16 帧、地板/墙、碎片、8 种道具、出口均正常显示；老八移动时切换方向与行走帧。
+- 占位美术已实际加载：老八 16 帧、地板/墙、碎片、8 种道具、出口、菜单背景、CD、主人剪影均正常显示；老八移动时切换方向与行走帧。
 - 三档难度、难度菜单、3/4/5 碎片、5/7/9 分钟、60s/30s 提醒、3/2/1 星结算均已实际验证。
 - 困难 19×23 地板完整覆盖棋盘，墙体/碎片/道具随格子尺寸正确缩放。
 - 困难碎片不再扎堆：12 个种子中任意两块最小 BFS 距离 48–79，四象限均有分布；出口 6–9 步。
 - 首次道具教学卡、超时 1.5 秒演出与延迟结算已实际验证。
 - `FogView / GuideView / InputRouter` 拆分后，遮罩、蝴蝶路径、移动与菜单流程回归通过。
 - 6 个 WAV 音轨成功加载为 AudioSource；用户手势后同时播放，6 路时间差 < 1ms；1 秒静音→高潮流程实际跑通。
+- 5 个 SFX WAV 成功加载到 `SfxDirector`；菜单选择/拾取/通关/超时会触发对应 AudioSource 音效；通关 CD、超时主人插画显示正常。
 - WAV 缺失时回退程序化音乐；原生端无 WebAudio 时静音但不影响玩法。
 - 最佳成绩/静音/音量写入 localStorage，刷新页面后仍保留；菜单、设置页与 HUD 静音按钮状态同步。
 - 设置页滑条实际改变主音量并同步 AudioSource 音量；关闭设置后继续游戏。
 - 语言切换后菜单/HUD/教学/结算全部切换为 English；震动开关在浏览器触发 `navigator.vibrate`；重置记录二次确认后清空最佳成绩。
 - 构建产物在 `build-demo/web-desktop`（本地打开需 HTTP 服务；日常开发直接使用 Cocos 预览即可）。
-- **HarmonyOS HAP 已成功构建**：Cocos `harmonyos-next` → OHOS NDK native 编译 → ArkTS 编译 → `hvigor assembleHap` 成功；产物 `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（约 43 MB）。当前未签名，签名与真机安装步骤见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
+- **HarmonyOS HAP 已成功构建**：Cocos `harmonyos-next` → OHOS NDK native 编译 → ArkTS 编译 → `hvigor assembleHap` 成功；产物 `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（45,316,286 字节，约 43.2 MB，内含新菜单背景/CD/主人/5 个 SFX）。当前未签名，签名与真机安装步骤见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
 
 ## 代码结构
 
@@ -87,14 +88,17 @@ assets/
 ├─ resources/
 │  ├─ effects/fog.effect          # 2 格柔边遮罩 Shader
 │  ├─ audio/music/                # 6 层占位 WAV + climax
+│  ├─ audio/sfx/                  # 点击/拾取/通关/超时/脚步
 │  └─ art/                        # 脚本生成的占位 PNG
 │     ├─ cat/                     # 老八 4 方向 × 4 帧
 │     ├─ board/                   # floor.png / wall.png
-│     └─ props/                   # 碎片/道具/出口
+│     ├─ ui/                      # menu_bg.png
+│     └─ props/                   # 碎片/道具/CD/主人/出口
 └─ scripts/
    ├─ core/
    │  ├─ Rng.ts                   # 确定性随机
    │  ├─ AudioDirector.ts         # 6 层 AudioSource 音乐 + 静音/高潮
+   │  ├─ SfxDirector.ts           # 文件式 SFX：点击/拾取/通关/超时/脚步
    │  ├─ MusicDirector.ts         # WAV 加载失败时的程序化回退
    │  ├─ ProgressStore.ts         # 最佳记录 / 音量 / 静音 / 语言 / 震动
    │  ├─ Locale.ts                # 中文/English 文案与难度/道具名
@@ -123,7 +127,7 @@ scripts/build-harmony.ps1          # Cocos → patch → hvigor HAP 构建
 docs/鸿蒙HAP构建.md                # 工具链、构建、签名与真机步骤
 ```
 
-占位图由 `tools/gen_placeholder_art.py` 生成，占位音乐由 `tools/gen_placeholder_audio.py` 生成；正式资源到位后按同名路径替换即可。
+占位图由 `tools/gen_placeholder_art.py` 生成，占位音乐由 `tools/gen_placeholder_audio.py` 生成，占位音效由 `tools/gen_placeholder_sfx.py` 生成；正式资源到位后按同名路径替换即可。
 
 ## 说明
 
@@ -131,5 +135,6 @@ docs/鸿蒙HAP构建.md                # 工具链、构建、签名与真机步
 - 已从单文件拆出 `MazeRenderer / PlayerController / HudView / ItemSystem / FogView / GuideView / InputRouter`，并新增 `ArtAssets / CatView / LevelConfig / MenuView`；`DemoGame` 现在主要负责一局流程编排。
 - 占位图不是最终美术，只用于把 Sprite/动画/资源加载管线跑通；正式图到位后按 `assets/resources/art/` 同名路径替换即可。
 - 遮罩优先使用 `resources/effects/fog.effect` 的 Shader；如果设备/构建不支持自定义材质，会自动回退到格子遮罩，保证仍可玩。
-- 音频只在浏览器预览中发声（`AudioContext`）；鸿蒙真机暂时静音，M2 接入 OGG 分轨后替换。
+- 音乐与 SFX 均走 `AudioSource`，HAP 内已打包；鸿蒙真机的 WAV 解码/延迟/音频焦点仍未验证。
 - 场景通过脚本 UUID 绑定组件：`assets/scripts/game/DemoGame.ts.meta` 中的 UUID 与 `Main.scene` 里的压缩 UUID 必须保持一致；不要手动改其中一个。
+
