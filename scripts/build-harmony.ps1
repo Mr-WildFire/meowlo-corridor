@@ -5,7 +5,8 @@ param(
     [string]$CltPath = $env:DEVECO_CLI_CLT_PATH,
     [string]$DevecoCli = '',
     [switch]$SkipCocos,
-    [switch]$Sign
+    [switch]$Sign,
+    [switch]$Release
 )
 
 $ErrorActionPreference = 'Stop'
@@ -14,7 +15,8 @@ $hapUnsigned = Join-Path $native 'entry\build\default\outputs\default\entry-defa
 $hapSigned = Join-Path $native 'entry\build\default\outputs\default\entry-default-signed.hap'
 $outDir = Join-Path $Project 'build-harmony'
 $outUnsigned = Join-Path $outDir 'MeowloCorridor-1.0.0-unsigned.hap'
-$outSigned = Join-Path $outDir 'MeowloCorridor-1.0.0-signed.hap'
+$outSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-1.0.0-release-signed.hap' } else { 'MeowloCorridor-1.0.0-signed.hap' })
+$buildMode = if ($Release) { 'release' } else { 'debug' }
 
 if (-not $CltPath) { $CltPath = 'C:\command-line-tools' }
 $hvigor = Join-Path $CltPath 'bin\hvigorw.bat'
@@ -119,10 +121,11 @@ if ($Sign) {
     Write-Host 'Generating signing materials with Huawei account...'
     $oldEap = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
+    $signType = if ($Release) { 'release' } else { 'debug' }
     if ($DevecoCli -like '*.js') {
-        & (Join-Path $CltPath 'tool\node\node.exe') $DevecoCli signature generate --product default --type debug 2>&1 | Out-Host
+        & (Join-Path $CltPath 'tool\node\node.exe') $DevecoCli signature generate --product default --type $signType 2>&1 | Out-Host
     } else {
-        & $DevecoCli signature generate --product default --type debug 2>&1 | Out-Host
+        & $DevecoCli signature generate --product default --type $signType 2>&1 | Out-Host
     }
     $signExit = $LASTEXITCODE
     $ErrorActionPreference = $oldEap
@@ -136,7 +139,7 @@ Push-Location $native
 try {
     $oldEap = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    & $hvigor assembleHap --mode module -p product=default -p module=entry@default -p buildMode=debug --no-daemon 2>&1 | Out-Host
+    & $hvigor assembleHap --mode module -p product=default -p module=entry@default -p "buildMode=$buildMode" --no-daemon 2>&1 | Out-Host
     $ErrorActionPreference = $oldEap
 } finally {
     Pop-Location

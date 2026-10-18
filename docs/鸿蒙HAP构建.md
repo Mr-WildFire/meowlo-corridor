@@ -164,6 +164,65 @@ hdc install entry/build/default/outputs/default/entry-default-signed.hap
 
 > 调试签名绑定设备 UDID；换手机需要重新签名。发布/评委自行安装需要 AGC 发布证书 + Profile。
 
+### 5.3 通用 Release 包（其他人体验/打分）
+
+**真正的“通用包”是 release profile 签名的 HAP，不绑定单台手机 UDID。**
+
+但 release Profile 必须由 AGC 审核/签发，`devecocli signature generate --type release` 只能生成前半部分：
+
+- `.p12` 私钥
+- `.csr` 证书请求
+- `.cer` 本地证书
+- `build-profile.json5` 里的 `default_release` 配置
+
+它**不能自动生成 `.p7b`**。当前环境已经生成到：
+
+```text
+C:\Users\m1523\.ohos\config\*_release=.csr
+C:\Users\m1523\.ohos\config\*_release=.cer
+C:\Users\m1523\.ohos\config\*_release=.p12
+```
+
+下一步在 AGC 完成：
+
+1. 打开 AppGallery Connect → 我的应用。
+2. 确认已创建应用，包名必须是：
+
+```text
+com.meowlo.corridor
+```
+
+3. 进入“证书、APP ID 和 Profile” → 证书 → 发布证书。
+4. 上传刚生成的 `.csr`，申请发布证书，下载 `.cer`。
+5. 进入 Profile → 发布 Profile，选择该应用和发布证书，下载 `.p7b`。
+6. 把 `build-profile.json5` 的 `default_release.material` 改成：
+
+```json5
+certpath: "下载的发布证书.cer",
+profile: "下载的发布Profile.p7b",
+```
+
+`storeFile` 仍指向生成的 `.p12`，密码不要改。
+
+7. 打 release 包：
+
+```powershell
+cd D:\Projects\MusicCat
+
+.\scripts\build-harmony.ps1 -SkipCocos -Release `
+  -CltPath 'D:\Projects\MusicCat\temp\ohos-clt\extract\command-line-tools'
+```
+
+输出：
+
+```text
+build-harmony/MeowloCorridor-1.0.0-release-signed.hap
+```
+
+这个 HAP **不含单台设备 UDID 限制**，可以给多台兼容设备使用；但 release 包的实际安装方式取决于 Profile 的分发类型（AppGallery / 企业分发等），不一定能直接 `hdc install`。
+
+> 如果只是几位评委用自己的手机现场体验，**更稳的折中方案**是：收集这些手机的 UDID，加入一个 debug Profile，重新签一次名；一个 debug HAP 可以同时装进 Profile 里的多台设备。缺点是每换一台新手机都要重签。
+
 ## 6. 应用配置（已写入）
 
 | 项 | 值 |
