@@ -60,13 +60,21 @@ Write-Utf8NoBom $appFile $app
 
 $appString = Join-Path $native 'AppScope\resources\base\element\string.json'
 $entryString = Join-Path $native 'entry\src\main\resources\base\element\string.json'
+# Build from Unicode code points so Windows PowerShell 5.1 cannot turn the
+# label into question marks while reading this UTF-8-BOM script.
+$appName = [string]([char]0x55B5) + [char]0x97F3 + [char]0x56DE + [char]0x5ECA
 foreach ($f in @($appString, $entryString)) {
-    if (Test-Path $f) {
-        $text = Get-Content -LiteralPath $f -Raw -Encoding UTF8
-        $text = $text.Replace('"value": "MusicCat"', '"value": "喵音回廊"')
-        $text = $text.Replace('"value": "鍠甸煶鍥炲粖"', '"value": "喵音回廊"')
-        Write-Utf8NoBom $f $text
-    }
+    if (-not (Test-Path $f)) { continue }
+    $text = Get-Content -LiteralPath $f -Raw -Encoding UTF8
+    # Replace by key, not by the previous value: Cocos may introduce a new
+    # mojibake string after each full build. Cover both the app label and the
+    # ability label used by the launcher.
+    $text = [regex]::Replace(
+        $text,
+        '("name"\s*:\s*"(?:app_name|MainAbility_label)"\s*,\s*"value"\s*:\s*")[^"]*(")',
+        ('${1}' + $appName + '${2}')
+    )
+    Write-Utf8NoBom $f $text
 }
 
 $moduleFile = Join-Path $native 'entry\src\main\module.json5'
