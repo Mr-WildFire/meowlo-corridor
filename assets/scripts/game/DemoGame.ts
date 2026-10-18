@@ -136,6 +136,8 @@ export class DemoGame extends Component {
         this.ending = false;
         this.unscheduleAllCallbacks();
         Tween.stopAll();
+        // Hide the frozen run behind the opaque menu instead of showing ghost HUD text.
+        if (this.demoRoot) this.demoRoot.active = false;
         if (this.menu) this.menu.dispose();
         this.menu = new MenuView(
             this.node,
@@ -224,7 +226,9 @@ export class DemoGame extends Component {
         this.screenH = view.getVisibleSize().height;
         this.seed = nowSeed();
         this.rng = new Rng(this.seed);
-        this.model = new MazeModel(generateMaze(this.level.cols, this.level.rows, this.seed, 0.05));
+        this.model = new MazeModel(
+            generateMaze(this.level.cols, this.level.rows, this.seed, this.level.braid),
+        );
 
         this.state = 'playing';
         this.finale = false;

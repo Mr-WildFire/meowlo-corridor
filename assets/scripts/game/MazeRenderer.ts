@@ -1,4 +1,4 @@
-import { Color, Graphics, Node, Sprite, UITransform } from 'cc';
+import { Color, Graphics, Node, Sprite, SpriteFrame, UITransform } from 'cc';
 import { ArtAssets } from './ArtAssets';
 import { GridPos } from './MazeGenerator';
 import { MazeModel } from './MazeModel';
@@ -60,11 +60,7 @@ export class MazeRenderer {
     createFragmentNode(pos: GridPos): Node {
         if (this.art?.fragment) {
             const n = makeNode('Fragment', this.boardRoot, 0, 0, this.cell * 0.9, this.cell * 0.9);
-            const s = n.addComponent(Sprite);
-            s.spriteFrame = this.art.fragment;
-            s.sizeMode = Sprite.SizeMode.CUSTOM;
-            s.type = Sprite.Type.SIMPLE;
-            s.trim = false;
+            this.addSprite(n, this.cell * 0.9, this.cell * 0.9, this.art.fragment);
             n.setPosition(this.cellToLocal(pos).x, this.cellToLocal(pos).y, 0);
             return n;
         }
@@ -85,11 +81,7 @@ export class MazeRenderer {
     createItemNode(type: ItemType, pos: GridPos): Node {
         if (this.art?.items[type]) {
             const n = makeNode('Item_' + type, this.boardRoot, 0, 0, this.cell * 0.78, this.cell * 0.78);
-            const s = n.addComponent(Sprite);
-            s.spriteFrame = this.art.items[type]!;
-            s.sizeMode = Sprite.SizeMode.CUSTOM;
-            s.type = Sprite.Type.SIMPLE;
-            s.trim = false;
+            this.addSprite(n, this.cell * 0.78, this.cell * 0.78, this.art.items[type]!);
             n.setPosition(this.cellToLocal(pos).x, this.cellToLocal(pos).y, 0);
             return n;
         }
@@ -111,11 +103,7 @@ export class MazeRenderer {
     createPlayerNode(): Node {
         if (this.art?.cat) {
             const n = makeNode('Player', this.boardRoot, 0, 0, this.cell * 1.1, this.cell * 1.1);
-            const s = n.addComponent(Sprite);
-            s.spriteFrame = this.art.cat.down[0];
-            s.sizeMode = Sprite.SizeMode.CUSTOM;
-            s.type = Sprite.Type.SIMPLE;
-            s.trim = false;
+            this.addSprite(n, this.cell * 1.1, this.cell * 1.1, this.art.cat.down[0]);
             return n;
         }
 
@@ -162,11 +150,7 @@ export class MazeRenderer {
         if (this.art?.floor) {
             const floor = makeNode('Floor', this.boardRoot, 0, 0, this.boardW, this.boardH);
             floor.getComponent(UITransform)!.setAnchorPoint(0, 0);
-            const s = floor.addComponent(Sprite);
-            s.spriteFrame = this.art.floor;
-            s.sizeMode = Sprite.SizeMode.CUSTOM;
-            s.type = Sprite.Type.SIMPLE;
-            s.trim = false;
+            this.addSprite(floor, this.boardW, this.boardH, this.art.floor);
         } else {
             const floor = addGraphics(this.boardRoot, 'Floor', 0, 0, this.boardW, this.boardH);
             floor.fillColor = Theme.floor;
@@ -205,11 +189,7 @@ export class MazeRenderer {
 
         const exit = makeNode('Exit', this.boardRoot, 0, 0, this.cell * 1.2, this.cell * 1.2);
         if (this.art?.exit) {
-            const s = exit.addComponent(Sprite);
-            s.spriteFrame = this.art.exit;
-            s.sizeMode = Sprite.SizeMode.CUSTOM;
-            s.type = Sprite.Type.SIMPLE;
-            s.trim = false;
+            this.addSprite(exit, this.cell * 1.2, this.cell * 1.2, this.art.exit);
         } else {
             const eg = exit.addComponent(Graphics);
             eg.fillColor = new Color(143, 211, 214, 60);
@@ -269,11 +249,23 @@ export class MazeRenderer {
     private addWall(cx: number, cy: number, angle: number, thickness: number): void {
         if (!this.art?.wall) return;
         const n = makeNode('Wall', this.boardRoot, cx, cy, this.cell, thickness);
-        const s = n.addComponent(Sprite);
-        s.spriteFrame = this.art.wall;
+        this.addSprite(n, this.cell, thickness, this.art.wall);
+        n.angle = angle;
+    }
+
+    /**
+     * Assigning spriteFrame resets UITransform to the texture size.
+     * Force our desired size again so floor/wall/entities scale with the grid.
+     */
+    private addSprite(node: Node, width: number, height: number, frame: SpriteFrame): Sprite {
+        const ut = node.getComponent(UITransform)!;
+        ut.setContentSize(width, height);
+        const s = node.addComponent(Sprite);
         s.sizeMode = Sprite.SizeMode.CUSTOM;
         s.type = Sprite.Type.SIMPLE;
         s.trim = false;
-        n.angle = angle;
+        s.spriteFrame = frame;
+        ut.setContentSize(width, height);
+        return s;
     }
 }

@@ -10,6 +10,8 @@ export interface LevelConfig {
     rows: number;
     fragments: number;
     timeLimit: number;
+    /** Extra loops carved into the perfect maze (0–0.1). */
+    braid: number;
     itemCounts: Partial<Record<ItemType, number>>;
 }
 
@@ -26,6 +28,7 @@ export const LEVELS: Record<Difficulty, LevelConfig> = {
         rows: 13,
         fragments: 3,
         timeLimit: 300,
+        braid: 0,
         itemCounts: {
             butterfly: 1,
             firefly: 1,
@@ -39,10 +42,11 @@ export const LEVELS: Record<Difficulty, LevelConfig> = {
         id: 'normal',
         label: '标准',
         subtitle: '完整的回廊体验',
-        cols: 13,
-        rows: 17,
+        cols: 15,
+        rows: 19,
         fragments: 4,
         timeLimit: 420,
+        braid: 0.05,
         itemCounts: {
             butterfly: 1,
             firefly: 1,
@@ -57,13 +61,14 @@ export const LEVELS: Record<Difficulty, LevelConfig> = {
         id: 'hard',
         label: '困难',
         subtitle: '更大、更暗、更少回头路',
-        cols: 17,
-        rows: 19,
+        cols: 19,
+        rows: 23,
         fragments: 5,
         timeLimit: 540,
+        braid: 0.08,
         itemCounts: {
             butterfly: 2,
-            firefly: 1,
+            firefly: 2,
             wine: 1,
             catStrip: 2,
             sewer: 2,

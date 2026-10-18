@@ -55,11 +55,11 @@ export class MenuView {
         g.fill();
         g.stroke();
 
-        addLabel(node, 'MenuLabel', level.label, 27, Theme.cream, 0, 18, 520, 40);
+        addLabel(node, 'MenuLabel', `${level.label} · ${level.subtitle}`, 22, Theme.cream, 0, 18, 520, 40);
         addLabel(
             node,
             'MenuDesc',
-            `${level.fragments} 块碎片 · ${timeText(level.timeLimit)} · ${level.subtitle}`,
+            `${level.cols}×${level.rows} · ${level.fragments} 块碎片 · ${timeText(level.timeLimit)}`,
             16,
             Theme.dim,
             0,
