@@ -12,6 +12,7 @@ import {
     view,
 } from 'cc';
 import { AudioDirector } from '../core/AudioDirector';
+import { ProgressStore } from '../core/ProgressStore';
 import { nowSeed, Rng } from '../core/Rng';
 import { ToneSynth } from '../core/ToneSynth';
 import { Dir, generateMaze, GridPos, samePos } from './MazeGenerator';
@@ -81,6 +82,8 @@ export class DemoGame extends Component {
     private hudAcc = 0;
     private readonly tone = new ToneSynth();
     private readonly music = new AudioDirector();
+    private readonly progress = new ProgressStore();
+    private muted = false;
 
     onLoad(): void {
         // Demo uses SHOW_ALL so the portrait board is fully visible in any preview window.
@@ -110,6 +113,7 @@ export class DemoGame extends Component {
         this.inputRouter = new InputRouter({
             onDirection: (dir) => this.handleDirection(dir),
             onPause: () => this.togglePause(),
+            onMute: () => this.toggleMute(),
             onRestart: () => this.restart(),
             onMenu: () => this.openMenu(),
             onDifficulty: (difficulty) => {
@@ -134,6 +138,9 @@ export class DemoGame extends Component {
         } catch (e) {
             console.warn('[DemoGame] audio load failed, using procedural fallback', e);
         }
+        this.muted = this.progress.muted;
+        this.music.setMuted(this.muted);
+        this.tone.setMuted(this.muted);
         this.openMenu();
     }
 
@@ -152,7 +159,10 @@ export class DemoGame extends Component {
             this.node,
             this.screenW,
             this.screenH,
+            this.progress.allBest(),
+            this.muted,
             (difficulty) => this.startLevel(difficulty),
+            () => this.toggleMute(),
         );
     }
 
@@ -294,9 +304,11 @@ export class DemoGame extends Component {
             {
                 onDirection: (dir) => this.handleDirection(dir),
                 onPause: () => this.togglePause(),
+                onMute: () => this.toggleMute(),
             },
             (cb, delay) => this.scheduleOnce(cb, delay),
         );
+        this.hud.setMuted(this.muted);
 
         this.refreshFog();
         this.refreshGuide();
@@ -726,12 +738,25 @@ export class DemoGame extends Component {
         const ratio = this.timeLeft / this.level.timeLimit;
         const stars = ratio >= 0.4 ? 3 : ratio >= 0.15 ? 2 : 1;
         const starText = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+        const newBest = this.progress.submitWin(this.level.id, stars, this.elapsed);
 
         this.hud.showOverlay(
             `带回家了  ${starText}`,
-            `音轨 ${this.collected}/${this.level.fragments}　步数 ${this.player.steps}　用时 ${this.timeText(this.elapsed)}\n主人把 CD 放进了唱机。`,
+            `音轨 ${this.collected}/${this.level.fragments}　步数 ${this.player.steps}　用时 ${this.timeText(this.elapsed)}${newBest ? '　新纪录！' : ''}\n主人把 CD 放进了唱机。`,
             '按 R 重开　M 选难度　或点击屏幕再走一次',
         );
+    }
+
+    private toggleMute(): boolean {
+        this.muted = !this.muted;
+        this.progress.setMuted(this.muted);
+        this.music.setMuted(this.muted);
+        this.tone.setMuted(this.muted);
+        this.hud?.setMuted(this.muted);
+        if (this.hud && this.state === 'playing') {
+            this.hud.toast(this.muted ? '已静音' : '声音已恢复', 1.4);
+        }
+        return this.muted;
     }
 
     private togglePause(): void {
@@ -739,7 +764,7 @@ export class DemoGame extends Component {
         if (this.state === 'playing' && !this.finale) {
             this.state = 'paused';
             this.music.pause();
-            this.hud.showOverlay('暂停', '倒计时与道具效果已冻结。', '按 P 继续　R 重开');
+            this.hud.showOverlay('暂停', '倒计时与道具效果已冻结。', '按 P 继续　R 重开　V 静音');
         } else if (this.state === 'paused') {
             this.state = 'playing';
             this.music.resume();

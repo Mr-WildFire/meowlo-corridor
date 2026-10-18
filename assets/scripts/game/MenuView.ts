@@ -1,18 +1,23 @@
-import { Color, EventMouse, EventTouch, Graphics, Node } from 'cc';
+import { Color, EventMouse, EventTouch, Graphics, Label, Node } from 'cc';
+import type { BestRecord } from '../core/ProgressStore';
 import { DIFFICULTY_ORDER, Difficulty, LEVELS, LevelConfig } from './LevelConfig';
 import { Theme, addLabel, makeNode, timeText } from './UiKit';
 
 /**
- * Pre-run difficulty selector. Uses Graphics/Label until the final UI art exists.
+ * Pre-run difficulty selector + best records + mute toggle.
  */
 export class MenuView {
     private readonly root: Node;
+    private readonly muteLabel: Label;
 
     constructor(
         parent: Node,
         private readonly screenW: number,
         private readonly screenH: number,
+        private readonly best: Partial<Record<Difficulty, BestRecord>>,
+        muted: boolean,
         private readonly onSelect: (difficulty: Difficulty) => void,
+        private readonly onToggleMute: () => boolean,
     ) {
         this.root = makeNode('MenuRoot', parent, 0, 0, screenW, screenH);
 
@@ -25,7 +30,7 @@ export class MenuView {
         addLabel(this.root, 'MenuSub', '选择难度', 24, Theme.cyan, 0, screenH * 0.5 - 255, 900, 44);
 
         DIFFICULTY_ORDER.forEach((id, index) => {
-            this.addButton(LEVELS[id], 80 - index * 118);
+            this.addButton(LEVELS[id], 80 - index * 132);
         });
 
         addLabel(
@@ -39,34 +44,62 @@ export class MenuView {
             1000,
             36,
         );
+
+        const mute = makeNode('MenuMute', this.root, screenW * 0.5 - 64, screenH * 0.5 - 80, 50, 50);
+        const mg = mute.addComponent(Graphics);
+        mg.fillColor = new Color(40, 31, 54, 220);
+        mg.strokeColor = new Color(170, 158, 145, 180);
+        mg.lineWidth = 2;
+        mg.circle(0, 0, 25);
+        mg.fill();
+        mg.stroke();
+        this.muteLabel = addLabel(mute, 'MenuMuteLabel', muted ? '静' : '音', 19, Theme.cream, 0, 0, 50, 50);
+
+        const press = (event: EventTouch | EventMouse): void => {
+            event.propagationStopped = true;
+            this.setMuted(this.onToggleMute());
+        };
+        mute.on(Node.EventType.TOUCH_END, press, this);
+        mute.on(Node.EventType.MOUSE_UP, press, this);
     }
 
     dispose(): void {
         if (this.root?.isValid) this.root.destroy();
     }
 
+    private setMuted(muted: boolean): void {
+        this.muteLabel.string = muted ? '静' : '音';
+        this.muteLabel.color = muted ? Theme.rose : Theme.cream;
+    }
+
     private addButton(level: LevelConfig, y: number): void {
-        const node = makeNode('Menu_' + level.id, this.root, 0, y, 560, 94);
+        const node = makeNode('Menu_' + level.id, this.root, 0, y, 560, 112);
         const g = node.addComponent(Graphics);
         g.fillColor = new Color(38, 28, 50, 235);
         g.strokeColor = level.id === 'hard' ? Theme.rose : Theme.wall;
         g.lineWidth = 2;
-        g.roundRect(-280, -47, 560, 94, 18);
+        g.roundRect(-280, -56, 560, 112, 18);
         g.fill();
         g.stroke();
 
-        addLabel(node, 'MenuLabel', `${level.label} · ${level.subtitle}`, 22, Theme.cream, 0, 18, 520, 40);
+        addLabel(node, 'MenuLabel', `${level.label} · ${level.subtitle}`, 22, Theme.cream, 0, 30, 520, 36);
         addLabel(
             node,
             'MenuDesc',
             `${level.cols}×${level.rows} · ${level.fragments} 块碎片 · ${timeText(level.timeLimit)}`,
-            16,
+            15,
             Theme.dim,
             0,
-            -20,
+            2,
             520,
-            32,
+            28,
         );
+
+        const rec = this.best[level.id];
+        const bestText = rec
+            ? `最佳 ${'★'.repeat(rec.stars)}${'☆'.repeat(3 - rec.stars)} · ${timeText(rec.elapsed)}`
+            : '最佳 —';
+        addLabel(node, 'MenuBest', bestText, 13, rec ? Theme.amber : Theme.dim, 0, -34, 520, 24);
 
         const press = (event: EventTouch | EventMouse): void => {
             event.propagationStopped = true;

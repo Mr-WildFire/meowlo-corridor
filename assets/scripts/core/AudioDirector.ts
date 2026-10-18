@@ -37,6 +37,9 @@ export class AudioDirector {
     private climaxSource: AudioSource | null = null;
     private climaxClip: AudioClip | null = null;
     private loaded = false;
+    private unlocked = 0;
+    private muted = false;
+    private silent = true;
     private readonly fallback = new MusicDirector();
 
     async load(parent: Node): Promise<boolean> {
@@ -73,29 +76,38 @@ export class AudioDirector {
             this.fallback.start();
             return;
         }
-        this.sources.forEach((source, i) => {
+        this.silent = false;
+        this.unlocked = 0;
+        this.sources.forEach((source) => {
             try {
                 source.stop();
                 source.loop = true;
-                source.volume = i === 0 ? 0.5 : 0;
+                source.volume = 0;
                 source.play();
             } catch {
                 // Audio is optional.
             }
         });
+        this.applyVolumes();
     }
 
     setUnlocked(n: number): void {
+        this.unlocked = n;
         if (!this.loaded) {
             this.fallback.setUnlocked(n);
             return;
         }
-        this.sources.forEach((source, i) => {
-            source.volume = i === 0 ? 0.5 : i <= n ? 0.32 : 0;
-        });
+        this.applyVolumes();
+    }
+
+    setMuted(muted: boolean): void {
+        this.muted = muted;
+        this.applyVolumes();
+        if (!this.loaded) this.fallback.setMuted(muted);
     }
 
     silence(seconds: number): void {
+        this.silent = true;
         if (!this.loaded) {
             this.fallback.silence(seconds);
             return;
@@ -104,6 +116,7 @@ export class AudioDirector {
     }
 
     climax(): void {
+        this.silent = true;
         if (!this.loaded) {
             this.fallback.climax();
             return;
@@ -115,7 +128,7 @@ export class AudioDirector {
                 // ignore
             }
         }
-        if (this.climaxSource && this.climaxClip) {
+        if (!this.muted && this.climaxSource && this.climaxClip) {
             this.climaxSource.playOneShot(this.climaxClip, 0.95);
         }
     }
@@ -133,10 +146,13 @@ export class AudioDirector {
             this.fallback.resume();
             return;
         }
+        this.silent = false;
         for (const source of this.sources) source.play();
+        this.applyVolumes();
     }
 
     stop(): void {
+        this.silent = true;
         if (!this.loaded) {
             this.fallback.stop();
             return;
@@ -150,6 +166,13 @@ export class AudioDirector {
             }
         }
         if (this.climaxSource) this.climaxSource.stop();
+    }
+
+    private applyVolumes(): void {
+        if (!this.loaded) return;
+        this.sources.forEach((source, i) => {
+            source.volume = this.silent || this.muted ? 0 : i === 0 ? 0.5 : i <= this.unlocked ? 0.32 : 0;
+        });
     }
 
     dispose(): void {

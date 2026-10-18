@@ -7,6 +7,7 @@ import { Theme, addLabel, makeNode, timeText } from './UiKit';
 export interface HudCallbacks {
     onDirection(dir: Dir): void;
     onPause(): void;
+    onMute(): void;
 }
 
 export interface HudStats {
@@ -46,6 +47,7 @@ export class HudView {
     private readonly overlayTitle: Label;
     private readonly overlayBody: Label;
     private readonly overlayHint: Label;
+    private muteLabel!: Label;
     private toastToken = 0;
 
     constructor(
@@ -68,7 +70,7 @@ export class HudView {
         addLabel(
             this.root,
             'Help',
-            'WASD / 方向键 / 滑动移动　P 暂停　R 重开　M 难度　C 测试集齐　T 扣 30 秒',
+            'WASD / 方向键 / 滑动移动　P 暂停　R 重开　M 难度　V 静音　C 测试集齐　T 扣 30 秒',
             15,
             Theme.dim,
             0,
@@ -172,6 +174,12 @@ export class HudView {
         this.overlayRoot.active = false;
     }
 
+    setMuted(muted: boolean): void {
+        if (!this.muteLabel) return;
+        this.muteLabel.string = muted ? '静' : '音';
+        this.muteLabel.color = muted ? Theme.rose : Theme.cream;
+    }
+
     dispose(): void {
         this.toastToken++;
         this.tutorialToken++;
@@ -204,6 +212,23 @@ export class HudView {
         };
         pause.on(Node.EventType.TOUCH_END, pausePress, this);
         pause.on(Node.EventType.MOUSE_UP, pausePress, this);
+
+        const mute = makeNode('MuteButton', this.root, this.screenW * 0.5 - 66, this.screenH * 0.5 - 78, 54, 54);
+        const mg = mute.addComponent(Graphics);
+        mg.fillColor = new Color(40, 31, 54, 220);
+        mg.strokeColor = new Color(170, 158, 145, 180);
+        mg.lineWidth = 2;
+        mg.roundRect(-27, -27, 54, 54, 14);
+        mg.fill();
+        mg.stroke();
+        this.muteLabel = addLabel(mute, 'MuteLabel', '音', 20, Theme.cream, 0, 0, 54, 54);
+
+        const mutePress = (event: EventTouch | EventMouse): void => {
+            event.propagationStopped = true;
+            this.callbacks.onMute();
+        };
+        mute.on(Node.EventType.TOUCH_END, mutePress, this);
+        mute.on(Node.EventType.MOUSE_UP, mutePress, this);
     }
 
     private createDirectionButton(dir: Dir, text: string, x: number, y: number, size: number): void {

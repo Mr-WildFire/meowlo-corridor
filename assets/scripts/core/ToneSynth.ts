@@ -7,6 +7,7 @@ export class ToneSynth {
     private ctx: any = null;
     private master: any = null;
     private enabled = true;
+    private muted = false;
 
     private ensure(): boolean {
         if (!this.enabled) return false;
@@ -22,7 +23,7 @@ export class ToneSynth {
         try {
             this.ctx = new Ctor();
             this.master = this.ctx.createGain();
-            this.master.gain.value = 0.22;
+            this.master.gain.value = this.muted ? 0 : 0.22;
             this.master.connect(this.ctx.destination);
             return true;
         } catch (e) {
@@ -56,6 +57,16 @@ export class ToneSynth {
             osc.stop(t0 + duration + 0.05);
         } catch (e) {
             // Audio is a nice-to-have in the skeleton; never break gameplay.
+        }
+    }
+
+    setMuted(muted: boolean): void {
+        this.muted = muted;
+        if (!this.master) return;
+        try {
+            this.master.gain.value = muted ? 0 : 0.22;
+        } catch {
+            // ignore
         }
     }
 

@@ -22,6 +22,7 @@ export class MusicDirector {
     private playing = false;
     private unlocked = 0;
     private mutedUntil = 0;
+    private muted = false;
     private enabled = true;
 
     start(): void {
@@ -32,7 +33,7 @@ export class MusicDirector {
         this.step = 0;
         this.nextTime = this.ctx.currentTime + 0.08;
         this.master.gain.cancelScheduledValues(this.ctx.currentTime);
-        this.master.gain.setValueAtTime(0.16, this.ctx.currentTime);
+        this.master.gain.setValueAtTime(this.muted ? 0 : 0.16, this.ctx.currentTime);
         this.setUnlocked(0);
         this.resumeContext();
         this.timer = setInterval(() => this.schedule(), 25);
@@ -52,6 +53,14 @@ export class MusicDirector {
         }
     }
 
+    setMuted(muted: boolean): void {
+        this.muted = muted;
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        this.master.gain.cancelScheduledValues(now);
+        this.master.gain.setTargetAtTime(muted ? 0 : 0.16, now, 0.05);
+    }
+
     /** Fade music out for the finale silence. */
     silence(seconds: number): void {
         if (!this.ensure()) return;
@@ -66,7 +75,7 @@ export class MusicDirector {
 
     /** Loud final chord after the 1s silence; the loop stops underneath it. */
     climax(): void {
-        if (!this.ensure()) return;
+        if (this.muted || !this.ensure()) return;
         this.stopScheduler();
         this.playing = false;
         this.mutedUntil = 0;
