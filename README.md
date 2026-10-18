@@ -61,6 +61,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - 占位美术已实际加载：老八 16 帧、地板/墙、碎片、8 种道具、出口均正常显示；老八移动时切换方向与行走帧。
 - 三档难度、难度菜单、3/4/5 碎片、5/7/9 分钟、60s/30s 提醒、3/2/1 星结算均已实际验证。
 - 首次道具教学卡、超时 1.5 秒演出与延迟结算已实际验证。
+- `FogView / GuideView / InputRouter` 拆分后，遮罩、蝴蝶路径、移动与菜单流程回归通过。
 - 构建产物在 `build-demo/web-desktop`（本地打开需 HTTP 服务；日常开发直接使用 Cocos 预览即可）。
 
 ## 代码结构
@@ -84,6 +85,9 @@ assets/
       ├─ DemoTypes.ts             # 碎片/道具/状态类型
       ├─ UiKit.ts                 # 颜色、节点/Graphics/Label 工厂
       ├─ MazeRenderer.ts          # 棋盘、墙、碎片/道具/角色/出口视图
+      ├─ FogView.ts               # 2 格 Shader 遮罩 + 格子回退
+      ├─ GuideView.ts             # 毛线轨迹、出口光柱、蝴蝶路径
+      ├─ InputRouter.ts           # 键盘/触摸/鼠标事件路由
       ├─ PlayerController.ts      # 逐格移动、Tween、步数、传送
       ├─ CatView.ts               # 老八四方向行走帧动画
       ├─ ArtAssets.ts             # resources 占位图异步加载 + 回退
@@ -99,7 +103,7 @@ assets/
 ## 说明
 
 - `DemoGame` 现在是编排层；场景本身仍很轻，运行时生成全部节点。M1 后续替换为 Prefab/正式场景。
-- 已从单文件拆出 `MazeRenderer / PlayerController / HudView / ItemSystem`，并新增 `ArtAssets / CatView / LevelConfig / MenuView`；后续新增道具/UI/移动表现不需要继续堆在 `DemoGame` 里。
+- 已从单文件拆出 `MazeRenderer / PlayerController / HudView / ItemSystem / FogView / GuideView / InputRouter`，并新增 `ArtAssets / CatView / LevelConfig / MenuView`；`DemoGame` 现在主要负责一局流程编排。
 - 占位图不是最终美术，只用于把 Sprite/动画/资源加载管线跑通；正式图到位后按 `assets/resources/art/` 同名路径替换即可。
 - 遮罩优先使用 `resources/effects/fog.effect` 的 Shader；如果设备/构建不支持自定义材质，会自动回退到格子遮罩，保证仍可玩。
 - 音频只在浏览器预览中发声（`AudioContext`）；鸿蒙真机暂时静音，M2 接入 OGG 分轨后替换。

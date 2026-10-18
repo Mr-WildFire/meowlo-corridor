@@ -1,27 +1,14 @@
 import {
     _decorator,
     Camera,
-    Color,
     Component,
-    EffectAsset,
-    EventKeyboard,
-    EventMouse,
-    EventTouch,
-    Graphics,
-    Input,
-    input,
-    KeyCode,
-    Material,
     Node,
     profiler,
     ResolutionPolicy,
-    resources,
     sys,
     tween,
     Tween,
-    Vec2,
     Vec3,
-    Vec4,
     view,
 } from 'cc';
 import { nowSeed, Rng } from '../core/Rng';
@@ -35,6 +22,9 @@ import { HudView } from './HudView';
 import { ItemContext, ItemSystem } from './ItemSystem';
 import { ArtAssets, loadArtAssets } from './ArtAssets';
 import { CatView } from './CatView';
+import { FogView } from './FogView';
+import { GuideView } from './GuideView';
+import { InputRouter } from './InputRouter';
 import { Difficulty, LEVELS, LevelConfig } from './LevelConfig';
 import { MenuView } from './MenuView';
 import { makeNode, posKey } from './UiKit';
@@ -55,6 +45,9 @@ export class DemoGame extends Component {
     private catView: CatView | null = null;
     private art: ArtAssets | null = null;
     private hud!: HudView;
+    private fog!: FogView;
+    private guide!: GuideView;
+    private inputRouter!: InputRouter;
     private readonly itemSystem = new ItemSystem();
     private itemContext!: ItemContext;
     private difficulty: Difficulty = 'normal';
@@ -64,12 +57,6 @@ export class DemoGame extends Component {
     private screenW = 1080;
     private screenH = 1920;
     private demoRoot: Node | null = null;
-
-    private fogGfx!: Graphics;
-    private fogMat: Material | null = null;
-    private fogShaderReady = false;
-    private guideGfx!: Graphics;
-    private trailGfx!: Graphics;
 
     private exitPos: GridPos | null = null;
     private fragments: FragmentView[] = [];
@@ -90,7 +77,6 @@ export class DemoGame extends Component {
     private butterflySteps = 0;
     private visitedTrail: GridPos[] = [];
 
-    private touchStart: Vec2 | null = null;
     private hudAcc = 0;
     private readonly tone = new ToneSynth();
 
@@ -119,11 +105,18 @@ export class DemoGame extends Component {
             cameraNode.setWorldPosition(this.screenW * 0.5, this.screenH * 0.5, 1000);
         }
 
-        input.on(Input.EventType.KEY_DOWN, this.onKeyDown, this);
-        input.on(Input.EventType.TOUCH_START, this.onTouchStart, this);
-        input.on(Input.EventType.TOUCH_END, this.onTouchEnd, this);
-        input.on(Input.EventType.MOUSE_DOWN, this.onMouseDown, this);
-        input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+        this.inputRouter = new InputRouter({
+            onDirection: (dir) => this.handleDirection(dir),
+            onPause: () => this.togglePause(),
+            onRestart: () => this.restart(),
+            onMenu: () => this.openMenu(),
+            onDifficulty: (difficulty) => {
+                if (this.state === 'menu') this.startLevel(difficulty);
+            },
+            onDebugCollect: () => this.debugCollectAll(),
+            onDebugTime: () => this.debugSubtractTime(),
+            onTap: () => this.handleTap(),
+        });
     }
 
     async start(): Promise<void> {
@@ -137,6 +130,7 @@ export class DemoGame extends Component {
     }
 
     private openMenu(): void {
+        if (this.state === 'menu' && this.menu) return;
         this.state = 'menu';
         this.finale = false;
         this.ending = false;
@@ -162,11 +156,9 @@ export class DemoGame extends Component {
     }
 
     onDestroy(): void {
-        input.off(Input.EventType.KEY_DOWN, this.onKeyDown, this);
-        input.off(Input.EventType.TOUCH_START, this.onTouchStart, this);
-        input.off(Input.EventType.TOUCH_END, this.onTouchEnd, this);
-        input.off(Input.EventType.MOUSE_DOWN, this.onMouseDown, this);
-        input.off(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+        this.inputRouter?.dispose();
+        this.fog?.dispose();
+        this.guide?.dispose();
         if (this.menu) this.menu.dispose();
         this.tone.dispose();
         Tween.stopAll();
@@ -252,8 +244,6 @@ export class DemoGame extends Component {
         this.exitPos = null;
         this.fragments = [];
         this.items = [];
-        this.fogMat = null;
-        this.fogShaderReady = false;
 
         this.demoRoot = makeNode('DemoRoot', this.node, 0, 0, this.screenW, this.screenH);
         this.catView = null;
@@ -343,31 +333,12 @@ export class DemoGame extends Component {
     }
 
     private createFogAndGuide(): void {
-        this.trailGfx = this.renderer.addOverlayGraphics('YarnTrail');
-        this.fogGfx = this.renderer.addOverlayGraphics('Fog');
-        this.guideGfx = this.renderer.addOverlayGraphics('Guide');
-        this.loadFogEffect();
-    }
-
-    private loadFogEffect(): void {
-        resources.load('effects/fog', EffectAsset, (err, effect) => {
-            if (err || !effect || !this.fogGfx) {
-                console.warn('[DemoGame] fog shader unavailable, using cell fallback', err);
-                return;
-            }
-
-            const mat = new Material();
-            mat.initialize({ effectAsset: effect });
-            this.fogGfx.customMaterial = mat;
-            this.fogMat = this.fogGfx.getMaterialInstance(0) || mat;
-            this.fogShaderReady = true;
-
-            this.fogGfx.clear();
-            this.fogGfx.fillColor = new Color(255, 255, 255, 255);
-            this.fogGfx.rect(0, 0, this.renderer.boardW, this.renderer.boardH);
-            this.fogGfx.fill();
-            this.refreshFog();
-        });
+        const trailGfx = this.renderer.addOverlayGraphics('YarnTrail');
+        const fogGfx = this.renderer.addOverlayGraphics('Fog');
+        const guideGfx = this.renderer.addOverlayGraphics('Guide');
+        this.fog = new FogView(fogGfx, this.model, this.renderer.cell, this.renderer.boardW, this.renderer.boardH);
+        this.guide = new GuideView(trailGfx, guideGfx, this.model);
+        this.fog.loadEffect();
     }
 
     // ---------------------------------------------------------------------
@@ -582,103 +553,21 @@ export class DemoGame extends Component {
     // ---------------------------------------------------------------------
 
     private refreshFog(): void {
-        const radius = this.firefly > 0 ? 4 : 2;
-
-        if (this.fogShaderReady && this.fogMat) {
-            this.fogMat.setProperty(
-                'u_player',
-                new Vec4(
-                    (this.player.position.x + 0.5) * this.renderer.cell,
-                    (this.player.position.y + 0.5) * this.renderer.cell,
-                    this.renderer.cell,
-                    radius,
-                ),
-            );
-            return;
-        }
-
-        const limit = (radius + 0.35) * (radius + 0.35);
-        this.fogGfx.clear();
-        this.fogGfx.fillColor = new Color(5, 3, 10, 255);
-
-        for (const cell of this.model.data.cells) {
-            const dx = cell.x - this.player.position.x;
-            const dy = cell.y - this.player.position.y;
-            if (dx * dx + dy * dy <= limit) continue;
-            this.fogGfx.rect(
-                cell.x * this.renderer.cell,
-                cell.y * this.renderer.cell,
-                this.renderer.cell,
-                this.renderer.cell,
-            );
-        }
-        this.fogGfx.fill();
+        this.fog.setTarget(this.player.position, this.firefly > 0 ? 4 : 2);
     }
 
     private refreshGuide(): void {
-        this.guideGfx.clear();
-        this.trailGfx.clear();
-
-        if (this.yarn > 0 && this.visitedTrail.length > 1) {
-            this.trailGfx.strokeColor = new Color(201, 106, 122, 150);
-            this.trailGfx.lineWidth = 3;
-            const first = this.renderer.cellToLocal(this.visitedTrail[0]);
-            this.trailGfx.moveTo(first.x, first.y);
-            for (let i = 1; i < this.visitedTrail.length; i++) {
-                const p = this.renderer.cellToLocal(this.visitedTrail[i]);
-                this.trailGfx.lineTo(p.x, p.y);
-            }
-            this.trailGfx.stroke();
-        }
-
-        if (this.exitPos) {
-            const p = this.renderer.cellToLocal(this.exitPos);
-            this.guideGfx.strokeColor = new Color(143, 211, 214, 170);
-            this.guideGfx.lineWidth = 6;
-            this.guideGfx.moveTo(p.x, p.y);
-            this.guideGfx.lineTo(p.x, this.renderer.boardH + 100);
-            this.guideGfx.stroke();
-            this.guideGfx.fillColor = new Color(143, 211, 214, 80);
-            this.guideGfx.circle(p.x, p.y, this.renderer.cell * 0.42);
-            this.guideGfx.fill();
-        }
-
-        if (this.butterflySteps > 0) {
-            const path = this.butterflyPath();
-            if (path.length > 1) {
-                const first = this.renderer.cellToLocal(path[0]);
-                this.guideGfx.strokeColor = new Color(143, 211, 214, 210);
-                this.guideGfx.lineWidth = 4;
-                this.guideGfx.moveTo(first.x, first.y);
-                const count = Math.min(4, path.length - 1);
-                for (let i = 1; i <= count; i++) {
-                    const p = this.renderer.cellToLocal(path[i]);
-                    this.guideGfx.lineTo(p.x, p.y);
-                    this.guideGfx.circle(p.x, p.y, 4);
-                }
-                this.guideGfx.stroke();
-                this.guideGfx.fillColor = new Color(143, 211, 214, 255);
-                this.guideGfx.fill();
-            }
-        }
-    }
-
-    private butterflyPath(): GridPos[] {
-        let target: GridPos | null = null;
-        let best = Number.POSITIVE_INFINITY;
-
-        for (const f of this.fragments) {
-            if (f.collected) continue;
-            const d = this.model.distance(this.player.position, f.pos);
-            if (d < best) {
-                best = d;
-                target = f.pos;
-            }
-        }
-
-        if (!target && this.exitPos) target = this.exitPos;
-        if (!target) return [];
-        return this.model.path(this.player.position, target);
+        this.guide.render({
+            player: this.player.position,
+            exit: this.exitPos,
+            fragments: this.fragments,
+            yarnActive: this.yarn > 0,
+            butterflyActive: this.butterflySteps > 0,
+            visitedTrail: this.visitedTrail,
+            cellToLocal: (p) => this.renderer.cellToLocal(p),
+            boardH: this.renderer.boardH,
+            cell: this.renderer.cell,
+        });
     }
 
     private refreshHud(): void {
@@ -767,6 +656,7 @@ export class DemoGame extends Component {
     }
 
     private restart(): void {
+        if (this.state === 'menu') return;
         this.build();
     }
 
@@ -812,91 +702,17 @@ export class DemoGame extends Component {
             return;
         }
         if (this.state !== 'playing' || this.finale) return;
-        this.touchStart = null;
         void this.tryMove(dir);
     }
 
-    private onKeyDown(event: EventKeyboard): void {
-        const key = event.keyCode;
-
-        if (this.state === 'menu') {
-            if (key === KeyCode.DIGIT_1 || key === KeyCode.NUM_1) this.startLevel('easy');
-            else if (key === KeyCode.DIGIT_2 || key === KeyCode.NUM_2) this.startLevel('normal');
-            else if (key === KeyCode.DIGIT_3 || key === KeyCode.NUM_3) this.startLevel('hard');
-            return;
-        }
-        if (this.ending) return;
-
-        if (key === KeyCode.KEY_M) {
-            this.openMenu();
-            return;
-        }
-        if (key === KeyCode.KEY_R) {
-            this.restart();
-            return;
-        }
-        if (key === KeyCode.KEY_P) {
-            this.togglePause();
-            return;
-        }
-        if (key === KeyCode.KEY_C) {
-            this.debugCollectAll();
-            return;
-        }
-        if (key === KeyCode.KEY_T) {
-            this.debugSubtractTime();
-            return;
-        }
-        if (this.state === 'won' || this.state === 'timeout') return;
-        if (this.state !== 'playing' || this.finale) return;
-
-        if (key === KeyCode.ARROW_UP || key === KeyCode.KEY_W) void this.tryMove(0);
-        else if (key === KeyCode.ARROW_RIGHT || key === KeyCode.KEY_D) void this.tryMove(1);
-        else if (key === KeyCode.ARROW_DOWN || key === KeyCode.KEY_S) void this.tryMove(2);
-        else if (key === KeyCode.ARROW_LEFT || key === KeyCode.KEY_A) void this.tryMove(3);
-    }
-
-    private onTouchStart(event: EventTouch): void {
-        this.touchStart = event.getUILocation();
-    }
-
-    private onTouchEnd(event: EventTouch): void {
-        const start = this.touchStart;
-        if (!start) return;
-        this.touchStart = null;
-        this.handlePointerEnd(start, event.getUILocation());
-    }
-
-    private onMouseDown(event: EventMouse): void {
-        this.touchStart = event.getUILocation();
-    }
-
-    private onMouseUp(event: EventMouse): void {
-        const start = this.touchStart;
-        if (!start) return;
-        this.touchStart = null;
-        this.handlePointerEnd(start, event.getUILocation());
-    }
-
-    private handlePointerEnd(start: Vec2, end: Vec2): void {
-        if (this.ending) return;
+    private handleTap(): void {
+        if (this.ending || this.state === 'menu') return;
         if (this.state === 'won' || this.state === 'timeout') {
             this.restart();
             return;
         }
         if (this.state === 'paused') {
             this.togglePause();
-            return;
-        }
-        if (this.state !== 'playing' || this.finale) return;
-
-        const dx = end.x - start.x;
-        const dy = end.y - start.y;
-        if (Math.abs(dx) < 30 && Math.abs(dy) < 30) return;
-        if (Math.abs(dx) > Math.abs(dy)) {
-            void this.tryMove(dx > 0 ? 1 : 3);
-        } else {
-            void this.tryMove(dy > 0 ? 0 : 2);
         }
     }
 }
