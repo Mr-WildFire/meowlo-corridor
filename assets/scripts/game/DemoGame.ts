@@ -11,6 +11,7 @@ import {
     Vec3,
     view,
 } from 'cc';
+import { MusicDirector } from '../core/MusicDirector';
 import { nowSeed, Rng } from '../core/Rng';
 import { ToneSynth } from '../core/ToneSynth';
 import { Dir, generateMaze, GridPos, samePos } from './MazeGenerator';
@@ -79,6 +80,7 @@ export class DemoGame extends Component {
 
     private hudAcc = 0;
     private readonly tone = new ToneSynth();
+    private readonly music = new MusicDirector();
 
     onLoad(): void {
         // Demo uses SHOW_ALL so the portrait board is fully visible in any preview window.
@@ -136,6 +138,7 @@ export class DemoGame extends Component {
         this.ending = false;
         this.unscheduleAllCallbacks();
         Tween.stopAll();
+        this.music.stop();
         // Hide the frozen run behind the opaque menu instead of showing ghost HUD text.
         if (this.demoRoot) this.demoRoot.active = false;
         if (this.menu) this.menu.dispose();
@@ -162,6 +165,7 @@ export class DemoGame extends Component {
         this.fog?.dispose();
         this.guide?.dispose();
         if (this.menu) this.menu.dispose();
+        this.music.dispose();
         this.tone.dispose();
         Tween.stopAll();
     }
@@ -215,6 +219,7 @@ export class DemoGame extends Component {
     private build(): void {
         this.unscheduleAllCallbacks();
         Tween.stopAll();
+        this.music.stop();
         if (this.hud) this.hud.dispose();
 
         if (this.demoRoot) {
@@ -291,6 +296,7 @@ export class DemoGame extends Component {
         this.refreshGuide();
         this.refreshHud();
         this.hud.toast(`找到 ${this.level.fragments} 块碎片。集齐后音乐完整，出口才会出现。`, 3.2);
+        this.music.start();
     }
 
     private placeFragments(occupied: Set<string>): void {
@@ -467,6 +473,7 @@ export class DemoGame extends Component {
         f.node.active = false;
         this.collected++;
         this.tone.pickup(this.collected - 1);
+        this.music.setUnlocked(this.collected);
         this.hud.toast(`音轨 ${this.collected}/${this.level.fragments} · 音乐更完整了`, 2.2);
         this.refreshHud();
 
@@ -478,11 +485,12 @@ export class DemoGame extends Component {
         this.finale = true;
         this.timerStopped = true;
         this.state = 'finale';
+        this.music.silence(1.0);
         this.hud.toast('最后一段……', 1.0);
 
         this.scheduleOnce(() => {
             if (this.state !== 'finale') return;
-            this.tone.climax();
+            this.music.climax();
             this.clearTemporaryEffects();
             this.spawnExit();
             this.state = 'playing';
@@ -681,6 +689,7 @@ export class DemoGame extends Component {
         this.finale = false;
         this.ending = true;
         this.timerStopped = true;
+        this.music.stop();
         this.tone.timeout();
         this.refreshHud();
         this.hud.toast('主人推门进来了……', 1.2);
@@ -705,6 +714,7 @@ export class DemoGame extends Component {
         if (this.state === 'won' || this.state === 'timeout') return;
         this.state = 'won';
         this.finale = false;
+        this.music.stop();
         this.tone.climax();
 
         const ratio = this.timeLeft / this.level.timeLimit;
@@ -722,9 +732,11 @@ export class DemoGame extends Component {
         if (this.ending) return;
         if (this.state === 'playing' && !this.finale) {
             this.state = 'paused';
+            this.music.pause();
             this.hud.showOverlay('暂停', '倒计时与道具效果已冻结。', '按 P 继续　R 重开');
         } else if (this.state === 'paused') {
             this.state = 'playing';
+            this.music.resume();
             this.hud.hideOverlay();
         }
     }
@@ -743,6 +755,7 @@ export class DemoGame extends Component {
             this.collected++;
             this.tone.pickup(this.collected - 1);
         }
+        this.music.setUnlocked(this.collected);
         this.refreshHud();
         if (this.collected >= this.level.fragments) this.startFinale();
     }
