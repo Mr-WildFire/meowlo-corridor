@@ -106,20 +106,48 @@ EBUSY: resource busy or locked ... oh_modules\@ohos\hypium
 
 ### 5.1 DevEco Studio 自动签名（推荐）
 
-1. 用 DevEco Studio 打开 `native/engine/harmonyos-next`。
-2. 登录华为开发者账号。
-3. `File > Project Structure > Signing Configs`，勾选 `Automatically generate signature`。
-4. 连接比赛手机并开启 USB 调试；自动签名会登记设备 UDID。
-5. `Build > Build Hap(s)/APP(s) > Build Hap(s)`。
+1. 先跑完 Cocos 构建（`build-harmony.ps1` 的步骤 1），再打开 `native/engine/harmonyos-next`。
+2. 登录华为开发者账号（需要已完成开发者实名/团队）。
+3. 连接比赛手机，开启开发者模式 + USB 调试，并在手机上允许调试。
+4. `File > Project Structure > Signing Configs`，选择 `default` 产品，勾选 `Automatically generate signature`。
+5. DevEco 会生成 `.p12/.cer/.p7b`，并把 `signingConfigs` 写入 `build-profile.json5`。
+6. `Build > Build Hap(s)/APP(s) > Build Hap(s)`。
+
+> **重要**：Cocos 重新构建会重新生成 `native/engine/harmonyos-next`，可能覆盖 DevEco 写入的签名配置。签名后如果要再改游戏，重新跑 Cocos 后要重新做自动签名；日常签名调试建议用 `-SkipCocos` 只重打 HAP。
 
 ### 5.2 命令行签名
 
 ```powershell
 npm i -g @deveco/deveco-cli
 devecocli auth login
+hdc list targets   # 必须能看到比赛手机
+
+# 当前工程已经把 Cocos 构建 + patch + hvigor 串好：
+cd D:\Projects\MusicCat
+.\scripts\build-harmony.ps1 -Sign -SkipCocos `
+  -CltPath 'D:\Projects\MusicCat\temp\ohos-clt\extract\command-line-tools'
+```
+
+`-Sign` 会先执行：
+
+```powershell
+devecocli signature generate --product default --type debug
+```
+
+然后调用 `hvigorw assembleHap`。如果 `devecocli` 不在 PATH，可以显式指定：
+
+```powershell
+.\scripts\build-harmony.ps1 -Sign -SkipCocos `
+  -DevecoCli 'D:\Projects\MusicCat\temp\deveco-cli\node_modules\@deveco\deveco-cli\cli.js' `
+  -CltPath 'D:\Projects\MusicCat\temp\ohos-clt\extract\command-line-tools'
+```
+
+也可以手动执行：
+
+```powershell
 cd native/engine/harmonyos-next
 devecocli signature generate --product default --type debug
-devecocli build --product default --build-mode debug --assemble-type assembleHap
+hvigorw assembleHap --mode module -p product=default -p module=entry@default -p buildMode=debug --no-daemon
 ```
 
 签名后通常在：
@@ -164,7 +192,12 @@ hdc install entry/build/default/outputs/default/entry-default-signed.hap
 
 # 已有 Cocos 原生工程，只重新打包
 .\scripts\build-harmony.ps1 -SkipCocos -CltPath 'C:\command-line-tools'
+
+# 登录华为账号、连接设备后，生成调试签名并打 signed HAP
+.\scripts\build-harmony.ps1 -Sign -SkipCocos -CltPath 'C:\command-line-tools'
 ```
+
+`-Sign` 需要 `devecocli` 已安装并执行过 `devecocli auth login`；脚本会输出 `build-harmony/MeowloCorridor-1.0.0-signed.hap`。
 
 脚本只修改生成目录 `native/engine/harmonyos-next`，不会改 `assets/` 业务代码；`native/` 与 `build-harmony/` 都在 `.gitignore` 中。
 

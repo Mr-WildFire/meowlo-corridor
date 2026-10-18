@@ -3,14 +3,18 @@ param(
     [string]$Project = (Split-Path -Parent $PSScriptRoot),
     [string]$CocosCreator = 'D:\Tools\CocosCreator\Creator\CocosCreator-v3.8.8-win-121518\CocosCreator.exe',
     [string]$CltPath = $env:DEVECO_CLI_CLT_PATH,
-    [switch]$SkipCocos
+    [string]$DevecoCli = '',
+    [switch]$SkipCocos,
+    [switch]$Sign
 )
 
 $ErrorActionPreference = 'Stop'
 $native = Join-Path $Project 'native\engine\harmonyos-next'
-$hap = Join-Path $native 'entry\build\default\outputs\default\entry-default-unsigned.hap'
+$hapUnsigned = Join-Path $native 'entry\build\default\outputs\default\entry-default-unsigned.hap'
+$hapSigned = Join-Path $native 'entry\build\default\outputs\default\entry-default-signed.hap'
 $outDir = Join-Path $Project 'build-harmony'
-$outHap = Join-Path $outDir 'MeowloCorridor-1.0.0-unsigned.hap'
+$outUnsigned = Join-Path $outDir 'MeowloCorridor-1.0.0-unsigned.hap'
+$outSigned = Join-Path $outDir 'MeowloCorridor-1.0.0-signed.hap'
 
 if (-not $CltPath) { $CltPath = 'C:\command-line-tools' }
 $hvigor = Join-Path $CltPath 'bin\hvigorw.bat'
@@ -103,7 +107,31 @@ Write-Host '[3/4] hvigor assembleHap...'
 $env:DEVECO_CLI_CLT_PATH = $CltPath
 $env:DEVECO_NODE_HOME = Join-Path $CltPath 'tool\node'
 $env:PATH = "$(Join-Path $CltPath 'bin');$env:DEVECO_NODE_HOME;$env:PATH"
-Remove-Item $hap -Force -ErrorAction SilentlyContinue
+
+if ($Sign) {
+    if (-not $DevecoCli) {
+        $cmd = Get-Command devecocli -ErrorAction SilentlyContinue
+        if ($cmd) { $DevecoCli = $cmd.Source }
+    }
+    if (-not $DevecoCli -or -not (Test-Path $DevecoCli)) {
+        throw 'Sign requested, but devecocli was not found. Install it with: npm i -g @deveco/deveco-cli, or pass -DevecoCli <cli.js>.'
+    }
+    Write-Host 'Generating signing materials with Huawei account...'
+    $oldEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    if ($DevecoCli -like '*.js') {
+        & (Join-Path $CltPath 'tool\node\node.exe') $DevecoCli signature generate --product default --type debug 2>&1 | Out-Host
+    } else {
+        & $DevecoCli signature generate --product default --type debug 2>&1 | Out-Host
+    }
+    $signExit = $LASTEXITCODE
+    $ErrorActionPreference = $oldEap
+    if ($signExit -ne 0) {
+        throw 'devecocli signature generate failed. Run: devecocli auth login, connect a device, then retry.'
+    }
+}
+
+Remove-Item $hapUnsigned,$hapSigned -Force -ErrorAction SilentlyContinue
 Push-Location $native
 try {
     $oldEap = $ErrorActionPreference
@@ -114,14 +142,19 @@ try {
     Pop-Location
 }
 
-if (-not (Test-Path $hap)) { throw "HAP was not produced: $hap" }
+$signed = Test-Path $hapSigned
+$source = if ($signed) { $hapSigned } else { $hapUnsigned }
+if (-not (Test-Path $source)) { throw "HAP was not produced: $source" }
 
-Write-Host '[4/4] Copy unsigned HAP...'
+Write-Host '[4/4] Copy HAP...'
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
-Copy-Item $hap $outHap -Force
-$size = [math]::Round((Get-Item $outHap).Length / 1MB, 1)
-Write-Host "OK: $outHap ($size MB)"
-Write-Host 'Unsigned artifact. Use DevEco automatic signing or devecocli auth login + signature generate, then rebuild the signed package.'
+$dest = if ($signed) { $outSigned } else { $outUnsigned }
+Copy-Item $source $dest -Force
+$size = [math]::Round((Get-Item $dest).Length / 1MB, 1)
+Write-Host "OK: $dest ($size MB, $(if ($signed) { 'signed' } else { 'unsigned' }))"
+if (-not $signed) {
+    Write-Host 'Unsigned artifact. Use DevEco automatic signing, or run devecocli auth login then this script with -Sign.'
+}
 
 
 

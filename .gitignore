@@ -26,3 +26,10 @@ node_modules/
 build-demo/
 build-harmony/
 *.log
+
+# HarmonyOS signing material (never commit private keys / profiles)
+*.p12
+*.p7b
+*.cer
+*.jks
+*.keystore

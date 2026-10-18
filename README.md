@@ -79,7 +79,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - 设置页滑条实际改变主音量并同步 AudioSource 音量；关闭设置后继续游戏。
 - 语言切换后菜单/HUD/教学/结算全部切换为 English；震动开关在浏览器触发 `navigator.vibrate`；重置记录二次确认后清空最佳成绩。
 - 构建产物在 `build-demo/web-desktop`（本地打开需 HTTP 服务；日常开发直接使用 Cocos 预览即可）。
-- **HarmonyOS HAP 已成功构建**：Cocos `harmonyos-next` → OHOS NDK native 编译 → ArkTS 编译 → `hvigor assembleHap` 成功；产物 `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（45,324,360 字节，约 43.2 MB，内含新菜单背景/CD/主人/5 个 SFX/CD 拼合终局）。当前未签名，签名与真机安装步骤见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
+- **HarmonyOS HAP 已成功构建**：Cocos `harmonyos-next` → OHOS NDK native 编译 → ArkTS 编译 → `hvigor assembleHap` 成功；产物 `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（45,324,360 字节，约 43.2 MB，内含新菜单背景/CD/主人/5 个 SFX/CD 拼合终局）。当前未签名；登录华为账号并连接设备后运行 `scripts/build-harmony.ps1 -Sign -SkipCocos` 可生成 `MeowloCorridor-1.0.0-signed.hap`。步骤见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
 
 ## 代码结构
 
