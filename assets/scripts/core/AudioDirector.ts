@@ -40,6 +40,7 @@ export class AudioDirector {
     private unlocked = 0;
     private muted = false;
     private silent = true;
+    private volume = 0.7;
     private readonly fallback = new MusicDirector();
 
     async load(parent: Node): Promise<boolean> {
@@ -106,6 +107,12 @@ export class AudioDirector {
         if (!this.loaded) this.fallback.setMuted(muted);
     }
 
+    setVolume(volume: number): void {
+        this.volume = Math.max(0, Math.min(1, volume));
+        this.applyVolumes();
+        if (!this.loaded) this.fallback.setVolume(this.volume);
+    }
+
     silence(seconds: number): void {
         this.silent = true;
         if (!this.loaded) {
@@ -128,8 +135,8 @@ export class AudioDirector {
                 // ignore
             }
         }
-        if (!this.muted && this.climaxSource && this.climaxClip) {
-            this.climaxSource.playOneShot(this.climaxClip, 0.95);
+        if (!this.muted && this.volume > 0 && this.climaxSource && this.climaxClip) {
+            this.climaxSource.playOneShot(this.climaxClip, 0.95 * this.volume);
         }
     }
 
@@ -171,7 +178,8 @@ export class AudioDirector {
     private applyVolumes(): void {
         if (!this.loaded) return;
         this.sources.forEach((source, i) => {
-            source.volume = this.silent || this.muted ? 0 : i === 0 ? 0.5 : i <= this.unlocked ? 0.32 : 0;
+            const base = i === 0 ? 0.5 : i <= this.unlocked ? 0.32 : 0;
+            source.volume = this.silent || this.muted ? 0 : base * this.volume;
         });
     }
 

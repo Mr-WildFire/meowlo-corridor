@@ -9,6 +9,7 @@ export interface BestRecord {
 interface SaveData {
     best: Partial<Record<Difficulty, BestRecord>>;
     muted: boolean;
+    volume: number;
 }
 
 const KEY = 'meowlo.progress.v1';
@@ -18,7 +19,7 @@ const KEY = 'meowlo.progress.v1';
  * Uses Cocos localStorage so it works in browser and native WebView.
  */
 export class ProgressStore {
-    private data: SaveData = { best: {}, muted: false };
+    private data: SaveData = { best: {}, muted: false, volume: 0.7 };
 
     constructor() {
         this.load();
@@ -30,6 +31,15 @@ export class ProgressStore {
 
     setMuted(muted: boolean): void {
         this.data.muted = muted;
+        this.save();
+    }
+
+    get volume(): number {
+        return this.data.volume;
+    }
+
+    setVolume(volume: number): void {
+        this.data.volume = Math.max(0, Math.min(1, volume));
         this.save();
     }
 
@@ -59,9 +69,10 @@ export class ProgressStore {
             if (parsed && typeof parsed === 'object') {
                 this.data.best = parsed.best ?? {};
                 this.data.muted = !!parsed.muted;
+                this.data.volume = Math.max(0, Math.min(1, Number(parsed.volume ?? 0.7)));
             }
         } catch {
-            this.data = { best: {}, muted: false };
+            this.data = { best: {}, muted: false, volume: 0.7 };
         }
     }
 

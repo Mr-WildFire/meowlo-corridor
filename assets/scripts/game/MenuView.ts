@@ -18,6 +18,7 @@ export class MenuView {
         muted: boolean,
         private readonly onSelect: (difficulty: Difficulty) => void,
         private readonly onToggleMute: () => boolean,
+        private readonly onSettings: () => void,
     ) {
         this.root = makeNode('MenuRoot', parent, 0, 0, screenW, screenH);
 
@@ -61,6 +62,22 @@ export class MenuView {
         };
         mute.on(Node.EventType.TOUCH_END, press, this);
         mute.on(Node.EventType.MOUSE_UP, press, this);
+
+        const settings = makeNode('MenuSettings', this.root, screenW * 0.5 - 130, screenH * 0.5 - 80, 50, 50);
+        const sg = settings.addComponent(Graphics);
+        sg.fillColor = new Color(40, 31, 54, 220);
+        sg.strokeColor = new Color(170, 158, 145, 180);
+        sg.lineWidth = 2;
+        sg.circle(0, 0, 25);
+        sg.fill();
+        sg.stroke();
+        addLabel(settings, 'MenuSettingsLabel', '设', 18, Theme.cream, 0, 0, 50, 50);
+        const settingsPress = (event: EventTouch | EventMouse): void => {
+            event.propagationStopped = true;
+            this.onSettings();
+        };
+        settings.on(Node.EventType.TOUCH_END, settingsPress, this);
+        settings.on(Node.EventType.MOUSE_UP, settingsPress, this);
     }
 
     dispose(): void {

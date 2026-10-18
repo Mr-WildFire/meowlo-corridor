@@ -29,6 +29,7 @@ import { GuideView } from './GuideView';
 import { InputRouter } from './InputRouter';
 import { Difficulty, LEVELS, LevelConfig } from './LevelConfig';
 import { MenuView } from './MenuView';
+import { SettingsView } from './SettingsView';
 import { makeNode, posKey } from './UiKit';
 
 const { ccclass } = _decorator;
@@ -84,6 +85,9 @@ export class DemoGame extends Component {
     private readonly music = new AudioDirector();
     private readonly progress = new ProgressStore();
     private muted = false;
+    private volume = 0.7;
+    private settings: SettingsView | null = null;
+    private settingsWasPlaying = false;
 
     onLoad(): void {
         // Demo uses SHOW_ALL so the portrait board is fully visible in any preview window.
@@ -114,6 +118,7 @@ export class DemoGame extends Component {
             onDirection: (dir) => this.handleDirection(dir),
             onPause: () => this.togglePause(),
             onMute: () => this.toggleMute(),
+            onSettings: () => this.openSettings(),
             onRestart: () => this.restart(),
             onMenu: () => this.openMenu(),
             onDifficulty: (difficulty) => {
@@ -139,13 +144,20 @@ export class DemoGame extends Component {
             console.warn('[DemoGame] audio load failed, using procedural fallback', e);
         }
         this.muted = this.progress.muted;
+        this.volume = this.progress.volume;
         this.music.setMuted(this.muted);
+        this.music.setVolume(this.volume);
         this.tone.setMuted(this.muted);
+        this.tone.setVolume(this.volume);
         this.openMenu();
     }
 
     private openMenu(): void {
         if (this.state === 'menu' && this.menu) return;
+        if (this.settings) {
+            this.settings.dispose();
+            this.settings = null;
+        }
         this.state = 'menu';
         this.finale = false;
         this.ending = false;
@@ -163,6 +175,7 @@ export class DemoGame extends Component {
             this.muted,
             (difficulty) => this.startLevel(difficulty),
             () => this.toggleMute(),
+            () => this.openSettings(),
         );
     }
 
@@ -178,6 +191,8 @@ export class DemoGame extends Component {
 
     onDestroy(): void {
         this.inputRouter?.dispose();
+        this.settings?.dispose();
+        this.settings = null;
         this.fog?.dispose();
         this.guide?.dispose();
         if (this.menu) this.menu.dispose();
@@ -233,6 +248,10 @@ export class DemoGame extends Component {
     // ---------------------------------------------------------------------
 
     private build(): void {
+        if (this.settings) {
+            this.settings.dispose();
+            this.settings = null;
+        }
         this.unscheduleAllCallbacks();
         Tween.stopAll();
         this.music.stop();
@@ -305,6 +324,7 @@ export class DemoGame extends Component {
                 onDirection: (dir) => this.handleDirection(dir),
                 onPause: () => this.togglePause(),
                 onMute: () => this.toggleMute(),
+                onSettings: () => this.openSettings(),
             },
             (cb, delay) => this.scheduleOnce(cb, delay),
         );
@@ -753,14 +773,53 @@ export class DemoGame extends Component {
         this.music.setMuted(this.muted);
         this.tone.setMuted(this.muted);
         this.hud?.setMuted(this.muted);
+        this.settings?.setMuted(this.muted);
         if (this.hud && this.state === 'playing') {
             this.hud.toast(this.muted ? '已静音' : '声音已恢复', 1.4);
         }
         return this.muted;
     }
 
+    private setVolume(volume: number): void {
+        this.volume = Math.max(0, Math.min(1, volume));
+        this.progress.setVolume(this.volume);
+        this.music.setVolume(this.volume);
+        this.tone.setVolume(this.volume);
+    }
+
+    private openSettings(): void {
+        if (this.settings) return;
+        if (this.state === 'finale' || this.ending) return;
+        this.settingsWasPlaying = this.state === 'playing';
+        if (this.settingsWasPlaying) {
+            this.state = 'paused';
+            this.music.pause();
+        }
+        this.settings = new SettingsView(
+            this.node,
+            this.screenW,
+            this.screenH,
+            this.volume,
+            this.muted,
+            (v) => this.setVolume(v),
+            () => this.toggleMute(),
+            () => this.closeSettings(),
+        );
+    }
+
+    private closeSettings(): void {
+        if (!this.settings) return;
+        this.settings.dispose();
+        this.settings = null;
+        if (this.settingsWasPlaying && this.state === 'paused') {
+            this.state = 'playing';
+            this.music.resume();
+        }
+        this.settingsWasPlaying = false;
+    }
+
     private togglePause(): void {
-        if (this.ending) return;
+        if (this.settings || this.ending) return;
         if (this.state === 'playing' && !this.finale) {
             this.state = 'paused';
             this.music.pause();
@@ -773,7 +832,7 @@ export class DemoGame extends Component {
     }
 
     private restart(): void {
-        if (this.state === 'menu') return;
+        if (this.settings || this.state === 'menu') return;
         this.build();
     }
 
@@ -810,7 +869,7 @@ export class DemoGame extends Component {
     // ---------------------------------------------------------------------
 
     private handleDirection(dir: Dir): void {
-        if (this.ending || this.state === 'menu') return;
+        if (this.settings || this.ending || this.state === 'menu') return;
         if (this.state === 'won' || this.state === 'timeout') {
             this.restart();
             return;
@@ -824,7 +883,7 @@ export class DemoGame extends Component {
     }
 
     private handleTap(): void {
-        if (this.ending || this.state === 'menu') return;
+        if (this.settings || this.ending || this.state === 'menu') return;
         if (this.state === 'won' || this.state === 'timeout') {
             this.restart();
             return;

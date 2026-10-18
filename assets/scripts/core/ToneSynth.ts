@@ -8,6 +8,7 @@ export class ToneSynth {
     private master: any = null;
     private enabled = true;
     private muted = false;
+    private volume = 0.7;
 
     private ensure(): boolean {
         if (!this.enabled) return false;
@@ -23,7 +24,7 @@ export class ToneSynth {
         try {
             this.ctx = new Ctor();
             this.master = this.ctx.createGain();
-            this.master.gain.value = this.muted ? 0 : 0.22;
+            this.master.gain.value = this.muted ? 0 : 0.22 * this.volume;
             this.master.connect(this.ctx.destination);
             return true;
         } catch (e) {
@@ -64,7 +65,17 @@ export class ToneSynth {
         this.muted = muted;
         if (!this.master) return;
         try {
-            this.master.gain.value = muted ? 0 : 0.22;
+            this.master.gain.value = muted ? 0 : 0.22 * this.volume;
+        } catch {
+            // ignore
+        }
+    }
+
+    setVolume(volume: number): void {
+        this.volume = Math.max(0, Math.min(1, volume));
+        if (!this.master) return;
+        try {
+            this.master.gain.value = this.muted ? 0 : 0.22 * this.volume;
         } catch {
             // ignore
         }

@@ -8,6 +8,7 @@ export interface HudCallbacks {
     onDirection(dir: Dir): void;
     onPause(): void;
     onMute(): void;
+    onSettings(): void;
 }
 
 export interface HudStats {
@@ -70,7 +71,7 @@ export class HudView {
         addLabel(
             this.root,
             'Help',
-            'WASD / 方向键 / 滑动移动　P 暂停　R 重开　M 难度　V 静音　C 测试集齐　T 扣 30 秒',
+            'WASD / 滑动移动　P 暂停　R 重开　M 难度　V 静音　O 设置',
             15,
             Theme.dim,
             0,
@@ -229,6 +230,23 @@ export class HudView {
         };
         mute.on(Node.EventType.TOUCH_END, mutePress, this);
         mute.on(Node.EventType.MOUSE_UP, mutePress, this);
+
+        const settings = makeNode('SettingsButton', this.root, this.screenW * 0.5 - 132, this.screenH * 0.5 - 78, 54, 54);
+        const sg = settings.addComponent(Graphics);
+        sg.fillColor = new Color(40, 31, 54, 220);
+        sg.strokeColor = new Color(170, 158, 145, 180);
+        sg.lineWidth = 2;
+        sg.roundRect(-27, -27, 54, 54, 14);
+        sg.fill();
+        sg.stroke();
+        addLabel(settings, 'SettingsLabel', '设', 19, Theme.cream, 0, 0, 54, 54);
+
+        const settingsPress = (event: EventTouch | EventMouse): void => {
+            event.propagationStopped = true;
+            this.callbacks.onSettings();
+        };
+        settings.on(Node.EventType.TOUCH_END, settingsPress, this);
+        settings.on(Node.EventType.MOUSE_UP, settingsPress, this);
     }
 
     private createDirectionButton(dir: Dir, text: string, x: number, y: number, size: number): void {

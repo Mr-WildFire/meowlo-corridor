@@ -14,6 +14,7 @@ export interface InputCallbacks {
     onDirection(dir: Dir): void;
     onPause(): void;
     onMute(): void;
+    onSettings(): void;
     onRestart(): void;
     onMenu(): void;
     onDifficulty(difficulty: Difficulty): void;
@@ -54,6 +55,8 @@ export class InputRouter {
             this.callbacks.onPause();
         } else if (key === KeyCode.KEY_V) {
             this.callbacks.onMute();
+        } else if (key === KeyCode.KEY_O) {
+            this.callbacks.onSettings();
         } else if (key === KeyCode.KEY_M) {
             this.callbacks.onMenu();
         } else if (key === KeyCode.KEY_C) {
