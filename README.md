@@ -131,6 +131,7 @@ docs/鸿蒙HAP构建.md                # 工具链、构建、签名与真机步
 docs/资源需求清单.md               # 正式 UI/美术/音频/字体需求与验收标准
 docs/美术风格建议.md               # 纸雕绘本 + 旧唱片 UI 的视觉方向
 docs/AI美术生成工作流.md           # AI 出图、prompt、切图、动画与接入流程
+docs/prompts/老八三视图-prompt.md   # 布偶猫参考的三视图/单视角 prompt
 ```
 
 占位图由 `tools/gen_placeholder_art.py` 生成，占位音乐由 `tools/gen_placeholder_audio.py` 生成，占位音效由 `tools/gen_placeholder_sfx.py` 生成；正式资源到位后按同名路径替换即可。
