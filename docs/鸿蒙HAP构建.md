@@ -11,8 +11,9 @@
 | ArkTS 编译 | 成功（API 26 仅有 `globalThis`/弃用 API 警告） |
 | HAP 打包 | 成功 |
 | HAP 签名 | ✅ **Release signed**（AGC 发布证书 + `app_gallery` Release Profile） |
-| 当前通用产物 | `build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（25,055,499 字节，约 23.9 MB） |
-| Release SHA-256 | `C824C6144F57C9C507582EA596D350F507FCE282E950783C938ABA6C3B10D196` |
+| 当前通用产物 | `build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（25,055,494 字节，约 23.9 MB） |
+| Release SHA-256 | `7761F5922C65AEAB737048A6498D8A16D17FB85CA920EDCAA0A8BC18F6B25193` |
+| 应用名 | `喵音回廊`（已修复之前的乱码） |
 | 调试 unsigned 产物 | `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（45,324,360 字节，保留作对比） |
 | 真机安装 | 未执行（当前没有连接 HarmonyOS 设备） |
 
@@ -297,5 +298,25 @@ hdc install MeowloCorridor-1.0.0-release-signed.hap
 1. **AGC 云测试/云真机**（真实 arm64 设备）
 2. 借一台比赛用 HarmonyOS 手机
 3. 浏览器 Web 版做玩法预览（不能验证 HAP/原生音频）
+
+## 10. 应用名乱码修复
+
+现象：桌面/安装界面显示 `鍠甸煶鍥炲粖`，而不是 `喵音回廊`。
+
+根因：
+
+- `scripts/build-harmony.ps1` 原先保存为 **UTF-8 无 BOM**
+- 本机实际执行的是 **Windows PowerShell 5.1**
+- PowerShell 5.1 把无 BOM 脚本按 ANSI/GBK 读取，中文字面量 `喵音回廊` 被错误解码
+- 脚本再把错误字符串写进 `AppScope/.../string.json`，HAP 资源索引里就是乱码
+
+修复：
+
+1. 脚本改为 **UTF-8 with BOM**，PowerShell 5.1 能正确读取中文。
+2. 所有生成的 JSON 用 `.NET UTF8Encoding(false)` 写入，避免 BOM/编码二次转换。
+3. 兼容替换旧的 `鍠甸煶鍥炲粖`，`-SkipCocos` 也能修复。
+4. 重新打 release HAP，并检查 HAP 内 `resources.index` 包含 UTF-8 的 `喵音回廊`。
+
+当前产物已修复，桌面名应为 **喵音回廊**。
 
 

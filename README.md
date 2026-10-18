@@ -79,7 +79,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - 设置页滑条实际改变主音量并同步 AudioSource 音量；关闭设置后继续游戏。
 - 语言切换后菜单/HUD/教学/结算全部切换为 English；震动开关在浏览器触发 `navigator.vibrate`；重置记录二次确认后清空最佳成绩。
 - 构建产物在 `build-demo/web-desktop`（本地打开需 HTTP 服务；日常开发直接使用 Cocos 预览即可）。
-- **HarmonyOS Release 通用包已产出**：`build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（25,055,499 字节，约 23.9 MB），使用 AGC 发布证书 + `app_gallery` Release Profile 签名，不绑定单台设备 UDID。签名验证通过，包内含最新菜单背景/CD/主人/5 个 SFX/CD 拼合终局；未连接真机，安装方式与 AGC 内测流程见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
+- **HarmonyOS Release 通用包已产出**：`build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（25,055,494 字节，约 23.9 MB），使用 AGC 发布证书 + `app_gallery` Release Profile 签名，不绑定单台设备 UDID。签名验证通过，应用名已修复为 **喵音回廊**，包内含最新菜单背景/CD/主人/5 个 SFX/CD 拼合终局；未连接真机，安装方式与 AGC 内测流程见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
 - **官方模拟器限制**：HarmonyOS 6.0.1 模拟器为 x86_64，而当前 Cocos HAP 的 native 库是 arm64-v8a，安装会报 `9568347` ABI 不匹配；没有鸿蒙手机时优先用 AGC 云真机或借比赛手机，详见构建文档 §9。
 
 ## 代码结构

@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string]$Project = (Split-Path -Parent $PSScriptRoot),
     [string]$CocosCreator = 'D:\Tools\CocosCreator\Creator\CocosCreator-v3.8.8-win-121518\CocosCreator.exe',
@@ -10,6 +10,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+function Write-Utf8NoBom([string]$Path, [string]$Text) {
+    [System.IO.File]::WriteAllText($Path, $Text, (New-Object System.Text.UTF8Encoding($false)))
+}
+
 $native = Join-Path $Project 'native\engine\harmonyos-next'
 $hapUnsigned = Join-Path $native 'entry\build\default\outputs\default\entry-default-unsigned.hap'
 $hapSigned = Join-Path $native 'entry\build\default\outputs\default\entry-default-signed.hap'
@@ -46,7 +51,7 @@ Write-Host '[2/4] Patch generated HarmonyOS project...'
 $appFile = Join-Path $native 'AppScope\app.json5'
 $app = Get-Content -LiteralPath $appFile -Raw -Encoding UTF8
 $app = $app.Replace('com.cocos.test', 'com.meowlo.corridor').Replace('"vendor": "example"', '"vendor": "Meowlo"')
-Set-Content -LiteralPath $appFile -Value $app -Encoding UTF8
+Write-Utf8NoBom $appFile $app
 
 $appString = Join-Path $native 'AppScope\resources\base\element\string.json'
 $entryString = Join-Path $native 'entry\src\main\resources\base\element\string.json'
@@ -54,7 +59,8 @@ foreach ($f in @($appString, $entryString)) {
     if (Test-Path $f) {
         $text = Get-Content -LiteralPath $f -Raw -Encoding UTF8
         $text = $text.Replace('"value": "MusicCat"', '"value": "喵音回廊"')
-        Set-Content -LiteralPath $f -Value $text -Encoding UTF8
+        $text = $text.Replace('"value": "鍠甸煶鍥炲粖"', '"value": "喵音回廊"')
+        Write-Utf8NoBom $f $text
     }
 }
 
@@ -80,19 +86,19 @@ $permNew = @'
     ],
 '@
 $module = [regex]::Replace($module, '(?s)"requestPermissions":\s*\[.*?\],', $permNew)
-Set-Content -LiteralPath $moduleFile -Value $module -Encoding UTF8
+Write-Utf8NoBom $moduleFile $module
 
 # Cocos' Windows HarmonyOS template uses registry test deps + a local symlink
 # dependency. Both trigger EBUSY with ohpm on this Windows setup.
 $rootPkgFile = Join-Path $native 'oh-package.json5'
 $rootPkg = Get-Content -LiteralPath $rootPkgFile -Raw -Encoding UTF8
 $rootPkg = [regex]::Replace($rootPkg, 'devDependencies:\s*\{[\s\S]*?\},', 'devDependencies: {},')
-Set-Content -LiteralPath $rootPkgFile -Value $rootPkg -Encoding UTF8
+Write-Utf8NoBom $rootPkgFile $rootPkg
 
 $entryPkgFile = Join-Path $native 'entry\oh-package.json5'
 $entryPkg = Get-Content -LiteralPath $entryPkgFile -Raw -Encoding UTF8
 $entryPkg = [regex]::Replace($entryPkg, '"dependencies":\s*\{[\s\S]*?\}', '"dependencies": {}')
-Set-Content -LiteralPath $entryPkgFile -Value $entryPkg -Encoding UTF8
+Write-Utf8NoBom $entryPkgFile $entryPkg
 
 $libSrc = Join-Path $native 'entry\src\main\cpp\types\libcocos'
 $libDst = Join-Path $native 'entry\oh_modules\libcocos.so'
