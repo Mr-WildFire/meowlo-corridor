@@ -34,7 +34,24 @@ if (-not (Test-Path $hvigor)) {
     throw "HarmonyOS Command Line Tools not found at '$CltPath'. Set DEVECO_CLI_CLT_PATH or pass -CltPath."
 }
 
-if (-not $SkipCocos) {
+$runCocos = -not $SkipCocos
+if ($SkipCocos) {
+    $assetRoot = Join-Path $Project 'assets'
+    $buildData = Join-Path $Project 'build-harmony\harmonyos-next\data'
+    if (-not (Test-Path $buildData)) {
+        Write-Warning "-SkipCocos was requested, but no Cocos build output exists. Running Cocos build."
+        $runCocos = $true
+    } elseif (Test-Path $assetRoot) {
+        $assetStamp = (Get-ChildItem $assetRoot -Recurse -File | Measure-Object -Property LastWriteTime -Maximum).Maximum
+        $buildStamp = (Get-ChildItem $buildData -Recurse -File | Measure-Object -Property LastWriteTime -Maximum).Maximum
+        if ($assetStamp -gt $buildStamp) {
+            Write-Warning "-SkipCocos was requested, but assets/ is newer than the Cocos build. Running Cocos build to avoid packaging stale art."
+            $runCocos = $true
+        }
+    }
+}
+
+if ($runCocos) {
     if (-not (Test-Path $CocosCreator)) { throw "CocosCreator not found: $CocosCreator" }
     Write-Host '[1/5] Cocos harmonyos-next build...'
     $env:ELECTRON_RUN_AS_NODE = $null
