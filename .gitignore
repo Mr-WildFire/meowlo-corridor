@@ -24,4 +24,5 @@ node_modules/
 .idea/
 # Local demo build / logs
 build-demo/
+build-harmony/
 *.log

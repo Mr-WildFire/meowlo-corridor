@@ -20,7 +20,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 | 屏幕左上角 `Ⅱ` | 暂停 / 继续 |
 | `P` | 暂停 / 继续 |
 | `V` | 静音 / 恢复（HUD 右上角按钮同效） |
-| `O` | 打开设置（音量滑条 / 静音） |
+| `O` | 打开设置（音量 / 静音 / 语言 / 震动 / 重置记录） |
 | `M` | 返回难度菜单（换难度） |
 | `R` | 重开一局（当前难度/新种子） |
 | `C` | 测试用：直接收集全部碎片（触发 1 秒静默 + 出口） |
@@ -55,9 +55,8 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - 正式 6 层 OGG 音乐、高潮/音效（当前是程序化占位版）
 - 正式 2D 美术（替换当前扁平占位图）、正式 UI、主人/结局正式演出
 - 道具的正式音效（教学卡目前是占位版）
-- 真机触摸/HAP 验证（M3 前）
-- 鸿蒙 HAP 构建与真机适配（按文档放在 M3）
-- 存档、设置、演示模式
+- 鸿蒙 **签名 HAP** 与真机安装/触摸/音频验证（unsigned HAP 已构建，见下）
+- 正式存档、演示模式
 
 ## 已验证
 
@@ -78,6 +77,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - 设置页滑条实际改变主音量并同步 AudioSource 音量；关闭设置后继续游戏。
 - 语言切换后菜单/HUD/教学/结算全部切换为 English；震动开关在浏览器触发 `navigator.vibrate`；重置记录二次确认后清空最佳成绩。
 - 构建产物在 `build-demo/web-desktop`（本地打开需 HTTP 服务；日常开发直接使用 Cocos 预览即可）。
+- **HarmonyOS HAP 已成功构建**：Cocos `harmonyos-next` → OHOS NDK native 编译 → ArkTS 编译 → `hvigor assembleHap` 成功；产物 `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（约 43 MB）。当前未签名，签名与真机安装步骤见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
 
 ## 代码结构
 
@@ -118,6 +118,9 @@ assets/
       ├─ HudView.ts               # HUD、Toast、结算层、方向键/暂停
       ├─ ItemSystem.ts            # 道具落点与效果分发
       └─ DemoGame.ts              # 编排：状态、计时、碎片、终局、输入
+tools/                             # 占位资源生成、HarmonyOS 图标
+scripts/build-harmony.ps1          # Cocos → patch → hvigor HAP 构建
+docs/鸿蒙HAP构建.md                # 工具链、构建、签名与真机步骤
 ```
 
 占位图由 `tools/gen_placeholder_art.py` 生成，占位音乐由 `tools/gen_placeholder_audio.py` 生成；正式资源到位后按同名路径替换即可。
