@@ -11,7 +11,7 @@ import {
     Vec3,
     view,
 } from 'cc';
-import { MusicDirector } from '../core/MusicDirector';
+import { AudioDirector } from '../core/AudioDirector';
 import { nowSeed, Rng } from '../core/Rng';
 import { ToneSynth } from '../core/ToneSynth';
 import { Dir, generateMaze, GridPos, samePos } from './MazeGenerator';
@@ -80,7 +80,7 @@ export class DemoGame extends Component {
 
     private hudAcc = 0;
     private readonly tone = new ToneSynth();
-    private readonly music = new MusicDirector();
+    private readonly music = new AudioDirector();
 
     onLoad(): void {
         // Demo uses SHOW_ALL so the portrait board is fully visible in any preview window.
@@ -127,6 +127,12 @@ export class DemoGame extends Component {
         } catch (e) {
             console.warn('[DemoGame] art load failed, using Graphics placeholders', e);
             this.art = null;
+        }
+
+        try {
+            await this.music.load(this.node);
+        } catch (e) {
+            console.warn('[DemoGame] audio load failed, using procedural fallback', e);
         }
         this.openMenu();
     }

@@ -1,7 +1,7 @@
 # 喵音回廊 · 玩法骨架 Demo
 
 Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（迷宫整体 + 可玩骨架补强）**。
-当前美术是脚本生成的**扁平占位 PNG**（老八、地板、墙、碎片、道具、出口），HUD 仍用 `Graphics + Label`；浏览器预览时用 WebAudio 程序化生成占位音乐与音效。没有使用任何外部美术/音频素材。
+当前美术是脚本生成的**扁平占位 PNG**（老八、地板、墙、碎片、道具、出口），HUD 仍用 `Graphics + Label`；音乐是脚本生成的 6 层占位 WAV（AudioSource），缺失时回退 WebAudio；音效由 WebAudio 合成。没有使用任何外部美术/音频素材。
 
 ## 运行
 
@@ -42,8 +42,9 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - [x] 占位美术：老八四方向 4 帧行走、地板、墙、碎片、8 种道具、出口；`ArtAssets` 加载失败时回退 Graphics
 - [x] HUD：音轨进度、倒计时、步数、效果、种子、难度/时间上限
 - [x] 键盘 + 滑动 + 鼠标拖动 + 屏幕方向键；暂停按钮、重开、超时/通关结算
-- [x] 浏览器程序化占位音乐：底轨 + 每块碎片解锁一层（最多 6 层）+ 1 秒静音 + 高潮；暂停/继续/切难度会停/恢复
-- [x] 浏览器占位音效：拾取、脚步、超时；正式 OGG 音频仍在 M2
+- [x] 6 层占位 WAV 音乐（AudioSource）：底轨 + 每块碎片解锁一层 + 1 秒静音 + 高潮；暂停/继续/切难度会停/恢复
+- [x] WAV 加载失败时回退到 WebAudio 程序化音乐；浏览器占位音效：拾取、脚步、超时
+- [x] 正式 OGG 音频仍未接入，后续按同名资源替换 WAV 即可
 
 ## 尚未实现（后续阶段）
 
@@ -67,7 +68,8 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - 困难碎片不再扎堆：12 个种子中任意两块最小 BFS 距离 48–79，四象限均有分布；出口 6–9 步。
 - 首次道具教学卡、超时 1.5 秒演出与延迟结算已实际验证。
 - `FogView / GuideView / InputRouter` 拆分后，遮罩、蝴蝶路径、移动与菜单流程回归通过。
-- 浏览器用户手势后 `AudioContext` 进入 running；6 层占位音乐、逐碎片解锁、1 秒静音→高潮流程已实际跑通。
+- 6 个 WAV 音轨成功加载为 AudioSource；用户手势后同时播放，6 路时间差 < 1ms；1 秒静音→高潮流程实际跑通。
+- WAV 缺失时回退程序化音乐；原生端无 WebAudio 时静音但不影响玩法。
 - 构建产物在 `build-demo/web-desktop`（本地打开需 HTTP 服务；日常开发直接使用 Cocos 预览即可）。
 
 ## 代码结构
@@ -77,6 +79,7 @@ assets/
 ├─ scenes/Main.scene              # 只挂一个 DemoGame 组件
 ├─ resources/
 │  ├─ effects/fog.effect          # 2 格柔边遮罩 Shader
+│  ├─ audio/music/                # 6 层占位 WAV + climax
 │  └─ art/                        # 脚本生成的占位 PNG
 │     ├─ cat/                     # 老八 4 方向 × 4 帧
 │     ├─ board/                   # floor.png / wall.png
@@ -84,7 +87,8 @@ assets/
 └─ scripts/
    ├─ core/
    │  ├─ Rng.ts                   # 确定性随机
-   │  ├─ MusicDirector.ts         # 6 层程序化占位音乐 + 静音/高潮
+   │  ├─ AudioDirector.ts         # 6 层 AudioSource 音乐 + 静音/高潮
+   │  ├─ MusicDirector.ts         # WAV 加载失败时的程序化回退
    │  └─ ToneSynth.ts             # 浏览器占位音效（非最终音频方案）
    └─ game/
       ├─ MazeGenerator.ts         # 纯逻辑：DFS、BFS、路径、死路
@@ -105,7 +109,7 @@ assets/
       └─ DemoGame.ts              # 编排：状态、计时、碎片、终局、输入
 ```
 
-占位图由 `tools/gen_placeholder_art.py` 生成，可重复执行；正式美术到位后按同名路径替换 PNG 即可。
+占位图由 `tools/gen_placeholder_art.py` 生成，占位音乐由 `tools/gen_placeholder_audio.py` 生成；正式资源到位后按同名路径替换即可。
 
 ## 说明
 
