@@ -10,12 +10,13 @@
 | Native 编译（CMake + OHOS NDK） | 成功，产出 `libcocos.so` |
 | ArkTS 编译 | 成功（API 26 仅有 `globalThis`/弃用 API 警告） |
 | HAP 打包 | 成功 |
-| HAP 签名 | **未完成**：当前环境没有登录华为开发者账号，无法生成 AGC 调试/发布签名 |
-| 当前产物 | `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（45,324,360 字节，约 43.2 MB，unsigned） |
-| SHA-256 | `7AA1E2E6739A9E9D6B99B2D128E0056D23D17C6B62B63BDA09214E86B031650B` |
-| 真机安装 | 未执行（需签名 + HarmonyOS 设备/模拟器） |
+| HAP 签名 | ✅ **Release signed**（AGC 发布证书 + `app_gallery` Release Profile） |
+| 当前通用产物 | `build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（25,055,499 字节，约 23.9 MB） |
+| Release SHA-256 | `C824C6144F57C9C507582EA596D350F507FCE282E950783C938ABA6C3B10D196` |
+| 调试 unsigned 产物 | `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（45,324,360 字节，保留作对比） |
+| 真机安装 | 未执行（当前没有连接 HarmonyOS 设备） |
 
-> 这是一个**已成功构建的 unsigned HAP**，不是“可安装比赛包”。签名步骤见 §5；签名后才能 `hdc install`。
+> **通用包已产出**：Release Profile 不绑定单台设备 UDID；但 Profile 的 `app-distribution-type` 是 `app_gallery`，安装方式需要走 AGC 内测/应用市场，或先在目标设备验证能否直接 `hdc install`。签名材料路径在 `D:\Projects\MusicCat\cer`。
 
 ## 2. 工具链
 
