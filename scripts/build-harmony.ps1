@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
     [string]$Project = (Split-Path -Parent $PSScriptRoot),
     [string]$CocosCreator = 'D:\Tools\CocosCreator\Creator\CocosCreator-v3.8.8-win-121518\CocosCreator.exe',
@@ -21,6 +21,11 @@ $hapSigned = Join-Path $native 'entry\build\default\outputs\default\entry-defaul
 $outDir = Join-Path $Project 'build-harmony'
 $outUnsigned = Join-Path $outDir 'MeowloCorridor-1.0.0-unsigned.hap'
 $outSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-1.0.0-release-signed.hap' } else { 'MeowloCorridor-1.0.0-signed.hap' })
+$appDir = Join-Path $native 'build\outputs\default'
+$appUnsigned = Join-Path $appDir 'harmonyos-next-default-unsigned.app'
+$appSigned = Join-Path $appDir 'harmonyos-next-default-signed.app'
+$outAppUnsigned = Join-Path $outDir 'MeowloCorridor-1.0.0-unsigned.app'
+$outAppSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-1.0.0-release-signed.app' } else { 'MeowloCorridor-1.0.0-debug-signed.app' })
 $buildMode = if ($Release) { 'release' } else { 'debug' }
 
 if (-not $CltPath) { $CltPath = 'C:\command-line-tools' }
@@ -31,7 +36,7 @@ if (-not (Test-Path $hvigor)) {
 
 if (-not $SkipCocos) {
     if (-not (Test-Path $CocosCreator)) { throw "CocosCreator not found: $CocosCreator" }
-    Write-Host '[1/4] Cocos harmonyos-next build...'
+    Write-Host '[1/5] Cocos harmonyos-next build...'
     $env:ELECTRON_RUN_AS_NODE = $null
     $buildArg = 'platform=harmonyos-next;debug=true;startScene=2f49f9e3-9684-4fe5-b3ad-af39aedccc7c;buildPath=project://build-harmony'
     # Cocos tries to replace build-harmony/harmonyos-next/assets with a symlink;
@@ -47,7 +52,7 @@ if (-not $SkipCocos) {
     }
 }
 
-Write-Host '[2/4] Patch generated HarmonyOS project...'
+Write-Host '[2/5] Patch generated HarmonyOS project...'
 $appFile = Join-Path $native 'AppScope\app.json5'
 $app = Get-Content -LiteralPath $appFile -Raw -Encoding UTF8
 $app = $app.Replace('com.cocos.test', 'com.meowlo.corridor').Replace('"vendor": "example"', '"vendor": "Meowlo"')
@@ -112,7 +117,7 @@ if (Test-Path $icon) {
     Copy-Item $icon (Join-Path $native 'entry\src\main\resources\base\media\icon.png') -Force
 }
 
-Write-Host '[3/4] hvigor assembleHap...'
+Write-Host '[3/5] hvigor assembleHap...'
 $env:DEVECO_CLI_CLT_PATH = $CltPath
 $env:DEVECO_NODE_HOME = Join-Path $CltPath 'tool\node'
 $env:PATH = "$(Join-Path $CltPath 'bin');$env:DEVECO_NODE_HOME;$env:PATH"
@@ -156,7 +161,7 @@ $signed = Test-Path $hapSigned
 $source = if ($signed) { $hapSigned } else { $hapUnsigned }
 if (-not (Test-Path $source)) { throw "HAP was not produced: $source" }
 
-Write-Host '[4/4] Copy HAP...'
+Write-Host '[4/5] Copy HAP...'
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 $dest = if ($signed) { $outSigned } else { $outUnsigned }
 Copy-Item $source $dest -Force
@@ -165,6 +170,27 @@ Write-Host "OK: $dest ($size MB, $(if ($signed) { 'signed' } else { 'unsigned' }
 if (-not $signed) {
     Write-Host 'Unsigned artifact. Use DevEco automatic signing, or run devecocli auth login then this script with -Sign.'
 }
+
+# Always produce the matching App Pack (.app) for AGC upload/testing.
+Write-Host '[5/5] hvigor assembleApp...'
+Remove-Item $appUnsigned,$appSigned -Force -ErrorAction SilentlyContinue
+Push-Location $native
+try {
+    $oldEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    & $hvigor assembleApp --mode project -p product=default -p "buildMode=$buildMode" --no-daemon 2>&1 | Out-Host
+    $ErrorActionPreference = $oldEap
+} finally {
+    Pop-Location
+}
+
+$appIsSigned = Test-Path $appSigned
+$appSource = if ($appIsSigned) { $appSigned } else { $appUnsigned }
+if (-not (Test-Path $appSource)) { throw "APP was not produced: $appSource" }
+$appDest = if ($appIsSigned) { $outAppSigned } else { $outAppUnsigned }
+Copy-Item $appSource $appDest -Force
+$appSize = [math]::Round((Get-Item $appDest).Length / 1MB, 1)
+Write-Host "OK: $appDest ($appSize MB, $(if ($appIsSigned) { 'signed' } else { 'unsigned' }))"
 
 
 

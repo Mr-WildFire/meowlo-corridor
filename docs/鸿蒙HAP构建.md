@@ -1,4 +1,4 @@
-﻿# 喵音回廊 · HarmonyOS HAP 构建记录
+# 喵音回廊 · HarmonyOS HAP/APP 构建记录
 
 > 记录日期：2026-10-18　|　Cocos Creator 3.8.8　|　HarmonyOS Command Line Tools 26.0.0.821（API 26）
 
@@ -12,9 +12,10 @@
 | HAP 打包 | 成功 |
 | HAP 签名 | ✅ **Release signed**（AGC 发布证书 + `app_gallery` Release Profile） |
 | 当前通用产物 | `build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（25,780,491 字节，约 24.6 MB） |
-| Release SHA-256 | `E9A73A22A3AB9B5BADC6A9D13C247CD8EED095AAF920952FFC4B77753835C64B` |
+| Release SHA-256 | `FBC186FEDDEC4A51C68C1A01119ECB16D1BB5FE82F933B85B915DF2309CDC891` |
 | 应用名 | `喵音回廊`（已修复之前的乱码） |
-| 长屏适配 | `FIXED_WIDTH` + `sys.getSafeAreaRect()`；HUD/D-pad 使用安全区 |
+| 长屏适配 | `FIXED_WIDTH` + `sys.getSafeAreaRect()`；HUD 四边安全区、暂停/静音/设置内收、D-pad 底部预留 260 |
+| AGC 上架包 | `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（10,520,455 字节，签名验证通过） |
 | 调试 unsigned 产物 | `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（45,324,360 字节，保留作对比） |
 | 真机安装 | 未执行（当前没有连接 HarmonyOS 设备） |
 
@@ -24,21 +25,39 @@
 
 ## 1.1 上架包 `.app`（AGC 上传用）
 
-`.hap` 是**模块包**，只能 `hdc install` 到设备；AGC / 应用市场侧要求的是 **App Pack `.app`**（内含一个或多个 HAP）。把 HAP 直接上传会报：`您所上传的软件包不是HarmonyOS应用后缀.app，请重新上传。`
+`.hap` 是**模块包**，可以 `hdc install` 到设备；AGC / 应用市场侧要求的是 **App Pack `.app`**（内含一个或多个 HAP）。把 HAP 直接上传会报：`您所上传的软件包不是HarmonyOS应用后缀.app，请重新上传。`
+
+现在 `scripts/build-harmony.ps1` **每次打包都会自动同时产出 HAP + APP**：
 
 ```powershell
-cd native\engine\harmonyos-next
+# release 同时出 HAP 和 APP
+.\scripts\build-harmony.ps1 -SkipCocos -Release -CltPath '<CLT目录>'
+
+# debug 同时出 HAP 和 APP
+.\scripts\build-harmony.ps1 -SkipCocos -CltPath '<CLT目录>'
+```
+
+脚本内部在 HAP 之后执行：
+
+```powershell
 hvigorw assembleApp --mode project -p product=default -p buildMode=release --no-daemon
 ```
 
 | 项目 | 结果 |
 |---|---|
 | 原始输出 | `native/engine/harmonyos-next/build/outputs/default/harmonyos-next-default-signed.app` |
-| 归档副本 | `build-harmony/MeowloCorridor-1.0.0-release.app`（10,521,847 字节，约 10.0 MB） |
-| SHA-256 | `C4B537E1533E57FF3B9C103555D3977AACB3077F4FB3F2721347DABE397282CB` |
+| 归档副本 | `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（10,520,455 字节，约 10.0 MB） |
+| SHA-256 | `DDB9DD2A3CF87FF56F766E8EB93F75761EE35A8BC4FC67666ADDBB6A2C64E243` |
 | 内容 | `pac.json`、`pack.info`、`entry-default.hap`（25,586,193 字节） |
+| 用途 | **AGC 上传 / 应用市场 / 内测**；HAP 用于 `hdc install` |
 
-构建耗时约 15.5 秒（`PackageApp` + `SignApp`），签名沿用 `build-profile.json5` 里的 `default_release` 配置。
+debug 构建输出：
+
+```text
+build-harmony/MeowloCorridor-1.0.0-debug-signed.app
+```
+
+签名沿用 `build-profile.json5` 的 `default_release` 配置；如果没配置签名，则输出 `MeowloCorridor-1.0.0-unsigned.app`。
 
 
 ## 2. 工具链
@@ -86,7 +105,7 @@ Cocos 会：
 
 > Cocos 命令可能因为引擎 `engine/native -> engine-native` 符号链接警告返回非 0；只要 `native/engine/harmonyos-next/build-profile.json5` 和 `build-harmony/harmonyos-next/data` 存在，构建就是成功的。
 
-## 4. HAP 构建
+## 4. HAP + APP 构建
 
 本次实际执行：
 
@@ -342,6 +361,7 @@ hdc install MeowloCorridor-1.0.0-release-signed.hap
 4. 重新打 release HAP，并检查 HAP 内 `resources.index` 包含 UTF-8 的 `喵音回廊`。
 
 当前产物已修复，桌面名应为 **喵音回廊**。
+
 
 
 
