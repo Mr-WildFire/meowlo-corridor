@@ -295,25 +295,61 @@ export class DemoGame extends Component {
 
     private placeFragments(occupied: Set<string>): void {
         const start = this.model.data.start;
+        const count = this.level.fragments;
+        const cols = this.model.data.cols;
+        const rows = this.model.data.rows;
+        // Easy 4, normal 6, hard 8 cells. Fragments should not all sit in one corner.
+        const minSep = Math.max(4, Math.floor((cols + rows) / 5));
         const picks: GridPos[] = [];
+        const pool: GridPos[] = [];
+        const poolKeys = new Set<string>();
 
-        const dead = this.model
-            .deadEnds()
-            .filter((p) => !samePos(p, start))
-            .sort((a, b) => this.model.distance(start, b) - this.model.distance(start, a));
+        const addPool = (p: GridPos): void => {
+            if (samePos(p, start)) return;
+            const key = posKey(p);
+            if (poolKeys.has(key)) return;
+            poolKeys.add(key);
+            pool.push(p);
+        };
 
-        for (const p of dead) {
-            if (picks.length >= this.level.fragments) break;
-            if (picks.every((q) => this.model.distance(p, q) >= 3)) picks.push(p);
+        const dead = this.model.deadEnds().filter((p) => !samePos(p, start));
+        this.rng.shuffle(dead);
+        dead.forEach(addPool);
+
+        // Add candidate cells beyond dead ends so 0% braid / small mazes still work.
+        let guard = 0;
+        while (pool.length < Math.max(count * 6, 24) && guard++ < 4000) {
+            const p = this.model.randomCell(
+                this.rng,
+                (q) => !samePos(q, start) && this.model.distance(start, q) >= Math.max(3, minSep - 2),
+            );
+            if (!p) break;
+            addPool(p);
         }
 
-        while (picks.length < this.level.fragments) {
+        const sectorOf = (p: GridPos): number =>
+            (p.x < cols * 0.5 ? 0 : 1) + (p.y < rows * 0.5 ? 0 : 2);
+        const usedSectors = new Set<number>();
+
+        while (picks.length < count) {
+            let chosen: GridPos | null = null;
+            for (const relax of [1, 0.8, 0.6, 0]) {
+                chosen = this.pickSpreadFragment(pool, picks, usedSectors, sectorOf, minSep, relax);
+                if (chosen) break;
+            }
+            if (!chosen) break;
+            picks.push(chosen);
+            usedSectors.add(sectorOf(chosen));
+        }
+
+        // Last resort: random cells with as much separation as the maze allows.
+        while (picks.length < count) {
             let p = this.model.randomCell(
                 this.rng,
                 (q) =>
                     !samePos(q, start) &&
                     !occupied.has(posKey(q)) &&
-                    picks.every((r) => this.model.distance(q, r) >= 3),
+                    picks.every((r) => this.model.distance(q, r) >= Math.max(3, Math.floor(minSep * 0.6))),
             );
             if (!p) {
                 p = this.model.randomCell(
@@ -334,6 +370,39 @@ export class DemoGame extends Component {
                 collected: false,
             });
         }
+    }
+
+    private pickSpreadFragment(
+        pool: GridPos[],
+        picks: GridPos[],
+        usedSectors: Set<number>,
+        sectorOf: (p: GridPos) => number,
+        minSep: number,
+        relax: number,
+    ): GridPos | null {
+        const start = this.model.data.start;
+        let best: GridPos | null = null;
+        let bestScore = Number.NEGATIVE_INFINITY;
+
+        for (const p of pool) {
+            if (picks.some((q) => samePos(p, q))) continue;
+            const ds = this.model.distance(start, p);
+            if (ds < Math.max(2, minSep - 2)) continue;
+
+            let dMin = Number.POSITIVE_INFINITY;
+            for (const q of picks) dMin = Math.min(dMin, this.model.distance(p, q));
+            if (picks.length > 0 && dMin < minSep * relax) continue;
+            if (picks.length > 0 && relax === 0 && dMin < 2) continue;
+
+            const newSector = !usedSectors.has(sectorOf(p));
+            const distanceScore = picks.length === 0 ? ds : dMin;
+            const score = (newSector ? 1000 : 0) + distanceScore + ds * 0.05;
+            if (score > bestScore) {
+                bestScore = score;
+                best = p;
+            }
+        }
+        return best;
     }
 
     private createFogAndGuide(): void {
@@ -427,20 +496,21 @@ export class DemoGame extends Component {
         const dist = this.model.bfs(this.player.position);
         const candidates: GridPos[] = [];
 
-        for (const cell of this.model.data.cells) {
-            const d = dist.get(cell.y * this.model.data.cols + cell.x);
-            if (d === undefined || d < 3 || d > 5) continue;
-            const p = { x: cell.x, y: cell.y };
-            if (!this.isBlockedForExit(p)) candidates.push(p);
-        }
-
-        if (candidates.length === 0) {
+        const collect = (min: number, max: number): void => {
             for (const cell of this.model.data.cells) {
                 const d = dist.get(cell.y * this.model.data.cols + cell.x);
-                if (d === undefined || d < 6 || d > 8) continue;
+                if (d === undefined || d < min || d > max) continue;
                 const p = { x: cell.x, y: cell.y };
                 if (!this.isBlockedForExit(p)) candidates.push(p);
             }
+        };
+
+        collect(this.level.exitMin, this.level.exitMax);
+        if (candidates.length === 0) {
+            collect(this.level.exitMax + 1, this.level.exitMax + 4);
+        }
+        if (candidates.length === 0) {
+            collect(1, Number.MAX_SAFE_INTEGER);
         }
 
         const pos = candidates.length > 0 ? this.rng.pick(candidates) : null;

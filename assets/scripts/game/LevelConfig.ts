@@ -10,8 +10,11 @@ export interface LevelConfig {
     rows: number;
     fragments: number;
     timeLimit: number;
-    /** Extra loops carved into the perfect maze (0–0.1). */
+    /** Extra loops carved into the perfect maze (0–0.1). More loops = easier. */
     braid: number;
+    /** BFS distance range for the exit after the last fragment. */
+    exitMin: number;
+    exitMax: number;
     itemCounts: Partial<Record<ItemType, number>>;
 }
 
@@ -28,7 +31,9 @@ export const LEVELS: Record<Difficulty, LevelConfig> = {
         rows: 13,
         fragments: 3,
         timeLimit: 300,
-        braid: 0,
+        braid: 0.08,
+        exitMin: 3,
+        exitMax: 5,
         itemCounts: {
             butterfly: 1,
             firefly: 1,
@@ -47,6 +52,8 @@ export const LEVELS: Record<Difficulty, LevelConfig> = {
         fragments: 4,
         timeLimit: 420,
         braid: 0.05,
+        exitMin: 4,
+        exitMax: 6,
         itemCounts: {
             butterfly: 1,
             firefly: 1,
@@ -65,7 +72,9 @@ export const LEVELS: Record<Difficulty, LevelConfig> = {
         rows: 23,
         fragments: 5,
         timeLimit: 540,
-        braid: 0.08,
+        braid: 0,
+        exitMin: 6,
+        exitMax: 9,
         itemCounts: {
             butterfly: 2,
             firefly: 2,
