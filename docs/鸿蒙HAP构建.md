@@ -12,10 +12,10 @@
 | HAP 打包 | 成功 |
 | HAP 签名 | ✅ **Release signed**（AGC 发布证书 + `app_gallery` Release Profile） |
 | 当前通用产物 | `build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（26,767,615 字节，约 25.5 MB） |
-| Release SHA-256 | `22267649FB5EC9C02A54B1EDB75082F664487D673EF360DA6ECF378E3B7AB459` |
+| Release SHA-256 | `B0BF285E9F1A42B925E05B04AA6C70793A5A22F0C0D426289D09E1714E8843A4` |
 | 应用名 | `喵音回廊`（已修复之前的乱码） |
 | 长屏适配 | `FIXED_WIDTH` + `sys.getSafeAreaRect()`；HUD 四边安全区、暂停/静音/设置内收、D-pad 底部预留 260 |
-| AGC 上架包 | `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（11,503,722 字节，签名验证通过） |
+| AGC 上架包 | `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（11,503,857 字节，签名验证通过） |
 | 调试 unsigned 产物 | `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（45,324,360 字节，保留作对比） |
 | 真机安装 | 未执行（当前没有连接 HarmonyOS 设备） |
 
@@ -46,8 +46,8 @@ hvigorw assembleApp --mode project -p product=default -p buildMode=release --no-
 | 项目 | 结果 |
 |---|---|
 | 原始输出 | `native/engine/harmonyos-next/build/outputs/default/harmonyos-next-default-signed.app` |
-| 归档副本 | `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（11,503,722 字节，约 11.0 MB） |
-| SHA-256 | `AD7288AB03E0CB05D98AB3174E50075429CA0FE4C63E75BB66D8D92F8B163F4D` |
+| 归档副本 | `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（11,503,857 字节，约 11.0 MB） |
+| SHA-256 | `4216F9BF28680C5792E9B3FDBF3E92F1F4FEB2FC14BCB0FA1BCFA72C5F550F50` |
 | 内容 | `pac.json`、`pack.info`、`entry-default.hap`（26,572,265 字节） |
 | 用途 | **AGC 上传 / 应用市场 / 内测**；HAP 用于 `hdc install` |
 
@@ -361,6 +361,7 @@ hdc install MeowloCorridor-1.0.0-release-signed.hap
 4. 重新打 release HAP，并检查 HAP 内 `resources.index` 包含 UTF-8 的 `喵音回廊`。
 
 当前产物已修复，桌面名应为 **喵音回廊**。
+
 
 
 
