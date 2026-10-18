@@ -65,6 +65,8 @@ export class DemoGame extends Component {
     private screenH = 1920;
     private safeTop = 0;
     private safeBottom = 0;
+    private safeLeft = 0;
+    private safeRight = 0;
     private demoRoot: Node | null = null;
 
     private exitPos: GridPos | null = null;
@@ -100,6 +102,13 @@ export class DemoGame extends Component {
     private finaleView: FinaleView | null = null;
 
     onLoad(): void {
+        // Browser-only viewport override for reproducing tall phones in DevTools.
+        if (sys.isBrowser) {
+            const params = new URLSearchParams(location.search);
+            const fw = Number(params.get('w'));
+            const fh = Number(params.get('h'));
+            if (fw > 0 && fh > 0) view.setFrameSize(fw, fh);
+        }
         // Landscape/16:9 would letterbox; tall phones need the extra height,
         // otherwise the board/HUD are cropped. FIXED_WIDTH keeps the 1080
         // design width and lets the visible height grow with the device.
@@ -117,9 +126,13 @@ export class DemoGame extends Component {
             const safe = sys.getSafeAreaRect();
             this.safeBottom = Math.max(0, safe.y);
             this.safeTop = Math.max(0, this.screenH - (safe.y + safe.height));
+            this.safeLeft = Math.max(0, safe.x);
+            this.safeRight = Math.max(0, this.screenW - (safe.x + safe.width));
         } catch {
             this.safeTop = 0;
             this.safeBottom = 0;
+            this.safeLeft = 0;
+            this.safeRight = 0;
         }
         const canvasUT = this.node.getComponent('cc.UITransform') as any;
         if (canvasUT) canvasUT.setContentSize(this.screenW, this.screenH);
@@ -356,6 +369,8 @@ export class DemoGame extends Component {
             this.screenH,
             this.safeTop,
             this.safeBottom,
+            this.safeLeft,
+            this.safeRight,
             {
                 onDirection: (dir) => this.handleDirection(dir),
                 onPause: () => this.togglePause(),

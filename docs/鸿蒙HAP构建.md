@@ -1,4 +1,4 @@
-# 喵音回廊 · HarmonyOS HAP 构建记录
+﻿# 喵音回廊 · HarmonyOS HAP 构建记录
 
 > 记录日期：2026-10-18　|　Cocos Creator 3.8.8　|　HarmonyOS Command Line Tools 26.0.0.821（API 26）
 
@@ -11,8 +11,8 @@
 | ArkTS 编译 | 成功（API 26 仅有 `globalThis`/弃用 API 警告） |
 | HAP 打包 | 成功 |
 | HAP 签名 | ✅ **Release signed**（AGC 发布证书 + `app_gallery` Release Profile） |
-| 当前通用产物 | `build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（25,780,490 字节，约 24.6 MB） |
-| Release SHA-256 | `40A721D6C90F02A2D5308AA6F18776BBDD5F6ADD0CCF9214B842ABCFC8DEA131` |
+| 当前通用产物 | `build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（25,780,491 字节，约 24.6 MB） |
+| Release SHA-256 | `E9A73A22A3AB9B5BADC6A9D13C247CD8EED095AAF920952FFC4B77753835C64B` |
 | 应用名 | `喵音回廊`（已修复之前的乱码） |
 | 长屏适配 | `FIXED_WIDTH` + `sys.getSafeAreaRect()`；HUD/D-pad 使用安全区 |
 | 调试 unsigned 产物 | `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（45,324,360 字节，保留作对比） |
@@ -20,7 +20,7 @@
 
 > **通用包已产出**：Release Profile 不绑定单台设备 UDID；但 Profile 的 `app-distribution-type` 是 `app_gallery`，安装方式需要走 AGC 内测/应用市场，或先在目标设备验证能否直接 `hdc install`。签名材料路径在 `D:\Projects\MusicCat\cer`。
 
-> **2026-10-19 图标更新**：应用图标替换为「唱片环 + 布偶猫 + 碎 CD 裂光」版本，`tools/icon/icon-512.png` 为唯一源文件（512×512 RGBA；`tools/harmony_icon.png` 为兼容副本），构建脚本会把它复制到 `AppScope/.../app_icon.png` 与 `entry/.../icon.png`。本次 `-SkipCocos -Release` 增量重打，`@SignHap` 成功；HAP 内两张图标与源文件 SHA-256 一致（`0DEEBA78…D6E8544`），`resources.index` 仍含 `喵音回廊`。体积因此从 25,055,494 增至 25,780,490 字节；随后又合入长屏 `FIXED_WIDTH` + SafeArea 适配。
+> **2026-10-19 图标更新**：应用图标替换为「唱片环 + 布偶猫 + 碎 CD 裂光」版本，`tools/icon/icon-512.png` 为唯一源文件（512×512 RGBA；`tools/harmony_icon.png` 为兼容副本），构建脚本会把它复制到 `AppScope/.../app_icon.png` 与 `entry/.../icon.png`。本次 `-SkipCocos -Release` 增量重打，`@SignHap` 成功；HAP 内两张图标与源文件 SHA-256 一致（`0DEEBA78…D6E8544`），`resources.index` 仍含 `喵音回廊`。体积因此从 25,055,494 增至 25,780,491 字节；随后又合入长屏 `FIXED_WIDTH` + SafeArea 适配。
 
 ## 1.1 上架包 `.app`（AGC 上传用）
 
@@ -342,6 +342,7 @@ hdc install MeowloCorridor-1.0.0-release-signed.hap
 4. 重新打 release HAP，并检查 HAP 内 `resources.index` 包含 UTF-8 的 `喵音回廊`。
 
 当前产物已修复，桌面名应为 **喵音回廊**。
+
 
 
 

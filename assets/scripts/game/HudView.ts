@@ -59,6 +59,8 @@ export class HudView {
         private readonly screenH: number,
         private readonly safeTop: number,
         private readonly safeBottom: number,
+        private readonly safeLeft: number,
+        private readonly safeRight: number,
         private readonly callbacks: HudCallbacks,
         private readonly scheduleOnce: (cb: () => void, delay: number) => void,
     ) {
@@ -241,15 +243,18 @@ export class HudView {
     private createControls(): void {
         const size = 64;
         const gap = 8;
-        const baseX = this.screenW * 0.5 - 190;
-        const baseY = -this.screenH * 0.5 + this.safeBottom + 190;
+        const baseX = this.screenW * 0.5 - this.safeRight - 190;
+        // Tall phones need a larger bottom reserve; otherwise the down arrow
+        // and help line fall below the visible viewport.
+        const baseY = -this.screenH * 0.5 + this.safeBottom + 260;
 
         this.createDirectionButton(0, '↑', baseX, baseY + size + gap, size);
         this.createDirectionButton(2, '↓', baseX, baseY - size - gap, size);
         this.createDirectionButton(3, '←', baseX - size - gap, baseY, size);
         this.createDirectionButton(1, '→', baseX + size + gap, baseY, size);
 
-        const pause = makeNode('PauseButton', this.root, -this.screenW * 0.5 + 66, this.screenH * 0.5 - this.safeTop - 78, 54, 54);
+        const controlY = this.screenH * 0.5 - this.safeTop - 78;
+        const pause = makeNode('PauseButton', this.root, -this.screenW * 0.5 + this.safeLeft + 110, controlY, 54, 54);
         const pg = pause.addComponent(Graphics);
         pg.fillColor = new Color(40, 31, 54, 220);
         pg.strokeColor = new Color(170, 158, 145, 180);
@@ -257,7 +262,7 @@ export class HudView {
         pg.roundRect(-27, -27, 54, 54, 14);
         pg.fill();
         pg.stroke();
-        addLabel(pause, 'PauseLabel', 'Ⅱ', 22, Theme.cream, 0, 0, 54, 54);
+        addLabel(pause, 'PauseLabel', 'II', 20, Theme.cream, 0, 0, 54, 54);
 
         const pausePress = (event: EventTouch | EventMouse): void => {
             event.propagationStopped = true;
@@ -266,7 +271,7 @@ export class HudView {
         pause.on(Node.EventType.TOUCH_END, pausePress, this);
         pause.on(Node.EventType.MOUSE_UP, pausePress, this);
 
-        const mute = makeNode('MuteButton', this.root, this.screenW * 0.5 - 66, this.screenH * 0.5 - this.safeTop - 78, 54, 54);
+        const mute = makeNode('MuteButton', this.root, this.screenW * 0.5 - this.safeRight - 110, controlY, 54, 54);
         const mg = mute.addComponent(Graphics);
         mg.fillColor = new Color(40, 31, 54, 220);
         mg.strokeColor = new Color(170, 158, 145, 180);
@@ -283,7 +288,7 @@ export class HudView {
         mute.on(Node.EventType.TOUCH_END, mutePress, this);
         mute.on(Node.EventType.MOUSE_UP, mutePress, this);
 
-        const settings = makeNode('SettingsButton', this.root, this.screenW * 0.5 - 132, this.screenH * 0.5 - this.safeTop - 78, 54, 54);
+        const settings = makeNode('SettingsButton', this.root, this.screenW * 0.5 - this.safeRight - 176, controlY, 54, 54);
         const sg = settings.addComponent(Graphics);
         sg.fillColor = new Color(40, 31, 54, 220);
         sg.strokeColor = new Color(170, 158, 145, 180);
