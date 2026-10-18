@@ -128,6 +128,7 @@ assets/
 tools/                             # 占位资源生成、HarmonyOS 图标
 scripts/build-harmony.ps1          # Cocos → patch → hvigor HAP 构建
 docs/鸿蒙HAP构建.md                # 工具链、构建、签名与真机步骤
+docs/资源需求清单.md               # 正式 UI/美术/音频/字体需求与验收标准
 ```
 
 占位图由 `tools/gen_placeholder_art.py` 生成，占位音乐由 `tools/gen_placeholder_audio.py` 生成，占位音效由 `tools/gen_placeholder_sfx.py` 生成；正式资源到位后按同名路径替换即可。
