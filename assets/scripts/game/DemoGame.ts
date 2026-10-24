@@ -5,7 +5,6 @@ import {
     Node,
     profiler,
     ResolutionPolicy,
-    sys,
     tween,
     Tween,
     Vec3,
@@ -102,42 +101,23 @@ export class DemoGame extends Component {
     private finaleView: FinaleView | null = null;
 
     onLoad(): void {
-        // Browser-only viewport override for reproducing tall phones in DevTools.
-        if (sys.isBrowser) {
-            const params = new URLSearchParams(location.search);
-            const fw = Number(params.get('w'));
-            const fh = Number(params.get('h'));
-            // Keep the desktop preview in a real portrait frame. Without this,
-            // Cocos' browser preview can render the HUD against the wide window
-            // while the board stays in a portrait camera viewport.
-            if (fw > 0 && fh > 0) view.setFrameSize(fw, fh);
-            else view.setFrameSize(1080, 1920);
-        }
-        // Landscape/16:9 would letterbox; tall phones need the extra height,
-        // otherwise the board/HUD are cropped. FIXED_WIDTH keeps the 1080
-        // design width and lets the visible height grow with the device.
-        view.setDesignResolutionSize(1080, 1920, ResolutionPolicy.FIXED_WIDTH);
+        // Use a fixed 1080x1920 portrait stage and letterbox it. The previous
+        // FIXED_WIDTH/manual-Canvas combination made the browser preview lay
+        // the HUD out against the whole 2560x1440 window while the board stayed
+        // in a portrait camera viewport.
+        view.setDesignResolutionSize(1080, 1920, ResolutionPolicy.SHOW_ALL);
         try {
             profiler.hideStats();
         } catch (e) {
             // profiler is optional in release builds.
         }
 
-        const size = view.getVisibleSize();
-        this.screenW = size.width;
-        this.screenH = size.height;
-        try {
-            const safe = sys.getSafeAreaRect();
-            this.safeBottom = Math.max(0, safe.y);
-            this.safeTop = Math.max(0, this.screenH - (safe.y + safe.height));
-            this.safeLeft = Math.max(0, safe.x);
-            this.safeRight = Math.max(0, this.screenW - (safe.x + safe.width));
-        } catch {
-            this.safeTop = 0;
-            this.safeBottom = 0;
-            this.safeLeft = 0;
-            this.safeRight = 0;
-        }
+        this.screenW = 1080;
+        this.screenH = 1920;
+        this.safeTop = 0;
+        this.safeBottom = 0;
+        this.safeLeft = 0;
+        this.safeRight = 0;
         const canvasUT = this.node.getComponent('cc.UITransform') as any;
         if (canvasUT) canvasUT.setContentSize(this.screenW, this.screenH);
         this.node.setPosition(this.screenW * 0.5, this.screenH * 0.5, 0);
