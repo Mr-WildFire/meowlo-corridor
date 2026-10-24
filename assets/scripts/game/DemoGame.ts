@@ -484,19 +484,9 @@ export class DemoGame extends Component {
         const local = this.renderer.cellToLocal(this.player.position);
         const worldX = this.renderer.boardX + local.x;
         const worldY = this.renderer.boardY + local.y;
-        const halfW = this.screenW * 0.5;
-        const halfH = this.screenH * 0.5;
-        const minX = -this.renderer.boardW * 0.5 + halfW;
-        const maxX = this.renderer.boardW * 0.5 - halfW;
-        const minY = -this.renderer.boardH * 0.5 + halfH;
-        const maxY = this.renderer.boardH * 0.5 - halfH;
-        const camX = minX > maxX ? 0 : Math.max(minX, Math.min(maxX, worldX));
-        const camY = minY > maxY ? 0 : Math.max(minY, Math.min(maxY, worldY));
-        this.demoRoot.setPosition(
-            this.screenW * 0.5 - camX,
-            this.screenH * 0.5 - camY,
-            0,
-        );
+        // Center the cat in every move. Do not clamp to the board bounds:
+        // at the entrance/corners the camera must still visibly follow.
+        this.demoRoot.setPosition(-worldX, -worldY, 0);
     }
 
     private onArrive(next: GridPos): boolean {
