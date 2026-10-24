@@ -107,7 +107,11 @@ export class DemoGame extends Component {
             const params = new URLSearchParams(location.search);
             const fw = Number(params.get('w'));
             const fh = Number(params.get('h'));
+            // Keep the desktop preview in a real portrait frame. Without this,
+            // Cocos' browser preview can render the HUD against the wide window
+            // while the board stays in a portrait camera viewport.
             if (fw > 0 && fh > 0) view.setFrameSize(fw, fh);
+            else view.setFrameSize(1080, 1920);
         }
         // Landscape/16:9 would letterbox; tall phones need the extra height,
         // otherwise the board/HUD are cropped. FIXED_WIDTH keeps the 1080
