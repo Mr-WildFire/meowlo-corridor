@@ -32,6 +32,7 @@ import { GuideView } from './GuideView';
 import { InputRouter } from './InputRouter';
 import { Difficulty, LEVELS, LevelConfig } from './LevelConfig';
 import { MenuView } from './MenuView';
+import { UiFonts } from './UiFonts';
 import { SettingsView } from './SettingsView';
 import { makeNode, posKey } from './UiKit';
 
@@ -158,6 +159,7 @@ export class DemoGame extends Component {
         this.language = this.progress.language;
         locale.setLanguage(this.language);
         this.vibration.setEnabled(this.progress.vibration);
+        await UiFonts.load();
         this.sfx = new SfxDirector(this.node);
         this.sfx.setMuted(this.muted);
         this.sfx.setVolume(this.volume);

@@ -3,6 +3,7 @@ import { locale } from '../core/Locale';
 import type { BestRecord } from '../core/ProgressStore';
 import { DIFFICULTY_ORDER, Difficulty, LEVELS, LevelConfig } from './LevelConfig';
 import { Theme, addLabel, makeNode, timeText } from './UiKit';
+import { UiFonts } from './UiFonts';
 
 /**
  * Pre-run difficulty selector + best records + mute toggle.
@@ -40,7 +41,8 @@ export class MenuView {
             bgNode.getComponent(UITransform)!.setContentSize(screenW, screenH);
         });
 
-        addLabel(this.root, 'MenuTitle', locale.t('menu.title'), 58, Theme.cream, 0, screenH * 0.5 - 190, 900, 80);
+        const menuTitle = addLabel(this.root, 'MenuTitle', locale.t('menu.title'), 58, Theme.cream, 0, screenH * 0.5 - 190, 900, 80);
+        UiFonts.titleLabel(menuTitle);
         addLabel(this.root, 'MenuSub', locale.t('menu.subtitle'), 24, Theme.cyan, 0, screenH * 0.5 - 255, 900, 44);
 
         DIFFICULTY_ORDER.forEach((id, index) => {

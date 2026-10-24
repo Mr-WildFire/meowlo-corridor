@@ -1,4 +1,4 @@
-# 喵音回廊 · 玩法骨架 Demo
+﻿# 喵音回廊 · 玩法骨架 Demo
 
 Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（迷宫整体 + 可玩骨架补强）**。
 当前美术是脚本生成的**扁平占位 PNG**（老八、地板、墙、碎片、道具、出口），HUD 仍用 `Graphics + Label`；音乐是脚本生成的 6 层占位 WAV（AudioSource），缺失时回退 WebAudio；音效由 WebAudio 合成。没有使用任何外部美术/音频素材。
@@ -79,7 +79,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - 设置页滑条实际改变主音量并同步 AudioSource 音量；关闭设置后继续游戏。
 - 语言切换后菜单/HUD/教学/结算全部切换为 English；震动开关在浏览器触发 `navigator.vibrate`；重置记录二次确认后清空最佳成绩。
 - 构建产物在 `build-demo/web-desktop`（本地打开需 HTTP 服务；日常开发直接使用 Cocos 预览即可）。
-- **HarmonyOS Release HAP + APP 已产出**：`build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（26,833,147 字节，约 25.6 MB，SHA-256 `22B4EE3C3795F2BD89CAC94BAE8F99E9744E519345FFA658EA39C20400812EE7`）与 `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（11,570,770 字节，约 11.0 MB，SHA-256 `C57D3EB1D3716753B9961C4444E11EC9C14B61205406416D972FC19076EF3A6D`）。两者均使用 AGC 发布证书 + `app_gallery` Release Profile 签名，不绑定单台设备 UDID；HAP 用于 `hdc install`，APP 用于 AGC 上传/内测。应用名已修复为 **喵音回廊**，并已改为 1920×1080 横屏、固定 128px 格子 + 相机跟随、顶部单行 HUD + 单按钮菜单；未连接真机，安装方式与 AGC 内测流程见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
+- **HarmonyOS Release HAP + APP 已产出**：`build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（32,805,704 字节，约 31.3 MB，SHA-256 `A8D9719137F3E76839B08157ABFDBF281AACFCFE39934F5D5C25A7050FC18024`）与 `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（15,693,071 字节，约 15.0 MB，SHA-256 `4A1E5C4667BB5956624EE7394ABBDAAA0BC43FE0D6345497D97D0817C387DE7D`）。两者均使用 AGC 发布证书 + `app_gallery` Release Profile 签名，不绑定单台设备 UDID；HAP 用于 `hdc install`，APP 用于 AGC 上传/内测。应用名已修复为 **喵音回廊**，并已改为 1920×1080 横屏、固定 128px 格子 + 相机跟随、顶部单行 HUD + 单按钮菜单；未连接真机，安装方式与 AGC 内测流程见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
 - **官方模拟器限制**：HarmonyOS 6.0.1 模拟器为 x86_64，而当前 Cocos HAP 的 native 库是 arm64-v8a，安装会报 `9568347` ABI 不匹配；没有鸿蒙手机时优先用 AGC 云真机或借比赛手机，详见构建文档 §9。
 
 ## 代码结构
@@ -145,6 +145,8 @@ docs/prompts/老八三视图-prompt.md   # 布偶猫参考的三视图/单视角
 - 遮罩优先使用 `resources/effects/fog.effect` 的 Shader；如果设备/构建不支持自定义材质，会自动回退到格子遮罩，保证仍可玩。
 - 音乐与 SFX 均走 `AudioSource`，HAP 内已打包；鸿蒙真机的 WAV 解码/延迟/音频焦点仍未验证。
 - 场景通过脚本 UUID 绑定组件：`assets/scripts/game/DemoGame.ts.meta` 中的 UUID 与 `Main.scene` 里的压缩 UUID 必须保持一致；不要手动改其中一个。
+
+
 
 
 

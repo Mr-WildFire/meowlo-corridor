@@ -10,6 +10,7 @@ import {
     UITransform,
 } from 'cc';
 import { locale } from '../core/Locale';
+import { UiFonts } from './UiFonts';
 import { Difficulty } from './LevelConfig';
 import { ItemType } from './DemoTypes';
 import { addLabel, makeNode, Theme, timeText } from './UiKit';
@@ -90,7 +91,9 @@ export class HudView {
         // Keep the strip inside the central 1440px so it also fits 4:3
         // Cocos preview windows, not only a 16:9 device.
         this.trackLabel = addLabel(bar, 'Track', '', 21, Theme.cream, -520, 0, 340, 44);
-        this.timerLabel = addLabel(bar, 'Timer', '', 28, Theme.amber, -200, 0, 240, 48);
+        addLabel(bar, 'TimeCaption', locale.t('hud.timeCaption'), 17, Theme.dim, -245, 0, 70, 40);
+        this.timerLabel = addLabel(bar, 'Timer', '', 30, Theme.amber, -160, 0, 160, 48);
+        UiFonts.numberLabel(this.timerLabel);
         this.stepLabel = addLabel(bar, 'Steps', '', 19, Theme.cream, 30, 0, 220, 44);
         this.seedLabel = addLabel(bar, 'Seed', '', 14, Theme.dim, 330, 0, 330, 40);
         this.createButton(bar, 'MenuButton', '≡', 610, 0, 58, 50, () => this.callbacks.onMenu());
@@ -138,7 +141,8 @@ export class HudView {
         pg.roundRect(-380, -295, 760, 590, 24);
         pg.fill();
         pg.stroke();
-        addLabel(panel, 'PauseTitle', locale.t('game.pauseTitle'), 40, Theme.cream, 0, 225, 600, 60);
+        const pauseTitle = addLabel(panel, 'PauseTitle', locale.t('game.pauseTitle'), 40, Theme.cream, 0, 225, 600, 60);
+        UiFonts.titleLabel(pauseTitle);
         addLabel(panel, 'PauseBody', locale.t('game.pauseBody'), 20, Theme.dim, 0, 175, 620, 36);
         this.createButton(panel, 'Resume', locale.t('game.resume'), 0, 100, 420, 62, () => this.callbacks.onResume());
         this.createButton(panel, 'Settings', locale.t('settings.title'), 0, 22, 420, 62, () => this.callbacks.onSettings());
@@ -160,6 +164,7 @@ export class HudView {
         const artNode = makeNode('OverlayArt', this.overlayRoot, 0, 255, 220, 220);
         this.overlayArt = artNode.addComponent(Sprite);
         this.overlayTitle = addLabel(this.overlayRoot, 'OverlayTitle', '', 40, Theme.cream, 0, 90, 1100, 70);
+        UiFonts.titleLabel(this.overlayTitle);
         this.overlayBody = addLabel(this.overlayRoot, 'OverlayBody', '', 23, Theme.cream, 0, 10, 1100, 90);
         this.overlayHint = addLabel(this.overlayRoot, 'OverlayHint', '', 18, Theme.dim, 0, -80, 1100, 50);
         this.overlayRoot.active = false;
@@ -170,7 +175,7 @@ export class HudView {
             n: stats.collected,
             total: stats.total,
         });
-        this.timerLabel.string = locale.t('hud.timeLeft', { time: timeText(stats.timeLeft) });
+        this.timerLabel.string = timeText(stats.timeLeft);
         this.timerLabel.color = stats.timeLeft <= 30 ? Theme.rose : Theme.amber;
         this.stepLabel.string = locale.t('hud.steps', { steps: stats.steps, time: timeText(stats.elapsed) });
         this.seedLabel.string = locale.t('hud.seed', {
