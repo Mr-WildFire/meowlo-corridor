@@ -9,14 +9,14 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 2. 打开场景 `assets/scenes/Main.scene`。
 3. 点击编辑器顶部的 **预览**（浏览器预览即可）。
 4. 启动后先在难度菜单选择 **轻松 / 标准 / 困难**（也可按 `1/2/3`）。
-5. 推荐预览分辨率：**1080 × 1920 竖屏**；Demo 使用 `SHOW_ALL`，非竖屏窗口会自动留黑边。
+5. 推荐预览分辨率：**1920 × 1080 横屏**；游戏使用 `SHOW_ALL`，HUD 固定、迷宫相机跟随猫咪。
 
 ## 操作
 
 | 输入 | 行为 |
 |---|---|
 | `WASD` / 方向键 / 屏幕滑动 / 鼠标拖动 | 移动一格 |
-| 屏幕右下角方向键 | 移动一格（手机/鼠标皆可） |
+| 右上角 `≡` 菜单 | 暂停/继续、设置、静音、重开、难度 |
 | 屏幕左上角 `Ⅱ` | 暂停 / 继续 |
 | `P` | 暂停 / 继续 |
 | `V` | 静音 / 恢复（HUD 右上角按钮同效） |
@@ -45,7 +45,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - [x] 小鱼干（+20s）、毛线球（15s 路径记忆）
 - [x] 占位美术：老八四方向 4 帧行走、地板、墙、碎片、8 种道具、出口；菜单背景、完整 CD、主人剪影；`ArtAssets` 加载失败时回退 Graphics
 - [x] HUD：音轨进度、倒计时、步数、效果、种子、难度/时间上限
-- [x] 键盘 + 滑动 + 鼠标拖动 + 屏幕方向键；暂停按钮、重开、超时/通关结算
+- [x] 键盘 + 滑动 + 鼠标拖动；右上角单按钮菜单、超时/通关结算
 - [x] 6 层占位 WAV 音乐（AudioSource）：底轨 + 每块碎片解锁一层 + 1 秒静音 + 高潮；暂停/继续/切难度会停/恢复
 - [x] WAV 加载失败时回退到 WebAudio 程序化音乐；文件式 SFX（AudioSource）：点击、拾取、通关、超时、脚步，原生 HAP 也可用
 - [x] 正式 OGG 音频仍未接入，后续按同名资源替换 WAV 即可
@@ -64,7 +64,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - 1000 个种子的迷宫连通性/路径测试通过。
 - Cocos Creator 3.8.8 `web-desktop` 构建成功，场景 `Main` 正确注册并运行 `DemoGame`。
 - 浏览器实测：场景加载无异常；走一步、集齐 3/4/5 碎片、1 秒终局、出口生成、进入出口通关、超时结算均可触发。
-- 遮罩 Shader 已实际加载并出图（柔边圆形视野）；萤火虫 4 格半径切换、屏幕方向键事件均已验证。
+- 遮罩 Shader 已实际加载并出图（柔边圆形视野）；萤火虫 4 格半径切换、滑动/键盘输入已验证。
 - 占位美术已实际加载：老八 16 帧、地板/墙、碎片、8 种道具、出口、菜单背景、CD、主人剪影均正常显示；老八移动时切换方向与行走帧。
 - 三档难度、难度菜单、3/4/5 碎片、5/7/9 分钟、60s/30s 提醒、3/2/1 星结算均已实际验证。
 - 困难 19×23 地板完整覆盖棋盘，墙体/碎片/道具随格子尺寸正确缩放。
@@ -79,7 +79,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - 设置页滑条实际改变主音量并同步 AudioSource 音量；关闭设置后继续游戏。
 - 语言切换后菜单/HUD/教学/结算全部切换为 English；震动开关在浏览器触发 `navigator.vibrate`；重置记录二次确认后清空最佳成绩。
 - 构建产物在 `build-demo/web-desktop`（本地打开需 HTTP 服务；日常开发直接使用 Cocos 预览即可）。
-- **HarmonyOS Release HAP + APP 已产出**：`build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（26,837,237 字节，约 25.6 MB，SHA-256 `DEC2ADF0253C97B8908CE9EB944D65B8AC711EA4C763636AD09F435A33422F97`）与 `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（11,572,040 字节，约 11.0 MB，SHA-256 `C517395EE6B5B9F377E526A02558F747976FE75FD60AF8B5DEADC1ED7C8F9984`）。两者均使用 AGC 发布证书 + `app_gallery` Release Profile 签名，不绑定单台设备 UDID；HAP 用于 `hdc install`，APP 用于 AGC 上传/内测。应用名已修复为 **喵音回廊**，并已改为 `FIXED_WIDTH` 长屏适配 + `sys.getSafeAreaRect()` 安全区；未连接真机，安装方式与 AGC 内测流程见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
+- **HarmonyOS Release HAP + APP 已产出**：`build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（26,833,146 字节，约 25.6 MB，SHA-256 `B2C7265712C6E68998AD0B20DD7E0FF12E786E309A56EBDE430AD64876CA549B`）与 `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（11,572,436 字节，约 11.0 MB，SHA-256 `EF49BCEB81878FA6FCB5A7E6C23AA3E1AD4FC68F2A54220749521441A0248B12`）。两者均使用 AGC 发布证书 + `app_gallery` Release Profile 签名，不绑定单台设备 UDID；HAP 用于 `hdc install`，APP 用于 AGC 上传/内测。应用名已修复为 **喵音回廊**，并已改为 `FIXED_WIDTH` 长屏适配 + `sys.getSafeAreaRect()` 安全区；未连接真机，安装方式与 AGC 内测流程见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
 - **官方模拟器限制**：HarmonyOS 6.0.1 模拟器为 x86_64，而当前 Cocos HAP 的 native 库是 arm64-v8a，安装会报 `9568347` ABI 不匹配；没有鸿蒙手机时优先用 AGC 云真机或借比赛手机，详见构建文档 §9。
 
 ## 代码结构
@@ -122,7 +122,7 @@ assets/
       ├─ MenuView.ts              # 难度选择菜单 + 最佳记录 + 设置入口
       ├─ SettingsView.ts          # 音量 / 静音 / 语言 / 震动 / 重置记录
       ├─ FinaleView.ts            # 碎片拼 CD、静音/高潮/出口三段式终局
-      ├─ HudView.ts               # HUD、Toast、结算层、方向键/暂停
+      ├─ HudView.ts               # 顶部 HUD、单按钮菜单、Toast/结算层
       ├─ ItemSystem.ts            # 道具落点与效果分发
       └─ DemoGame.ts              # 编排：状态、计时、碎片、终局、输入
 tools/                             # 占位资源生成、HarmonyOS 图标
@@ -144,6 +144,9 @@ docs/prompts/老八三视图-prompt.md   # 布偶猫参考的三视图/单视角
 - 遮罩优先使用 `resources/effects/fog.effect` 的 Shader；如果设备/构建不支持自定义材质，会自动回退到格子遮罩，保证仍可玩。
 - 音乐与 SFX 均走 `AudioSource`，HAP 内已打包；鸿蒙真机的 WAV 解码/延迟/音频焦点仍未验证。
 - 场景通过脚本 UUID 绑定组件：`assets/scripts/game/DemoGame.ts.meta` 中的 UUID 与 `Main.scene` 里的压缩 UUID 必须保持一致；不要手动改其中一个。
+
+
+
 
 
 

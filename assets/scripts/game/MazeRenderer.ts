@@ -32,16 +32,13 @@ export class MazeRenderer {
         this.screenH = screenH;
         this.art = art;
 
-        this.cell = Math.min(
-            64,
-            Math.floor((screenW - 100) / model.data.cols),
-            Math.floor((screenH - 430) / model.data.rows),
-        );
-        this.cell = Math.max(38, this.cell);
+        // Fixed world-space cells: the camera follows the cat instead of
+        // shrinking the whole maze into the viewport.
+        this.cell = 128;
         this.boardW = model.data.cols * this.cell;
         this.boardH = model.data.rows * this.cell;
         this.boardX = -this.boardW * 0.5;
-        this.boardY = -20 - this.boardH * 0.5;
+        this.boardY = -this.boardH * 0.5;
 
         this.drawBackground();
         this.createBoard(model);

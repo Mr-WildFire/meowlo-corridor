@@ -105,9 +105,9 @@ foreach ($f in $settingsFiles) {
     if (-not (Test-Path $f)) { continue }
     $s = Get-Content -LiteralPath $f -Raw -Encoding UTF8 | ConvertFrom-Json
     if ($s.screen -and $s.screen.designResolution) {
-        $s.screen.designResolution.width = 1080
-        $s.screen.designResolution.height = 1920
-        $s.screen.designResolution.policy = 4
+        $s.screen.designResolution.width = 1920
+        $s.screen.designResolution.height = 1080
+        $s.screen.designResolution.policy = 2
         Write-Utf8NoBom $f ($s | ConvertTo-Json -Depth 100)
     }
 }
@@ -127,7 +127,7 @@ if ($Release) {
 
 $moduleFile = Join-Path $native 'entry\src\main\module.json5'
 $module = Get-Content -LiteralPath $moduleFile -Raw -Encoding UTF8
-$module = $module.Replace('auto_rotation_landscape', 'portrait')
+$module = [regex]::Replace($module, '("orientation"\s*:\s*")[^"]+(")', '${1}landscape${2}')
 $deviceOld = @'
     "deviceTypes": [
       "default"

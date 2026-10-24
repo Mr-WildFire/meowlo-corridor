@@ -101,19 +101,16 @@ export class DemoGame extends Component {
     private finaleView: FinaleView | null = null;
 
     onLoad(): void {
-        // Use a fixed 1080x1920 portrait stage and letterbox it. The previous
-        // FIXED_WIDTH/manual-Canvas combination made the browser preview lay
-        // the HUD out against the whole 2560x1440 window while the board stayed
-        // in a portrait camera viewport.
-        view.setDesignResolutionSize(1080, 1920, ResolutionPolicy.SHOW_ALL);
+        // Fixed landscape stage. The world camera follows the cat; UI is fixed.
+        view.setDesignResolutionSize(1920, 1080, ResolutionPolicy.SHOW_ALL);
         try {
             profiler.hideStats();
         } catch (e) {
             // profiler is optional in release builds.
         }
 
-        this.screenW = 1080;
-        this.screenH = 1920;
+        this.screenW = 1920;
+        this.screenH = 1080;
         this.safeTop = 0;
         this.safeBottom = 0;
         this.safeLeft = 0;
@@ -135,10 +132,8 @@ export class DemoGame extends Component {
             onMute: () => this.toggleMute(),
             onSettings: () => this.openSettings(),
             onRestart: () => this.restart(),
-            onMenu: () => this.openMenu(),
-            onDifficulty: (difficulty) => {
-                if (this.state === 'menu') this.startLevel(difficulty);
-            },
+            onMenu: () => this.togglePause(),
+            onDifficulty: (difficulty) => this.startLevel(difficulty),
             onDebugCollect: () => this.debugCollectAll(),
             onDebugTime: () => this.debugSubtractTime(),
             onTap: () => this.handleTap(),
@@ -172,35 +167,13 @@ export class DemoGame extends Component {
         this.music.setVolume(this.volume);
         this.tone.setMuted(this.muted);
         this.tone.setVolume(this.volume);
-        this.openMenu();
+        // Main page is the maze itself. Difficulty lives in the single menu panel.
+        this.startLevel(this.difficulty);
     }
 
     private openMenu(): void {
-        if (this.state === 'finale') return;
-        if (this.state === 'menu' && this.menu) return;
-        if (this.settings) {
-            this.settings.dispose();
-            this.settings = null;
-        }
-        this.state = 'menu';
-        this.finale = false;
-        this.ending = false;
-        this.unscheduleAllCallbacks();
-        Tween.stopAll();
-        this.music.stop();
-        // Hide the frozen run behind the opaque menu instead of showing ghost HUD text.
-        if (this.demoRoot) this.demoRoot.active = false;
-        if (this.menu) this.menu.dispose();
-        this.menu = new MenuView(
-            this.node,
-            this.screenW,
-            this.screenH,
-            this.progress.allBest(),
-            this.muted,
-            (difficulty) => this.startLevel(difficulty),
-            () => this.toggleMute(),
-            () => this.openSettings(),
-        );
+        // Kept for keyboard compatibility; the visible menu is the pause panel.
+        this.togglePause();
     }
 
     private startLevel(difficulty: Difficulty): void {
@@ -293,8 +266,8 @@ export class DemoGame extends Component {
             this.demoRoot = null;
         }
 
-        this.screenW = view.getVisibleSize().width;
-        this.screenH = view.getVisibleSize().height;
+        this.screenW = 1920;
+        this.screenH = 1080;
         this.seed = nowSeed();
         this.rng = new Rng(this.seed);
         this.model = new MazeModel(
@@ -348,22 +321,21 @@ export class DemoGame extends Component {
 
         this.createFogAndGuide();
         this.hud = new HudView(
-            this.demoRoot,
+            this.node,
             this.screenW,
             this.screenH,
-            this.safeTop,
-            this.safeBottom,
-            this.safeLeft,
-            this.safeRight,
             {
-                onDirection: (dir) => this.handleDirection(dir),
-                onPause: () => this.togglePause(),
-                onMute: () => this.toggleMute(),
+                onMenu: () => this.togglePause(),
+                onResume: () => this.togglePause(),
                 onSettings: () => this.openSettings(),
+                onMute: () => this.toggleMute(),
+                onRestart: () => this.restart(),
+                onDifficulty: (difficulty) => this.startLevel(difficulty),
             },
             (cb, delay) => this.scheduleOnce(cb, delay),
         );
         this.hud.setMuted(this.muted);
+        this.followCamera();
 
         this.refreshFog();
         this.refreshGuide();
@@ -504,6 +476,27 @@ export class DemoGame extends Component {
         this.catView?.setMoving(true);
         await this.player.move(actual, this.catStrip > 0 ? 2 : 1);
         this.catView?.setMoving(false);
+        this.followCamera();
+    }
+
+    private followCamera(): void {
+        if (!this.demoRoot || !this.renderer || !this.player) return;
+        const local = this.renderer.cellToLocal(this.player.position);
+        const worldX = this.renderer.boardX + local.x;
+        const worldY = this.renderer.boardY + local.y;
+        const halfW = this.screenW * 0.5;
+        const halfH = this.screenH * 0.5;
+        const minX = -this.renderer.boardW * 0.5 + halfW;
+        const maxX = this.renderer.boardW * 0.5 - halfW;
+        const minY = -this.renderer.boardH * 0.5 + halfH;
+        const maxY = this.renderer.boardH * 0.5 - halfH;
+        const camX = minX > maxX ? 0 : Math.max(minX, Math.min(maxX, worldX));
+        const camY = minY > maxY ? 0 : Math.max(minY, Math.min(maxY, worldY));
+        this.demoRoot.setPosition(
+            this.screenW * 0.5 - camX,
+            this.screenH * 0.5 - camY,
+            0,
+        );
     }
 
     private onArrive(next: GridPos): boolean {
@@ -654,6 +647,7 @@ export class DemoGame extends Component {
         }
 
         this.player.teleport(target);
+        this.followCamera();
         this.visitedTrail = [];
         this.refreshFog();
         this.refreshGuide();
@@ -920,9 +914,8 @@ export class DemoGame extends Component {
             this.menu = null;
         }
         this.settingsWasPlaying = false;
-        this.state = 'menu';
         this.ending = false;
-        this.openMenu();
+        this.startLevel(this.difficulty);
     }
 
     private toggleVibration(): boolean {
@@ -937,15 +930,11 @@ export class DemoGame extends Component {
         if (this.state === 'playing' && !this.finale) {
             this.state = 'paused';
             this.music.pause();
-            this.hud.showOverlay(
-                locale.t('game.pauseTitle'),
-                locale.t('game.pauseBody'),
-                locale.t('game.pauseHint'),
-            );
+            this.hud.showPausePanel();
         } else if (this.state === 'paused') {
             this.state = 'playing';
             this.music.resume();
-            this.hud.hideOverlay();
+            this.hud.hidePausePanel();
         }
     }
 
@@ -992,10 +981,6 @@ export class DemoGame extends Component {
             this.restart();
             return;
         }
-        if (this.state === 'paused') {
-            this.togglePause();
-            return;
-        }
         if (this.state !== 'playing' || this.finale) return;
         void this.tryMove(dir);
     }
@@ -1005,9 +990,6 @@ export class DemoGame extends Component {
         if (this.state === 'won' || this.state === 'timeout') {
             this.restart();
             return;
-        }
-        if (this.state === 'paused') {
-            this.togglePause();
         }
     }
 }
