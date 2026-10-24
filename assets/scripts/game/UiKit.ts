@@ -1,4 +1,5 @@
 import { Color, Graphics, Label, Layers, Node, UITransform } from 'cc';
+import { UiFonts } from './UiFonts';
 
 export const Theme = {
     bg: new Color(11, 9, 18, 255),
@@ -67,6 +68,7 @@ export function addLabel(
     label.horizontalAlign = Label.HorizontalAlign.CENTER;
     label.verticalAlign = Label.VerticalAlign.CENTER;
     label.overflow = Label.Overflow.NONE;
+    UiFonts.apply(label);
     return label;
 }
 

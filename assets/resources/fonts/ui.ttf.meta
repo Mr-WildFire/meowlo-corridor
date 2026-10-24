@@ -2,10 +2,10 @@
   "ver": "1.0.1",
   "importer": "ttf-font",
   "imported": true,
-  "uuid": "fe84c652-4ef4-4bb2-b2f4-652561d78fdc",
+  "uuid": "3e8cb00e-724b-44ab-88c2-27566e5f7301",
   "files": [
     ".json",
-    "numbers.ttf"
+    "ui.ttf"
   ],
   "subMetas": {},
   "userData": {}

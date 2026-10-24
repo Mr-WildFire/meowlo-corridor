@@ -1,41 +1,40 @@
 import { Font, Label, resources } from 'cc';
 
 /**
- * Optional UI fonts. Body copy stays on HarmonyOS Sans/system; the bundled
- * title/numbers fonts are only applied where they improve hierarchy.
+ * Single UI font for the whole game: BoukenGothic with missing simplified
+ * Chinese glyphs merged from ZCOOL XiaoWei, then subset to the strings used.
  */
 export class UiFonts {
+    static ui: Font | null = null;
     static title: Font | null = null;
     static numbers: Font | null = null;
 
     static async load(): Promise<void> {
-        await Promise.all([
-            new Promise<void>((resolve) => {
-                resources.load('fonts/title', Font, (err, font) => {
-                    if (!err && font) UiFonts.title = font;
-                    else console.warn('[UiFonts] title font load failed', err);
-                    resolve();
-                });
-            }),
-            new Promise<void>((resolve) => {
-                resources.load('fonts/numbers', Font, (err, font) => {
-                    if (!err && font) UiFonts.numbers = font;
-                    else console.warn('[UiFonts] numbers font load failed', err);
-                    resolve();
-                });
-            }),
-        ]);
+        await new Promise<void>((resolve) => {
+            resources.load('fonts/ui', Font, (err, font) => {
+                if (!err && font) {
+                    UiFonts.ui = font;
+                    UiFonts.title = font;
+                    UiFonts.numbers = font;
+                } else {
+                    console.warn('[UiFonts] UI font load failed', err);
+                }
+                resolve();
+            });
+        });
+    }
+
+    static apply(label: Label): void {
+        if (!UiFonts.ui) return;
+        label.useSystemFont = false;
+        label.font = UiFonts.ui;
     }
 
     static titleLabel(label: Label): void {
-        if (!UiFonts.title) return;
-        label.useSystemFont = false;
-        label.font = UiFonts.title;
+        UiFonts.apply(label);
     }
 
     static numberLabel(label: Label): void {
-        if (!UiFonts.numbers) return;
-        label.useSystemFont = false;
-        label.font = UiFonts.numbers;
+        UiFonts.apply(label);
     }
 }
