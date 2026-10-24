@@ -1,6 +1,7 @@
 import { Color, EventMouse, EventTouch, Graphics, Label, Node, UITransform, Vec3 } from 'cc';
 import { locale } from '../core/Locale';
 import { Theme, addLabel, makeNode } from './UiKit';
+import { UiFonts } from './UiFonts';
 
 /**
  * Settings overlay: volume, mute, language, vibration, reset records.
@@ -56,7 +57,8 @@ export class SettingsView {
         pg.fill();
         pg.stroke();
 
-        addLabel(panel, 'SettingsTitle', locale.t('settings.title'), 40, Theme.cream, 0, 340, 720, 60);
+        const settingsTitle = addLabel(panel, 'SettingsTitle', locale.t('settings.title'), 40, Theme.cream, 0, 340, 720, 60);
+        UiFonts.titleLabel(settingsTitle);
         addLabel(panel, 'VolumeCaption', locale.t('settings.volume'), 20, Theme.dim, 0, 250, 720, 34);
         this.volumeLabel = addLabel(panel, 'VolumeValue', '', 18, Theme.cream, 0, 216, 720, 30);
 

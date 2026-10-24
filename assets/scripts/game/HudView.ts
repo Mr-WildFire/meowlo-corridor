@@ -269,7 +269,8 @@ export class HudView {
         g.roundRect(-w * 0.5, -h * 0.5, w, h, 14);
         g.fill();
         g.stroke();
-        addLabel(node, name + 'Label', text, 20, Theme.cream, 0, 0, w - 12, h);
+        const buttonLabel = addLabel(node, name + 'Label', text, 20, Theme.cream, 0, 0, w - 12, h);
+        if (text !== '≡') UiFonts.titleLabel(buttonLabel);
         const press = (event: EventTouch | EventMouse): void => {
             event.propagationStopped = true;
             onClick();

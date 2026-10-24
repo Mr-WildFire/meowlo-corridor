@@ -124,7 +124,7 @@ export class MenuView {
         g.fill();
         g.stroke();
 
-        addLabel(
+        const menuLabel = addLabel(
             node,
             'MenuLabel',
             `${locale.difficultyName(level.id)} · ${locale.difficultySubtitle(level.id)}`,
@@ -135,6 +135,7 @@ export class MenuView {
             520,
             36,
         );
+        UiFonts.titleLabel(menuLabel);
         addLabel(
             node,
             'MenuDesc',

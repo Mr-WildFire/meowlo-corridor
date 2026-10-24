@@ -1,6 +1,7 @@
 import { Color, Graphics, Label, Node, Sprite, SpriteFrame, Tween, tween, UITransform, Vec3 } from 'cc';
 import { locale } from '../core/Locale';
 import { Theme, addLabel, makeNode } from './UiKit';
+import { UiFonts } from './UiFonts';
 
 /**
  * Short CD assembly cinematic after the last fragment.
@@ -32,6 +33,7 @@ export class FinaleView {
 
         addLabel(this.root, 'FinaleKicker', 'CD', 18, Theme.cyan, 0, 500, 400, 30);
         this.title = addLabel(this.root, 'FinaleTitle', locale.t('finale.title'), 38, Theme.cream, 0, 430, 980, 60);
+        UiFonts.titleLabel(this.title);
         this.subtitle = addLabel(this.root, 'FinaleSub', locale.t('finale.subtitle'), 20, Theme.dim, 0, 365, 980, 40);
 
         this.cdNode = makeNode('FinaleCD', this.root, 0, 40, 300, 300);
