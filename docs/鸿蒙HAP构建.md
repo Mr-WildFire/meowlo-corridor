@@ -11,18 +11,18 @@
 | ArkTS 编译 | 成功（API 26 仅有 `globalThis`/弃用 API 警告） |
 | HAP 打包 | 成功 |
 | HAP 签名 | ✅ **Release signed**（AGC 发布证书 + `app_gallery` Release Profile） |
-| 当前通用产物 | `build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（26,833,146 字节，约 25.6 MB） |
-| Release SHA-256 | `8763A14954DD78602977B05CEE23F8B33C105820EA1B6055E8C497B55E54EFFB` |
+| 当前通用产物 | `build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（26,833,147 字节，约 25.6 MB） |
+| Release SHA-256 | `22B4EE3C3795F2BD89CAC94BAE8F99E9744E519345FFA658EA39C20400812EE7` |
 | 应用名 | `喵音回廊`（已修复之前的乱码） |
 | 屏幕方向 | `module.json5` 为 `landscape`；运行时 `settings.json` 强制 `1920×1080` / `policy=2`（SHOW_ALL） |
 | UI 布局 | 顶部单行 HUD；右上角单按钮菜单；无 D-pad；滑动移动 |
-| AGC 上架包 | `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（11,571,557 字节，签名验证通过） |
+| AGC 上架包 | `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（11,570,770 字节，签名验证通过） |
 | 调试 unsigned 产物 | `build-harmony/MeowloCorridor-1.0.0-unsigned.hap`（45,324,360 字节，保留作对比） |
 | 真机安装 | 未执行（当前没有连接 HarmonyOS 设备） |
 
 > **通用包已产出**：Release Profile 不绑定单台设备 UDID；但 Profile 的 `app-distribution-type` 是 `app_gallery`，安装方式需要走 AGC 内测/应用市场，或先在目标设备验证能否直接 `hdc install`。签名材料路径在 `D:\Projects\MusicCat\cer`。
 
-> **2026-10-19 图标更新**：应用图标替换为「唱片环 + 布偶猫 + 碎 CD 裂光」版本，`tools/icon/icon-512.png` 为唯一源文件（512×512 RGBA；`tools/harmony_icon.png` 为兼容副本），构建脚本会把它复制到 `AppScope/.../app_icon.png` 与 `entry/.../icon.png`。本次 `-SkipCocos -Release` 增量重打，`@SignHap` 成功；HAP 内两张图标与源文件 SHA-256 一致（`0DEEBA78…D6E8544`），`resources.index` 仍含 `喵音回廊`。体积因此从 25,055,494 增至 26,833,146 字节；随后又合入长屏 `FIXED_WIDTH` + SafeArea 适配。
+> **2026-10-19 图标更新**：应用图标替换为「唱片环 + 布偶猫 + 碎 CD 裂光」版本，`tools/icon/icon-512.png` 为唯一源文件（512×512 RGBA；`tools/harmony_icon.png` 为兼容副本），构建脚本会把它复制到 `AppScope/.../app_icon.png` 与 `entry/.../icon.png`。本次 `-SkipCocos -Release` 增量重打，`@SignHap` 成功；HAP 内两张图标与源文件 SHA-256 一致（`0DEEBA78…D6E8544`），`resources.index` 仍含 `喵音回廊`。体积因此从 25,055,494 增至 26,833,147 字节；随后又合入长屏 `FIXED_WIDTH` + SafeArea 适配。
 
 ## 1.1 上架包 `.app`（AGC 上传用）
 
@@ -47,8 +47,8 @@ hvigorw assembleApp --mode project -p product=default -p buildMode=release --no-
 | 项目 | 结果 |
 |---|---|
 | 原始输出 | `native/engine/harmonyos-next/build/outputs/default/harmonyos-next-default-signed.app` |
-| 归档副本 | `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（11,571,557 字节，约 11.0 MB） |
-| SHA-256 | `29495A92E558C353EDFB9E79D7C0C98E770AE916E000123DF6B22A62B1374D4A` |
+| 归档副本 | `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（11,570,770 字节，约 11.0 MB） |
+| SHA-256 | `C57D3EB1D3716753B9961C4444E11EC9C14B61205406416D972FC19076EF3A6D` |
 | 内容 | `pac.json`、`pack.info`、`entry-default.hap`（26,642,094 字节） |
 | 用途 | **AGC 上传 / 应用市场 / 内测**；HAP 用于 `hdc install` |
 
@@ -362,6 +362,7 @@ hdc install MeowloCorridor-1.0.0-release-signed.hap
 4. 重新打 release HAP，并检查 HAP 内 `resources.index` 包含 UTF-8 的 `喵音回廊`。
 
 当前产物已修复，桌面名应为 **喵音回廊**。
+
 
 
 

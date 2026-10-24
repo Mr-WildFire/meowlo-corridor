@@ -167,13 +167,34 @@ export class DemoGame extends Component {
         this.music.setVolume(this.volume);
         this.tone.setMuted(this.muted);
         this.tone.setVolume(this.volume);
-        // Main page is the maze itself. Difficulty lives in the single menu panel.
-        this.startLevel(this.difficulty);
+        this.openMenu();
     }
 
     private openMenu(): void {
-        // Kept for keyboard compatibility; the visible menu is the pause panel.
-        this.togglePause();
+        if (this.state === 'finale') return;
+        if (this.settings) {
+            this.settings.dispose();
+            this.settings = null;
+        }
+        this.state = 'menu';
+        this.finale = false;
+        this.ending = false;
+        this.unscheduleAllCallbacks();
+        Tween.stopAll();
+        this.music.stop();
+        this.hud?.dispose();
+        if (this.demoRoot) this.demoRoot.active = false;
+        if (this.menu) this.menu.dispose();
+        this.menu = new MenuView(
+            this.node,
+            this.screenW,
+            this.screenH,
+            this.progress.allBest(),
+            this.muted,
+            (difficulty) => this.startLevel(difficulty),
+            () => this.toggleMute(),
+            () => this.openSettings(),
+        );
     }
 
     private startLevel(difficulty: Difficulty): void {
@@ -205,6 +226,7 @@ export class DemoGame extends Component {
         if (this.state !== 'playing' || this.finale || !this.hud) return;
 
         this.catView?.update(dt);
+        this.followCamera();
         this.elapsed += dt;
         if (!this.timerStopped) {
             this.timeLeft = Math.max(0, this.timeLeft - dt);
@@ -481,7 +503,10 @@ export class DemoGame extends Component {
 
     private followCamera(): void {
         if (!this.demoRoot || !this.renderer || !this.player) return;
-        const local = this.renderer.cellToLocal(this.player.position);
+        // Use the tweening node position, not the logical grid cell. The grid
+        // only changes at the end of a move, which made the camera snap one
+        // cell at a time instead of following smoothly.
+        const local = this.player.node.position;
         const worldX = this.renderer.boardX + local.x;
         const worldY = this.renderer.boardY + local.y;
         // Center the cat in every move. Do not clamp to the board bounds:
@@ -905,7 +930,7 @@ export class DemoGame extends Component {
         }
         this.settingsWasPlaying = false;
         this.ending = false;
-        this.startLevel(this.difficulty);
+        this.openMenu();
     }
 
     private toggleVibration(): boolean {
