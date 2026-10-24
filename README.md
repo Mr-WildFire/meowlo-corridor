@@ -79,7 +79,7 @@ Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（
 - 设置页滑条实际改变主音量并同步 AudioSource 音量；关闭设置后继续游戏。
 - 语言切换后菜单/HUD/教学/结算全部切换为 English；震动开关在浏览器触发 `navigator.vibrate`；重置记录二次确认后清空最佳成绩。
 - 构建产物在 `build-demo/web-desktop`（本地打开需 HTTP 服务；日常开发直接使用 Cocos 预览即可）。
-- **HarmonyOS Release HAP + APP 已产出**：`build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（26,833,142 字节，约 25.6 MB，SHA-256 `F70A5F1840425C1E1C394A46DDF7726CD2BE5DD2BD1696DC9A6CCAAA19028E81`）与 `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（11,571,942 字节，约 11.0 MB，SHA-256 `8B15D01BA467B9C8EA459C4D629F715D09DE2D1019087BC9DA6C21743242D9BD`）。两者均使用 AGC 发布证书 + `app_gallery` Release Profile 签名，不绑定单台设备 UDID；HAP 用于 `hdc install`，APP 用于 AGC 上传/内测。应用名已修复为 **喵音回廊**，并已改为 `FIXED_WIDTH` 长屏适配 + `sys.getSafeAreaRect()` 安全区；未连接真机，安装方式与 AGC 内测流程见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
+- **HarmonyOS Release HAP + APP 已产出**：`build-harmony/MeowloCorridor-1.0.0-release-signed.hap`（26,837,237 字节，约 25.6 MB，SHA-256 `DEC2ADF0253C97B8908CE9EB944D65B8AC711EA4C763636AD09F435A33422F97`）与 `build-harmony/MeowloCorridor-1.0.0-release-signed.app`（11,572,040 字节，约 11.0 MB，SHA-256 `C517395EE6B5B9F377E526A02558F747976FE75FD60AF8B5DEADC1ED7C8F9984`）。两者均使用 AGC 发布证书 + `app_gallery` Release Profile 签名，不绑定单台设备 UDID；HAP 用于 `hdc install`，APP 用于 AGC 上传/内测。应用名已修复为 **喵音回廊**，并已改为 `FIXED_WIDTH` 长屏适配 + `sys.getSafeAreaRect()` 安全区；未连接真机，安装方式与 AGC 内测流程见 [docs/鸿蒙HAP构建.md](docs/鸿蒙HAP构建.md)。
 - **官方模拟器限制**：HarmonyOS 6.0.1 模拟器为 x86_64，而当前 Cocos HAP 的 native 库是 arm64-v8a，安装会报 `9568347` ABI 不匹配；没有鸿蒙手机时优先用 AGC 云真机或借比赛手机，详见构建文档 §9。
 
 ## 代码结构
@@ -144,6 +144,7 @@ docs/prompts/老八三视图-prompt.md   # 布偶猫参考的三视图/单视角
 - 遮罩优先使用 `resources/effects/fog.effect` 的 Shader；如果设备/构建不支持自定义材质，会自动回退到格子遮罩，保证仍可玩。
 - 音乐与 SFX 均走 `AudioSource`，HAP 内已打包；鸿蒙真机的 WAV 解码/延迟/音频焦点仍未验证。
 - 场景通过脚本 UUID 绑定组件：`assets/scripts/game/DemoGame.ts.meta` 中的 UUID 与 `Main.scene` 里的压缩 UUID 必须保持一致；不要手动改其中一个。
+
 
 
 

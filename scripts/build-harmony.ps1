@@ -94,6 +94,37 @@ foreach ($f in @($appString, $entryString)) {
     Write-Utf8NoBom $f $text
 }
 
+# Cocos CLI defaults to 1280x720 landscape when project.json has no screen
+# settings. Force portrait design resolution in the generated runtime settings
+# so the first frame is portrait even before DemoGame.onLoad runs.
+$settingsFiles = @(
+    (Join-Path $Project 'build-harmony\harmonyos-next\data\src\settings.json'),
+    (Join-Path $native 'entry\src\main\resources\rawfile\Resources\src\settings.json')
+)
+foreach ($f in $settingsFiles) {
+    if (-not (Test-Path $f)) { continue }
+    $s = Get-Content -LiteralPath $f -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ($s.screen -and $s.screen.designResolution) {
+        $s.screen.designResolution.width = 1080
+        $s.screen.designResolution.height = 1920
+        $s.screen.designResolution.policy = 4
+        Write-Utf8NoBom $f ($s | ConvertTo-Json -Depth 100)
+    }
+}
+
+# Cocos/DevEco can inject a debug signing block whose short password fails
+# hvigor's >=32-character validation. Release builds must use the AGC release
+# material, so drop only that block and point the product at default_release.
+if ($Release) {
+    $profileFile = Join-Path $native 'build-profile.json5'
+    if (Test-Path $profileFile) {
+        $profile = Get-Content -LiteralPath $profileFile -Raw -Encoding UTF8
+        $profile = [regex]::Replace($profile, '(?s)\s*// @debug-signing-start.*?// @debug-signing-end', '')
+        $profile = $profile.Replace("signingConfig: 'default_debug'", "signingConfig: 'default_release'")
+        Write-Utf8NoBom $profileFile $profile
+    }
+}
+
 $moduleFile = Join-Path $native 'entry\src\main\module.json5'
 $module = Get-Content -LiteralPath $moduleFile -Raw -Encoding UTF8
 $module = $module.Replace('auto_rotation_landscape', 'portrait')
