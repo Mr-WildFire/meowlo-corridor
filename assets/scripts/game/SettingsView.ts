@@ -102,12 +102,7 @@ export class SettingsView {
         cg.stroke();
         addLabel(close, 'SettingsCloseLabel', locale.t('settings.close'), 22, Theme.cream, 0, 0, 360, 62);
 
-        const closePress = (event: EventTouch | EventMouse): void => {
-            event.propagationStopped = true;
-            this.onClose();
-        };
-        close.on(Node.EventType.TOUCH_END, closePress, this);
-        close.on(Node.EventType.MOUSE_UP, closePress, this);
+        this.bindPress(close, () => this.onClose());
 
         this.bindPress(this.muteLabel.node.parent!, () => this.setMuted(this.onToggleMute()));
         this.bindPress(this.languageLabel.node.parent!, () => this.onToggleLanguage());

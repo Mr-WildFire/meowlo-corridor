@@ -1,18 +1,21 @@
-import { Color, EventMouse, EventTouch, Graphics, Node, resources, Sprite, SpriteFrame, sys, UITransform, VideoClip, VideoPlayer } from 'cc';
+﻿import { Color, EventMouse, EventTouch, Graphics, Node, resources, Sprite, SpriteFrame, UITransform } from 'cc';
 import { locale } from '../core/Locale';
 import { Theme, addLabel, makeNode } from './UiKit';
 import { UiFonts } from './UiFonts';
 
 /**
- * Full-screen tutorial movie. The clip is followed directly by the tutorial
- * level. A poster + tap-to-play layer keeps the flow usable on web builds
- * where autoplay with audio is blocked.
+ * Full-screen tutorial movie.
+ *
+ * Cocos VideoPlayer is unavailable in the Windows simulator and on some native
+ * targets, so the supplied 10-second movie is shipped as a 10fps frame strip.
+ * It auto-plays on every platform, then enters the tutorial directly.
  */
 export class TutorialIntroView {
     private readonly root: Node;
-    private video: VideoPlayer | null = null;
-    private videoNode: Node | null = null;
-    private playOverlay: Node | null = null;
+    private readonly video: Sprite;
+    private timer: ReturnType<typeof setInterval> | null = null;
+    private frames: SpriteFrame[] = [];
+    private index = 0;
     private started = false;
 
     constructor(
@@ -37,97 +40,61 @@ export class TutorialIntroView {
             poster.getComponent(UITransform)!.setContentSize(screenW, screenH);
         });
 
-        // Create the video node before the overlay so the overlay stays on top.
-        this.videoNode = makeNode('TutorialVideo', this.root, 0, 0, screenW, screenH);
-        this.playOverlay = this.createPlayOverlay();
+        const videoNode = makeNode('TutorialFrames', this.root, 0, 0, screenW, screenH);
+        this.video = videoNode.addComponent(Sprite);
+        this.video.sizeMode = Sprite.SizeMode.CUSTOM;
+        this.video.trim = false;
+        videoNode.getComponent(UITransform)!.setContentSize(screenW, screenH);
 
-        resources.load('video/tutorial_intro', VideoClip, (err, clip) => {
-            if (err || !clip || !this.root.isValid) {
-                console.warn('[TutorialIntro] video load failed', err);
-                this.showFallback();
-                return;
-            }
-
-            const vp = this.videoNode!.addComponent(VideoPlayer);
-            this.video = vp;
-            vp.resourceType = VideoPlayer.ResourceType.LOCAL;
-            vp.clip = clip;
-            vp.playOnAwake = false;
-            vp.loop = false;
-            // Browsers block unmuted autoplay; start muted on web so the
-            // intro always plays, then keep the overlay for unmuted replay.
-            vp.mute = sys.isBrowser;
-            vp.volume = 1;
-            vp.fullScreenOnPlaying = false;
-            vp.stayOnTop = false;
-            vp.node.on(VideoPlayer.EventType.PLAYING, () => {
-                if (this.playOverlay?.isValid) this.playOverlay.active = false;
-            }, this);
-            vp.node.on(VideoPlayer.EventType.CLICKED, () => { vp.mute = false; }, this);
-            vp.node.on(VideoPlayer.EventType.COMPLETED, () => this.finish(), this);
-            vp.node.on(VideoPlayer.EventType.ERROR, () => this.showFallback(), this);
-            vp.play();
-        });
+        this.loadFrames();
     }
 
-    private createPlayOverlay(): Node {
-        const overlay = makeNode('TutorialPlayOverlay', this.root, 0, 0, this.screenW, this.screenH);
-        const g = overlay.addComponent(Graphics);
-        g.fillColor = new Color(3, 2, 7, 60);
-        g.rect(-this.screenW * 0.5, -this.screenH * 0.5, this.screenW, this.screenH);
-        g.fill();
-        const play = makeNode('TutorialPlay', overlay, 0, 30, 88, 88);
-        const pg = play.addComponent(Graphics);
-        pg.fillColor = new Color(216, 178, 122, 35);
-        pg.circle(0, 0, 44);
-        pg.fill();
-        pg.strokeColor = Theme.amber;
-        pg.lineWidth = 2;
-        pg.circle(0, 0, 44);
-        pg.stroke();
-        pg.fillColor = Theme.cream;
-        pg.moveTo(-10, -17);
-        pg.lineTo(19, 0);
-        pg.lineTo(-10, 17);
-        pg.close();
-        pg.fill();
-        addLabel(overlay, 'PlayHint', locale.t('tutorial.tapToPlay'), 20, Theme.cream, 0, -70, 500, 40);
-
-        const skip = makeNode('TutorialSkip', overlay, this.screenW * 0.5 - 110, -this.screenH * 0.5 + 62, 180, 52);
-        const sg = skip.addComponent(Graphics);
-        sg.fillColor = new Color(12, 9, 18, 190);
-        sg.strokeColor = new Color(216, 178, 122, 100);
-        sg.lineWidth = 1;
-        sg.roundRect(-90, -26, 180, 52, 14);
-        sg.fill();
-        sg.stroke();
-        addLabel(skip, 'SkipLabel', locale.t('tutorial.skip'), 17, Theme.dim, 0, 0, 170, 46);
-        skip.on(Node.EventType.TOUCH_END, (event: EventTouch) => {
-            event.propagationStopped = true;
+    private loadFrames(): void {
+        const total = 101;
+        const loadAt = (index: number): void => {
+            if (!this.root.isValid) return;
+            if (index >= total) {
+                this.video.spriteFrame = this.frames[0];
+                this.video.node.getComponent(UITransform)!.setContentSize(this.screenW, this.screenH);
+                this.timer = setInterval(() => this.tick(), 100);
+                return;
+            }
+            const name = `frame_${String(index).padStart(3, '0')}`;
+            resources.load(`art/ui/tutorial_frames/${name}/spriteFrame`, SpriteFrame, (err, frame) => {
+                if (err || !frame) {
+                    this.showFallback();
+                    return;
+                }
+                this.frames.push(frame);
+                if (index === 0) this.video.spriteFrame = frame;
+                loadAt(index + 1);
+            });
+        };
+        loadAt(0);
+    }
+    private tick(): void {
+        if (!this.root.isValid) return;
+        this.index++;
+        if (this.index >= this.frames.length) {
             this.finish();
-        }, this);
-
-        overlay.on(Node.EventType.TOUCH_END, (event: EventTouch) => {
-            if (!this.video) return;
-            event.propagationStopped = true;
-            this.video.play();
-        }, this);
-        return overlay;
+            return;
+        }
+        this.video.spriteFrame = this.frames[this.index];
     }
 
     private finish(): void {
         if (this.started) return;
         this.started = true;
+        if (this.timer !== null) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
         this.onStart();
     }
 
     private showFallback(): void {
         if (this.started || !this.root.isValid) return;
-        if (this.video?.node.isValid) this.video.node.destroy();
-        this.video = null;
-        if (this.playOverlay?.isValid) this.playOverlay.destroy();
-        this.playOverlay = null;
-
+        this.video.node.active = false;
         const title = addLabel(this.root, 'TutorialTitle', locale.t('tutorial.title'), 44, Theme.cream, 0, 220, 900, 70);
         UiFonts.titleLabel(title);
         addLabel(this.root, 'TutorialBody', locale.t('tutorial.body'), 22, Theme.cream, 0, 110, 1100, 80);
@@ -149,10 +116,11 @@ export class TutorialIntroView {
     }
 
     dispose(): void {
-        if (this.video) {
-            this.video.stop();
-            this.video = null;
+        if (this.timer !== null) {
+            clearInterval(this.timer);
+            this.timer = null;
         }
+        this.frames.length = 0;
         if (this.root?.isValid) this.root.destroy();
     }
 }
