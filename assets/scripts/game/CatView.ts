@@ -48,7 +48,8 @@ export class CatView {
         this.timer += dt;
         if (this.timer < FRAME_TIME) return;
         this.timer = 0;
-        this.frame = (this.frame + 1) % 4;
+        const count = this.frames[DIR_TO_CAT[this.direction]].length;
+        this.frame = (this.frame + 1) % Math.max(1, count);
         this.apply();
     }
 

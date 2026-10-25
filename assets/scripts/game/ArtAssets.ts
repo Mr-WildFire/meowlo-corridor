@@ -1,4 +1,4 @@
-﻿import { resources, SpriteFrame } from 'cc';
+import { resources, SpriteFrame } from 'cc';
 import { ItemType } from './DemoTypes';
 
 export type CatDir = 'down' | 'up' | 'left' | 'right';
@@ -48,26 +48,28 @@ function loadSprite(path: string): Promise<SpriteFrame | null> {
  * Every field can be null, in which case the caller keeps its Graphics fallback.
  */
 export async function loadArtAssets(): Promise<ArtAssets> {
-    // One static 512x512 drawing per direction. CatView tolerates a single
-    // frame, so the supplied front/side/back art can be used directly.
-    const catPaths = CAT_DIRS.map((dir) => ({
-        dir,
-        path: `art/cat/cat_${dir}_0/spriteFrame`,
-    }));
+    // Eight frames per direction, extracted from the 8-frame / 8-direction
+    // turnaround sheet.
+    const catPaths: Array<{ dir: CatDir; index: number; path: string }> = [];
+    for (const dir of CAT_DIRS) {
+        for (let i = 0; i < 8; i++) {
+            catPaths.push({ dir, index: i, path: `art/cat/cat_${dir}_${i}/spriteFrame` });
+        }
+    }
 
-    const catAssets = await Promise.all(catPaths.map(async ({ dir, path }) => {
+    const catAssets = await Promise.all(catPaths.map(async ({ dir, index, path }) => {
         const frame = await loadSprite(path);
-        return { dir, frame };
+        return { dir, index, frame };
     }));
 
     const cat: CatFrames | null = CAT_DIRS.every((dir) =>
-        catAssets.some((x) => x.dir === dir && !!x.frame),
+        catAssets.filter((x) => x.dir === dir && !!x.frame).length === 8,
     )
         ? {
-              down: [catAssets.find((x) => x.dir === 'down')!.frame!],
-              up: [catAssets.find((x) => x.dir === 'up')!.frame!],
-              left: [catAssets.find((x) => x.dir === 'left')!.frame!],
-              right: [catAssets.find((x) => x.dir === 'right')!.frame!],
+              down: catAssets.filter((x) => x.dir === 'down').sort((a, b) => a.index - b.index).map((x) => x.frame!),
+              up: catAssets.filter((x) => x.dir === 'up').sort((a, b) => a.index - b.index).map((x) => x.frame!),
+              left: catAssets.filter((x) => x.dir === 'left').sort((a, b) => a.index - b.index).map((x) => x.frame!),
+              right: catAssets.filter((x) => x.dir === 'right').sort((a, b) => a.index - b.index).map((x) => x.frame!),
           }
         : null;
 
