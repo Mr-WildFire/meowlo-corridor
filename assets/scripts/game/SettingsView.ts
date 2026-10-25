@@ -1,4 +1,4 @@
-import { Color, EventMouse, EventTouch, Graphics, Label, Node, UITransform, Vec3 } from 'cc';
+﻿import { Color, EventMouse, EventTouch, Graphics, Label, Node, UITransform, Vec3 } from 'cc';
 import { locale } from '../core/Locale';
 import { Theme, addLabel, makeNode } from './UiKit';
 import { UiFonts } from './UiFonts';
@@ -107,10 +107,10 @@ export class SettingsView {
         close.on(Node.EventType.TOUCH_END, closePress, this);
         close.on(Node.EventType.MOUSE_UP, closePress, this);
 
-        this.bindPress(this.muteLabel.node, () => this.setMuted(this.onToggleMute()));
-        this.bindPress(this.languageLabel.node, () => this.onToggleLanguage());
-        this.bindPress(this.vibrationLabel.node, () => this.setVibration(this.onToggleVibration()));
-        this.bindPress(this.resetLabel.node, () => this.pressReset());
+        this.bindPress(this.muteLabel.node.parent!, () => this.setMuted(this.onToggleMute()));
+        this.bindPress(this.languageLabel.node.parent!, () => this.onToggleLanguage());
+        this.bindPress(this.vibrationLabel.node.parent!, () => this.setVibration(this.onToggleVibration()));
+        this.bindPress(this.resetLabel.node.parent!, () => this.pressReset());
 
         const drag = (event: EventTouch | EventMouse): void => {
             event.propagationStopped = true;
@@ -212,7 +212,10 @@ export class SettingsView {
             event.propagationStopped = true;
             action();
         };
-        node.on(Node.EventType.TOUCH_END, press, this);
-        node.on(Node.EventType.MOUSE_UP, press, this);
+        for (const target of [node, ...node.children]) {
+            target.on(Node.EventType.TOUCH_END, press, this);
+            target.on(Node.EventType.MOUSE_UP, press, this);
+        }
     }
 }
+

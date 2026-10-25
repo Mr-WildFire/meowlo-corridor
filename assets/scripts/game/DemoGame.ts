@@ -194,9 +194,7 @@ export class DemoGame extends Component {
             this.screenW,
             this.screenH,
             this.progress.allBest(),
-            this.muted,
             (difficulty) => this.startLevel(difficulty),
-            () => this.toggleMute(),
             () => this.openSettings(),
         );
     }

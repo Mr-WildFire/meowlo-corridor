@@ -1,4 +1,4 @@
-﻿import { Color, EventMouse, EventTouch, Graphics, Label, Node, resources, Sprite, SpriteFrame, UITransform } from 'cc';
+﻿import { Color, EventMouse, EventTouch, Graphics, Node, resources, Sprite, SpriteFrame, UITransform } from 'cc';
 import { locale } from '../core/Locale';
 import type { BestRecord } from '../core/ProgressStore';
 import { DIFFICULTY_ORDER, Difficulty, LEVELS, LevelConfig } from './LevelConfig';
@@ -10,16 +10,13 @@ import { UiFonts } from './UiFonts';
  */
 export class MenuView {
     private readonly root: Node;
-    private readonly muteLabel: Label;
 
     constructor(
         parent: Node,
         private readonly screenW: number,
         private readonly screenH: number,
         private readonly best: Partial<Record<Difficulty, BestRecord>>,
-        muted: boolean,
         private readonly onSelect: (difficulty: Difficulty) => void,
-        private readonly onToggleMute: () => boolean,
         private readonly onSettings: () => void,
     ) {
         this.root = makeNode('MenuRoot', parent, 0, 0, screenW, screenH);
@@ -78,34 +75,7 @@ export class MenuView {
             36,
         );
 
-        const mute = makeNode('MenuMute', this.root, screenW * 0.5 - 64, screenH * 0.5 - 80, 50, 50);
-        const mg = mute.addComponent(Graphics);
-        mg.fillColor = new Color(40, 31, 54, 220);
-        mg.strokeColor = new Color(170, 158, 145, 180);
-        mg.lineWidth = 2;
-        mg.circle(0, 0, 25);
-        mg.fill();
-        mg.stroke();
-        this.muteLabel = addLabel(
-            mute,
-            'MenuMuteLabel',
-            muted ? locale.t('menu.muted') : locale.t('menu.sound'),
-            19,
-            Theme.cream,
-            0,
-            0,
-            50,
-            50,
-        );
-
-        const press = (event: EventTouch | EventMouse): void => {
-            event.propagationStopped = true;
-            this.setMuted(this.onToggleMute());
-        };
-        mute.on(Node.EventType.TOUCH_END, press, this);
-        mute.on(Node.EventType.MOUSE_UP, press, this);
-
-        const settings = makeNode('MenuSettings', this.root, screenW * 0.5 - 130, screenH * 0.5 - 80, 50, 50);
+        const settings = makeNode('MenuSettings', this.root, screenW * 0.5 - 64, screenH * 0.5 - 80, 50, 50);
         const sg = settings.addComponent(Graphics);
         sg.fillColor = new Color(40, 31, 54, 220);
         sg.strokeColor = new Color(170, 158, 145, 180);
@@ -124,11 +94,6 @@ export class MenuView {
 
     dispose(): void {
         if (this.root?.isValid) this.root.destroy();
-    }
-
-    private setMuted(muted: boolean): void {
-        this.muteLabel.string = muted ? locale.t('menu.muted') : locale.t('menu.sound');
-        this.muteLabel.color = muted ? Theme.rose : Theme.cream;
     }
 
     private addButton(level: LevelConfig, y: number): void {
@@ -187,5 +152,6 @@ export class MenuView {
         node.on(Node.EventType.MOUSE_UP, press, this);
     }
 }
+
 
 
