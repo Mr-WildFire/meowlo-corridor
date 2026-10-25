@@ -1,4 +1,4 @@
-# 回廊地块 / 黑胶碎片 / 出口 Prompt · v2
+﻿# 回廊地块 / 黑胶碎片 / 出口 Prompt · v2
 
 > 目的：修正上一版“有边框、有中心高光、有钉子、不可平铺”的问题  
 > 风格：2D 卡通游戏资产，低对比，作为背景不抢角色  
@@ -136,23 +136,81 @@ centered, full width, game wall tile, 1024x256
 ### 规格
 
 ```text
-生成 1024×1024
-导出 256×256 或 512×512
-透明背景
+生成 1024×1024 或 2048×2048
+导出 256×256 / 512×512
+先出纯白背景，后期去背
 ```
 
-```text
-2D cartoon game asset, clean hand-drawn shapes, flat colors,
-one soft shadow tone, subtle paper grain, muted dark plum palette,
-warm amber accents, cyan musical glow, not photorealistic,
-no text, no letters, no watermark, no logo, no UI,
+### 设计修正
 
-a single broken black vinyl record shard, collectible game item,
-jagged broken edge, glossy black record surface with fine circular grooves,
-thin iridescent rainbow edge, small cyan musical sparkle,
-three-quarter top-down view, centered, full object visible,
-isolated on transparent background, clean silhouette, readable at 48px,
-no shadow, no background, no multiple objects, no text
+上一版的问题是：唱片太完整，像“坏了一点的完整唱片”，不像碎片。
+
+这一版要求：
+
+```text
+只保留 40%–55% 的唱片
+必须出现断口
+金标只保留一部分
+中心孔可以保留
+外圈不要白色贴纸边
+```
+
+### 英文 Prompt
+
+```text
+2D cartoon game asset, clean hand-drawn shapes, dark-plum outline,
+flat colors, one soft highlight, subtle paper grain,
+muted dark plum and black palette, warm gold accent, cyan musical glow,
+not photorealistic, no text, no letters, no watermark, no logo, no UI,
+
+a single broken vinyl record fragment, about 40 to 55 percent of the disc,
+clear jagged broken edge, black vinyl surface with fine circular grooves,
+partial gold center label, one small center hole, thin iridescent rainbow rim,
+one small cyan musical sparkle, three-quarter top-down view,
+centered, full object visible, clean silhouette, readable at 48px,
+isolated on a plain pure white background,
+no shadow, no reflections on the ground, no multiple objects,
+no white sticker outline, no full circular record, no record sleeve, no text
+```
+
+### 中文 Prompt
+
+```text
+2D 卡通游戏资产，干净手绘造型，深紫黑轮廓，
+平涂上色，一层柔和亮部，轻微纸张颗粒，
+深紫黑与黑色调，暖金色点缀，青蓝音乐微光，
+不要写实，不要文字、字母、水印、logo、UI，
+
+单个破碎黑胶唱片碎片，大约保留整张唱片的 40%–55%，
+清晰的锯齿状断口，黑色黑胶表面带细密同心圆纹，
+只保留一部分金色圆标，一个小中心孔，细彩虹反光边缘，
+一点青蓝音符星光，3/4 俯视，
+居中，完整物件，剪影干净，48px 下可辨认，
+放在纯白背景上，方便后期去背，
+不要投影、不要地面反光、不要多个物件，
+不要白色贴纸边、不要完整圆形唱片、不要唱片封套、不要文字
+```
+
+### 后期
+
+1. 用纯白背景生成，避免模型画棋盘格透明背景
+2. 去白底
+3. 检查中心孔是否透明
+4. 去掉外圈白边
+5. 加一圈深紫黑描边
+6. 导出 512×512，再缩 256×256
+
+### 负面 Prompt
+
+```text
+full circular record, complete disc, unbroken record, vinyl sleeve, record cover,
+white sticker outline, white border, sticker, die-cut outline,
+multiple records, multiple objects, pile of records, fragments everywhere,
+text, letters, label text, logo, watermark, signature,
+3D render, photorealistic, plastic, toy, CGI,
+hard shadow, ground reflection, gradient background, checkerboard background,
+busy background, clutter, neon, rainbow gradient overload,
+blurry, low contrast, noisy, jpeg artifacts, cropped
 ```
 
 ## 5. 出口
