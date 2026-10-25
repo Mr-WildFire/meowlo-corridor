@@ -45,6 +45,18 @@ export class MenuView {
         UiFonts.titleLabel(menuTitle);
         addLabel(this.root, 'MenuSub', locale.t('menu.subtitle'), 24, Theme.cyan, 0, screenH * 0.5 - 255, 900, 44);
 
+        // Keep the illustrated corridor visible at the edges, but give the
+        // three difficulty cards a quiet, opaque column so the cat/record
+        // do not show through the text.
+        const panel = makeNode('MenuPanel', this.root, 185, -50, 640, 480);
+        const panelG = panel.addComponent(Graphics);
+        panelG.fillColor = new Color(12, 9, 18, 210);
+        panelG.strokeColor = new Color(216, 178, 122, 90);
+        panelG.lineWidth = 1;
+        panelG.roundRect(-320, -240, 640, 480, 24);
+        panelG.fill();
+        panelG.stroke();
+
         DIFFICULTY_ORDER.forEach((id, index) => {
             this.addButton(LEVELS[id], 80 - index * 132);
         });
@@ -115,9 +127,9 @@ export class MenuView {
     }
 
     private addButton(level: LevelConfig, y: number): void {
-        const node = makeNode('Menu_' + level.id, this.root, 0, y, 560, 112);
+        const node = makeNode('Menu_' + level.id, this.root, 185, y, 560, 112);
         const g = node.addComponent(Graphics);
-        g.fillColor = new Color(38, 28, 50, 235);
+        g.fillColor = new Color(38, 28, 50, 252);
         g.strokeColor = level.id === 'hard' ? Theme.rose : Theme.wall;
         g.lineWidth = 2;
         g.roundRect(-280, -56, 560, 112, 18);
