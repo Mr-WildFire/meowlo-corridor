@@ -232,6 +232,10 @@ export class HudView {
         UiFonts.titleLabel(this.overlayTitle);
         this.overlayBody = addLabel(this.overlayRoot, 'OverlayBody', '', 21, Theme.cream, 0, -140, 900, 86);
         this.overlayHint = addLabel(this.overlayRoot, 'OverlayHint', '', 17, Theme.dim, 0, -220, 1000, 46);
+        this.createButton(this.overlayRoot, 'OverlayRestart', locale.t('game.again'), -160, -275, 300, 58, () => this.callbacks.onRestart(), 'art/ui/pause/pause_button/spriteFrame');
+        this.createButton(this.overlayRoot, 'OverlayBack', locale.t('game.backToMenu'), 160, -275, 300, 58, () => this.callbacks.onBackToMenu(), 'art/ui/pause/pause_button/spriteFrame');
+        this.overlayRoot.on(Node.EventType.TOUCH_END, (event: EventTouch) => this.handleOverlayTouch(event), this);
+        this.overlayRoot.on(Node.EventType.MOUSE_UP, (event: EventMouse) => this.handleOverlayTouch(event), this);
         this.overlayRoot.active = false;
     }
 
@@ -341,6 +345,17 @@ export class HudView {
         if (this.root?.isValid) this.root.destroy();
     }
 
+    private handleOverlayTouch(event: EventTouch | EventMouse): void {
+        const ui = event.getUILocation();
+        const local = this.overlayRoot.getComponent(UITransform)!.convertToNodeSpaceAR(new Vec3(ui.x, ui.y, 0));
+        event.propagationStopped = true;
+        if (Math.abs(local.x + 160) <= 150 && Math.abs(local.y + 275) <= 29) {
+            this.callbacks.onRestart();
+        } else if (Math.abs(local.x - 160) <= 150 && Math.abs(local.y + 275) <= 29) {
+            this.callbacks.onBackToMenu();
+        }
+    }
+
     private handlePauseTouch(event: EventTouch | EventMouse, panel: Node): void {
         const ui = event.getUILocation();
         const local = panel.getComponent(UITransform)!.convertToNodeSpaceAR(new Vec3(ui.x, ui.y, 0));
@@ -447,6 +462,7 @@ export class HudView {
         return sprite;
     }
 }
+
 
 
 

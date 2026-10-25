@@ -1,4 +1,4 @@
-﻿import {
+import {
     _decorator,
     Camera,
     Component,
@@ -950,6 +950,9 @@ export class DemoGame extends Component {
         const inMenuY = y >= this.screenH - 100 || y <= 100;
         if (inMenuX && inMenuY) {
             this.togglePause();
+            return;
+        }
+        if (this.state === 'won' || this.state === 'timeout') {
             return;
         }
 
