@@ -20,7 +20,7 @@ export interface InputCallbacks {
     onDifficulty(difficulty: Difficulty): void;
     onDebugCollect(): void;
     onDebugTime(): void;
-    onTap(): void;
+    onTap(x: number, y: number): void;
 }
 
 /**
@@ -106,7 +106,7 @@ export class InputRouter {
         const dx = end.x - start.x;
         const dy = end.y - start.y;
         if (Math.abs(dx) < 30 && Math.abs(dy) < 30) {
-            this.callbacks.onTap();
+            this.callbacks.onTap(end.x, end.y);
             return;
         }
         if (Math.abs(dx) > Math.abs(dy)) {

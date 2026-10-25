@@ -63,6 +63,7 @@ export class DemoGame extends Component {
 
     private screenW = 1080;
     private screenH = 1920;
+    private lastPauseToggleAt = 0;
     private safeTop = 0;
     private safeBottom = 0;
     private safeLeft = 0;
@@ -137,7 +138,7 @@ export class DemoGame extends Component {
             onDifficulty: (difficulty) => this.startLevel(difficulty),
             onDebugCollect: () => this.debugCollectAll(),
             onDebugTime: () => this.debugSubtractTime(),
-            onTap: () => this.handleTap(),
+            onTap: (x, y) => this.handleTapAt(x, y),
         });
     }
 
@@ -942,7 +943,20 @@ export class DemoGame extends Component {
         return enabled;
     }
 
+    private handleTapAt(x: number, y: number): void {
+        const inMenuX = x >= this.screenW - 420 && x <= this.screenW - 275;
+        const inMenuY = y >= this.screenH - 100 || y <= 100;
+        if (inMenuX && inMenuY) {
+            this.togglePause();
+            return;
+        }
+        this.handleTap();
+    }
+
     private togglePause(): void {
+        const now = Date.now();
+        if (now - this.lastPauseToggleAt < 280) return;
+        this.lastPauseToggleAt = now;
         if (this.settings || this.ending || this.state === 'finale') return;
         if (this.state === 'playing' && !this.finale) {
             this.state = 'paused';

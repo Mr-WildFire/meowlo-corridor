@@ -1,4 +1,4 @@
-﻿import {
+import {
     Color,
     EventMouse,
     EventTouch,
@@ -48,7 +48,6 @@ export interface HudCallbacks {
 export class HudView {
     private readonly root: Node;
     private readonly trackLabel: Label;
-    private readonly timerLabel: Label;
     private readonly stepLabel: Label;
     private readonly seedLabel: Label;
     private readonly toastNode: Node;
@@ -96,16 +95,28 @@ export class HudView {
         // Keep the strip inside the central 1440px so it also fits 4:3
         // Cocos preview windows, not only a 16:9 device.
         this.trackLabel = addLabel(bar, 'Track', '', 21, Theme.cream, -520, 0, 340, 44);
-        addLabel(bar, 'TimeCaption', locale.t('hud.timeCaption'), 17, Theme.dim, -245, 0, 70, 40);
-        this.timerLabel = addLabel(bar, 'Timer', '', 30, Theme.amber, -160, 0, 160, 48);
-        UiFonts.numberLabel(this.timerLabel);
         this.stepLabel = addLabel(bar, 'Steps', '', 19, Theme.cream, 30, 0, 220, 44);
         this.seedLabel = addLabel(bar, 'Seed', '', 14, Theme.dim, 330, 0, 330, 40);
 
         this.addHudSprite(bar, 'HudIconTrack', 'art/ui/hud/hud_icon_track/spriteFrame', -660, 0, 44, 44);
-        this.addHudSprite(bar, 'HudIconTime', 'art/ui/hud/hud_icon_time/spriteFrame', -310, 0, 44, 44);
+        this.addHudSprite(bar, 'HudIconSteps', 'art/ui/hud/hud_icon_steps/spriteFrame', -105, 0, 44, 44);
+        this.addHudSprite(bar, 'HudIconSeed', 'art/ui/hud/hud_icon_seed/spriteFrame', 135, 0, 44, 44);
 
         this.createButton(bar, 'MenuButton', '≡', 610, 0, 58, 50, () => this.callbacks.onMenu());
+        // The skin/icon sprites are the visual layer; this transparent hit area
+        // sits on top so the menu always receives the tap, even if a child
+        // sprite becomes the touch target.
+        const menuHit = makeNode('MenuHit', bar, 610, 0, 64, 52);
+        const menuHitG = menuHit.addComponent(Graphics);
+        menuHitG.fillColor = new Color(0, 0, 0, 1);
+        menuHitG.rect(-32, -26, 64, 52);
+        menuHitG.fill();
+        const menuTap = (event: EventTouch | EventMouse): void => {
+            event.propagationStopped = true;
+            this.callbacks.onMenu();
+        };
+        menuHit.on(Node.EventType.TOUCH_END, menuTap, this);
+        menuHit.on(Node.EventType.MOUSE_UP, menuTap, this);
 
         this.toastNode = makeNode('Toast', this.root, 0, -screenH * 0.5 + 88, 980, 48);
         const toastBg = this.toastNode.addComponent(Graphics);
@@ -184,8 +195,6 @@ export class HudView {
             n: stats.collected,
             total: stats.total,
         });
-        this.timerLabel.string = timeText(stats.timeLeft);
-        this.timerLabel.color = stats.timeLeft <= 30 ? Theme.rose : Theme.amber;
         this.stepLabel.string = locale.t('hud.steps', { steps: stats.steps, time: timeText(stats.elapsed) });
         this.seedLabel.string = locale.t('hud.seed', {
             seed: stats.seed,
@@ -280,11 +289,13 @@ export class HudView {
         g.stroke();
         const buttonLabel = addLabel(node, name + 'Label', text, 20, Theme.cream, 0, 0, w - 12, h);
         if (text !== '≡') UiFonts.titleLabel(buttonLabel);
+        const menuChildren: Node[] = [];
         if (name === 'MenuButton') {
-            this.addHudSprite(node, 'MenuSkin', 'art/ui/hud/hud_menu_normal/spriteFrame', 0, 0, w, h);
-            this.addHudSprite(node, 'MenuIcon', 'art/ui/hud/hud_menu_icon/spriteFrame', 0, 0, 30, 30, () => {
+            const skin = this.addHudSprite(node, 'MenuSkin', 'art/ui/hud/hud_menu_normal/spriteFrame', 0, 0, w, h);
+            const icon = this.addHudSprite(node, 'MenuIcon', 'art/ui/hud/hud_menu_icon/spriteFrame', 0, 0, 30, 30, () => {
                 buttonLabel.node.active = false;
             });
+            menuChildren.push(skin.node, icon.node);
         }
         const press = (event: EventTouch | EventMouse): void => {
             event.propagationStopped = true;
@@ -292,6 +303,12 @@ export class HudView {
         };
         node.on(Node.EventType.TOUCH_END, press, this);
         node.on(Node.EventType.MOUSE_UP, press, this);
+        // The skin and icon are child sprites and become the actual hit target.
+        // Forward their touch events to the same button handler.
+        for (const child of menuChildren) {
+            child.on(Node.EventType.TOUCH_END, press, this);
+            child.on(Node.EventType.MOUSE_UP, press, this);
+        }
         return node;
     }
 
@@ -324,4 +341,5 @@ export class HudView {
         return sprite;
     }
 }
+
 
