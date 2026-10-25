@@ -138,6 +138,7 @@ docs/prompts/回廊地块与黑胶碎片-prompt.md # 地板/墙/黑胶碎片/出
 docs/prompts/回廊地块与道具-prompt-v2.md # 修正边框/高光/钉子后的 v2 prompt
 docs/prompts/八道具图标-prompt.md # 8 个道具图标 prompt
 docs/prompts/结算面板与CD主人-prompt.md # 结算面板/CD/主人 prompt
+docs/prompts/老八动画-prompt.md # 老八行走/待机/拾取 prompt
 ```
 
 占位图由 `tools/gen_placeholder_art.py` 生成，占位音乐由 `tools/gen_placeholder_audio.py` 生成，占位音效由 `tools/gen_placeholder_sfx.py` 生成；正式资源到位后按同名路径替换即可。
@@ -150,6 +151,7 @@ docs/prompts/结算面板与CD主人-prompt.md # 结算面板/CD/主人 prompt
 - 遮罩优先使用 `resources/effects/fog.effect` 的 Shader；如果设备/构建不支持自定义材质，会自动回退到格子遮罩，保证仍可玩。
 - 音乐与 SFX 均走 `AudioSource`，HAP 内已打包；鸿蒙真机的 WAV 解码/延迟/音频焦点仍未验证。
 - 场景通过脚本 UUID 绑定组件：`assets/scripts/game/DemoGame.ts.meta` 中的 UUID 与 `Main.scene` 里的压缩 UUID 必须保持一致；不要手动改其中一个。
+
 
 
 
