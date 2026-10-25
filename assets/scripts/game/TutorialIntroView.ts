@@ -46,6 +46,24 @@ export class TutorialIntroView {
         this.video.trim = false;
         videoNode.getComponent(UITransform)!.setContentSize(screenW, screenH);
 
+        const storyBg = makeNode('TutorialStoryBg', this.root, 0, -350, 1200, 110);
+        const sb = storyBg.addComponent(Graphics);
+        sb.fillColor = new Color(3, 2, 7, 175);
+        sb.roundRect(-600, -55, 1200, 110, 18);
+        sb.fill();
+        const story = addLabel(
+            this.root,
+            'TutorialStory',
+            locale.t('tutorial.body'),
+            21,
+            Theme.cream,
+            0,
+            -350,
+            1120,
+            96,
+        );
+        UiFonts.titleLabel(story);
+
         const skip = makeNode('TutorialSkip', this.root, screenW * 0.5 - 300, -screenH * 0.5 + 62, 180, 52);
         const sg = skip.addComponent(Graphics);
         sg.fillColor = new Color(12, 9, 18, 205);
