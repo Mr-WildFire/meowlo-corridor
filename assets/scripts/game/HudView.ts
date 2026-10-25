@@ -204,6 +204,21 @@ export class HudView {
         // panel-local coordinates, so it does not depend on child sprite targets.
         this.pauseRoot.on(Node.EventType.TOUCH_END, (event: EventTouch) => this.handlePauseTouch(event, panel), this);
         this.pauseRoot.on(Node.EventType.MOUSE_UP, (event: EventMouse) => this.handlePauseTouch(event, panel), this);
+
+        // Full-screen transparent catcher, exactly like the ending action layer.
+        // It is the topmost pause child and dispatches by root-local coordinates.
+        const pauseCatcher = this.addHudSprite(
+            this.pauseRoot,
+            'PauseTouchCatcher',
+            'art/ui/pause/pause_touch/spriteFrame',
+            0,
+            0,
+            screenW,
+            screenH,
+        );
+        pauseCatcher.node.on(Node.EventType.TOUCH_END, (event: EventTouch) => this.handlePauseCatcher(event), this);
+        pauseCatcher.node.on(Node.EventType.MOUSE_UP, (event: EventMouse) => this.handlePauseCatcher(event), this);
+
         this.pauseRoot.active = false;
 
         this.overlayRoot = makeNode('Overlay', this.root, 0, 0, screenW, screenH);
@@ -355,6 +370,21 @@ export class HudView {
         } else if (Math.abs(local.x - 160) <= 150 && Math.abs(local.y + 275) <= 29) {
             this.callbacks.onBackToMenu();
         }
+    }
+
+    private handlePauseCatcher(event: EventTouch | EventMouse): void {
+        const ui = event.getUILocation();
+        const local = this.pauseRoot.getComponent(UITransform)!.convertToNodeSpaceAR(new Vec3(ui.x, ui.y, 0));
+        const hit = (x: number, y: number, w: number, h: number): boolean =>
+            Math.abs(local.x - x) <= w * 0.5 && Math.abs(local.y - y) <= h * 0.5;
+        event.propagationStopped = true;
+        if (hit(0, 200, 420, 64)) this.callbacks.onSettings();
+        else if (hit(0, 120, 420, 64)) this.callbacks.onRestart();
+        else if (hit(0, 40, 420, 64)) this.callbacks.onBackToMenu();
+        else if (hit(-230, -115, 200, 52)) this.callbacks.onDifficulty('easy');
+        else if (hit(0, -115, 200, 52)) this.callbacks.onDifficulty('normal');
+        else if (hit(230, -115, 200, 52)) this.callbacks.onDifficulty('hard');
+        else if (hit(0, -340, 360, 62)) this.callbacks.onResume();
     }
 
     private handlePauseTouch(event: EventTouch | EventMouse, panel: Node): void {
