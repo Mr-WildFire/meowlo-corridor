@@ -135,6 +135,7 @@ docs/AI美术生成工作流.md           # AI 出图、prompt、切图、动画
 docs/prompts/老八三视图-prompt.md   # 布偶猫参考的三视图/单视角 prompt
 docs/prompts/横屏菜单背景-prompt.md # 1920×1080 纸雕回廊菜单背景 prompt
 docs/prompts/回廊地块与黑胶碎片-prompt.md # 地板/墙/黑胶碎片/出口 prompt
+docs/prompts/回廊地块与道具-prompt-v2.md # 修正边框/高光/钉子后的 v2 prompt
 ```
 
 占位图由 `tools/gen_placeholder_art.py` 生成，占位音乐由 `tools/gen_placeholder_audio.py` 生成，占位音效由 `tools/gen_placeholder_sfx.py` 生成；正式资源到位后按同名路径替换即可。
