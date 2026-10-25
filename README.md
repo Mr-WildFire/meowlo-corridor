@@ -1,4 +1,4 @@
-﻿# 喵音回廊 · 玩法骨架 Demo
+# 喵音回廊 · 玩法骨架 Demo
 
 Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（迷宫整体 + 可玩骨架补强）**。
 当前美术是脚本生成的**扁平占位 PNG**（老八、地板、墙、碎片、道具、出口），HUD 仍用 `Graphics + Label`；音乐是脚本生成的 6 层占位 WAV（AudioSource），缺失时回退 WebAudio；音效由 WebAudio 合成。没有使用任何外部美术/音频素材。
@@ -134,6 +134,7 @@ docs/美术风格建议.md               # 纸雕绘本 + 旧唱片 UI 的视觉
 docs/AI美术生成工作流.md           # AI 出图、prompt、切图、动画与接入流程
 docs/prompts/老八三视图-prompt.md   # 布偶猫参考的三视图/单视角 prompt
 docs/prompts/横屏菜单背景-prompt.md # 1920×1080 纸雕回廊菜单背景 prompt
+docs/prompts/回廊地块与黑胶碎片-prompt.md # 地板/墙/黑胶碎片/出口 prompt
 ```
 
 占位图由 `tools/gen_placeholder_art.py` 生成，占位音乐由 `tools/gen_placeholder_audio.py` 生成，占位音效由 `tools/gen_placeholder_sfx.py` 生成；正式资源到位后按同名路径替换即可。
