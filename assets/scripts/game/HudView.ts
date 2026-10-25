@@ -171,17 +171,17 @@ export class HudView {
         const pauseTitle = addLabel(panel, 'PauseTitle', locale.t('game.pauseTitle'), 40, Theme.cream, 0, 330, 720, 60);
         UiFonts.titleLabel(pauseTitle);
         addLabel(panel, 'PauseBody', locale.t('game.pauseBody'), 20, Theme.dim, 0, 280, 680, 36);
-        this.createButton(panel, 'Resume', locale.t('game.resume'), 0, 205, 420, 64, () => this.callbacks.onResume());
-        this.createButton(panel, 'Settings', locale.t('settings.title'), 0, 120, 420, 64, () => this.callbacks.onSettings());
-        const muteButton = this.createButton(panel, 'Mute', locale.t('hud.sound'), 0, 35, 420, 64, () => this.callbacks.onMute());
+        this.createButton(panel, 'Settings', locale.t('settings.title'), 0, 170, 420, 64, () => this.callbacks.onSettings());
+        const muteButton = this.createButton(panel, 'Mute', locale.t('hud.sound'), 0, 85, 420, 64, () => this.callbacks.onMute());
         this.pauseMuteLabel = muteButton.getComponentInChildren(Label)!;
-        this.createButton(panel, 'Restart', locale.t('game.restart'), 0, -50, 420, 64, () => this.callbacks.onRestart());
+        this.createButton(panel, 'Restart', locale.t('game.restart'), 0, 0, 420, 64, () => this.callbacks.onRestart());
 
-        addLabel(panel, 'DifficultyTitle', locale.t('menu.subtitle'), 17, Theme.dim, 0, -140, 420, 30);
-        this.createButton(panel, 'Easy', locale.difficultyName('easy'), -230, -210, 200, 52, () => this.callbacks.onDifficulty('easy'));
-        this.createButton(panel, 'Normal', locale.difficultyName('normal'), 0, -210, 200, 52, () => this.callbacks.onDifficulty('normal'));
-        this.createButton(panel, 'Hard', locale.difficultyName('hard'), 230, -210, 200, 52, () => this.callbacks.onDifficulty('hard'));
-        addLabel(panel, 'PauseHint', locale.t('game.pauseHint'), 15, Theme.dim, 0, -340, 680, 30);
+        addLabel(panel, 'DifficultyTitle', locale.t('menu.subtitle'), 17, Theme.dim, 0, -80, 420, 30);
+        this.createButton(panel, 'Easy', locale.difficultyName('easy'), -230, -145, 200, 52, () => this.callbacks.onDifficulty('easy'));
+        this.createButton(panel, 'Normal', locale.difficultyName('normal'), 0, -145, 200, 52, () => this.callbacks.onDifficulty('normal'));
+        this.createButton(panel, 'Hard', locale.difficultyName('hard'), 230, -145, 200, 52, () => this.callbacks.onDifficulty('hard'));
+        addLabel(panel, 'PauseHint', locale.t('game.pauseHint'), 15, Theme.dim, 0, -255, 680, 30);
+        this.createButton(panel, 'ResumeBottom', locale.t('game.resume'), 0, -340, 360, 62, () => this.callbacks.onResume());
         this.pauseRoot.active = false;
 
         this.overlayRoot = makeNode('Overlay', this.root, 0, 0, screenW, screenH);
@@ -297,7 +297,7 @@ export class HudView {
         g.roundRect(-w * 0.5, -h * 0.5, w, h, 16);
         g.fill();
         g.stroke();
-        const buttonLabel = addLabel(node, name + 'Label', text, 20, Theme.cream, 0, 0, w - 12, h);
+        const buttonLabel = addLabel(node, name + 'Label', text, w >= 400 ? 22 : 18, Theme.cream, 0, 0, w - 12, h);
         if (text !== '≡') UiFonts.titleLabel(buttonLabel);
         const menuChildren: Node[] = [];
         if (name === 'MenuButton') {
