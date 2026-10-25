@@ -1,4 +1,4 @@
-﻿import {
+import {
     _decorator,
     Camera,
     Component,
@@ -64,6 +64,7 @@ export class DemoGame extends Component {
     private screenW = 1080;
     private screenH = 1920;
     private lastPauseToggleAt = 0;
+    private lastPauseActionAt = 0;
     private safeTop = 0;
     private safeBottom = 0;
     private safeLeft = 0;
@@ -951,6 +952,41 @@ export class DemoGame extends Component {
             this.togglePause();
             return;
         }
+
+        // The pause panel is drawn with sprites on device. Its child sprites can
+        // become the touch target, so handle the panel regions here as a fallback.
+        if (this.state === 'paused') {
+            const now = Date.now();
+            if (now - this.lastPauseActionAt < 300) return;
+            const hit = (cx: number, cy: number, w: number, h: number): boolean =>
+                Math.abs(x - cx) <= w * 0.5 && Math.abs(y - cy) <= h * 0.5;
+            const cx = this.screenW * 0.5;
+            const cy = this.screenH * 0.5;
+            if (hit(cx, cy + 200, 420, 64)) {
+                this.lastPauseActionAt = now;
+                this.openSettings();
+            } else if (hit(cx, cy + 120, 420, 64)) {
+                this.lastPauseActionAt = now;
+                this.restart();
+            } else if (hit(cx, cy + 40, 420, 64)) {
+                this.lastPauseActionAt = now;
+                this.openMenu();
+            } else if (hit(cx - 230, cy - 115, 200, 52)) {
+                this.lastPauseActionAt = now;
+                this.startLevel('easy');
+            } else if (hit(cx, cy - 115, 200, 52)) {
+                this.lastPauseActionAt = now;
+                this.startLevel('normal');
+            } else if (hit(cx + 230, cy - 115, 200, 52)) {
+                this.lastPauseActionAt = now;
+                this.startLevel('hard');
+            } else if (hit(cx, cy - 340, 360, 62)) {
+                this.lastPauseActionAt = now;
+                this.togglePause();
+            }
+            return;
+        }
+
         this.handleTap();
     }
 
