@@ -58,14 +58,13 @@ export class HudView {
     private readonly tutorialTitle: Label;
     private readonly tutorialBody: Label;
     private readonly pauseRoot: Node;
-    private readonly pauseMuteLabel: Label;
     private readonly overlayRoot: Node;
     private readonly overlayArt: Sprite;
     private readonly overlayTitle: Label;
     private readonly overlayBody: Label;
     private readonly overlayHint: Label;
-    private toastToken = 0;
-    private tutorialToken = 0;
+    private bottomBusy = false;
+    private readonly bottomQueue: Array<{ show: () => void; duration: number }> = [];
 
     constructor(
         parent: Node,
@@ -131,26 +130,28 @@ export class HudView {
         this.toastLabel = addLabel(this.toastNode, 'ToastLabel', '', 21, Theme.cream, 0, 0, 950, 44);
         this.toastNode.active = false;
 
-        this.tutorialNode = makeNode('Tutorial', this.root, -500, -screenH * 0.5 + 140, 460, 92);
+        // First-time item tutorial uses the same bottom-center slot as toast.
+        // HudView alternates them instead of drawing both cards on top of each other.
+        this.tutorialNode = makeNode('Tutorial', this.root, 0, -screenH * 0.5 + 88, 900, 76);
         const tutorialBg = this.tutorialNode.addComponent(Graphics);
-        tutorialBg.fillColor = new Color(30, 23, 40, 245);
+        tutorialBg.fillColor = new Color(30, 23, 40, 246);
         tutorialBg.strokeColor = new Color(216, 178, 122, 200);
         tutorialBg.lineWidth = 2;
-        tutorialBg.roundRect(-230, -46, 460, 92, 16);
+        tutorialBg.roundRect(-450, -38, 900, 76, 18);
         tutorialBg.fill();
         tutorialBg.stroke();
-        const iconNode = makeNode('TutorialIcon', this.tutorialNode, -190, 0, 58, 58);
+        const iconNode = makeNode('TutorialIcon', this.tutorialNode, -405, 0, 56, 56);
         const iconG = iconNode.addComponent(Graphics);
         iconG.fillColor = new Color(242, 179, 92, 60);
-        iconG.circle(0, 0, 27);
+        iconG.circle(0, 0, 26);
         iconG.fill();
         iconG.strokeColor = Theme.amber;
         iconG.lineWidth = 2;
-        iconG.circle(0, 0, 27);
+        iconG.circle(0, 0, 26);
         iconG.stroke();
-        this.tutorialIcon = addLabel(iconNode, 'TutorialIconLabel', '?', 18, Theme.cream, 0, 0, 58, 58);
-        this.tutorialTitle = addLabel(this.tutorialNode, 'TutorialTitle', '', 17, Theme.cream, -113, 20, 220, 28);
-        this.tutorialBody = addLabel(this.tutorialNode, 'TutorialBody', '', 14, Theme.dim, -113, -16, 220, 28);
+        this.tutorialIcon = addLabel(iconNode, 'TutorialIconLabel', '?', 18, Theme.cream, 0, 0, 56, 56);
+        this.tutorialTitle = addLabel(this.tutorialNode, 'TutorialTitle', '', 17, Theme.cream, -80, 16, 680, 28);
+        this.tutorialBody = addLabel(this.tutorialNode, 'TutorialBody', '', 14, Theme.dim, -80, -15, 680, 28);
         this.tutorialNode.active = false;
 
         this.pauseRoot = makeNode('PauseRoot', this.root, 0, 0, screenW, screenH);
@@ -174,25 +175,22 @@ export class HudView {
         const pauseTitle = addLabel(panel, 'PauseTitle', locale.t('game.pauseTitle'), 40, Theme.cream, 0, 330, 720, 60);
         UiFonts.titleLabel(pauseTitle);
         addLabel(panel, 'PauseBody', locale.t('game.pauseBody'), 20, Theme.dim, 0, 280, 680, 36);
-        this.createButton(panel, 'Settings', locale.t('settings.title'), 0, 170, 420, 64, () => this.callbacks.onSettings(), 'art/ui/pause/pause_button/spriteFrame');
-        const muteButton = this.createButton(panel, 'Mute', locale.t('hud.sound'), 0, 85, 420, 64, () => this.callbacks.onMute(), 'art/ui/pause/pause_button/spriteFrame');
-        this.pauseMuteLabel = muteButton.getComponentInChildren(Label)!;
-        this.createButton(panel, 'Restart', locale.t('game.restart'), 0, 0, 420, 64, () => this.callbacks.onRestart(), 'art/ui/pause/pause_button/spriteFrame');
+        this.createButton(panel, 'Settings', locale.t('settings.title'), 0, 190, 420, 64, () => this.callbacks.onSettings(), 'art/ui/pause/pause_button/spriteFrame');
+        this.createButton(panel, 'Restart', locale.t('game.restart'), 0, 100, 420, 64, () => this.callbacks.onRestart(), 'art/ui/pause/pause_button/spriteFrame');
 
-        addLabel(panel, 'DifficultyTitle', locale.t('menu.subtitle'), 17, Theme.dim, 0, -80, 420, 30);
-        this.createButton(panel, 'Easy', locale.difficultyName('easy'), -230, -145, 200, 52, () => this.callbacks.onDifficulty('easy'), 'art/ui/pause/pause_button_small/spriteFrame');
-        this.createButton(panel, 'Normal', locale.difficultyName('normal'), 0, -145, 200, 52, () => this.callbacks.onDifficulty('normal'), 'art/ui/pause/pause_button_small/spriteFrame');
-        this.createButton(panel, 'Hard', locale.difficultyName('hard'), 230, -145, 200, 52, () => this.callbacks.onDifficulty('hard'), 'art/ui/pause/pause_button_small/spriteFrame');
-        addLabel(panel, 'PauseHint', locale.t('game.pauseHint'), 15, Theme.dim, 0, -255, 680, 30);
+        addLabel(panel, 'DifficultyTitle', locale.t('menu.subtitle'), 17, Theme.dim, 0, -10, 420, 30);
+        this.createButton(panel, 'Easy', locale.difficultyName('easy'), -230, -75, 200, 52, () => this.callbacks.onDifficulty('easy'), 'art/ui/pause/pause_button_small/spriteFrame');
+        this.createButton(panel, 'Normal', locale.difficultyName('normal'), 0, -75, 200, 52, () => this.callbacks.onDifficulty('normal'), 'art/ui/pause/pause_button_small/spriteFrame');
+        this.createButton(panel, 'Hard', locale.difficultyName('hard'), 230, -75, 200, 52, () => this.callbacks.onDifficulty('hard'), 'art/ui/pause/pause_button_small/spriteFrame');
+        addLabel(panel, 'PauseHint', locale.t('game.pauseHint'), 15, Theme.dim, 0, -190, 680, 30);
         this.createButton(panel, 'ResumeBottom', locale.t('game.resume'), 0, -340, 360, 62, () => this.callbacks.onResume(), 'art/ui/pause/pause_button_wide/spriteFrame');
         // Native hit targets above the skin sprites. Sprite children can become
         // the touch target on device, so keep explicit transparent buttons.
-        this.addHitTarget(panel, 0, 170, 420, 64, () => this.callbacks.onSettings());
-        this.addHitTarget(panel, 0, 85, 420, 64, () => this.callbacks.onMute());
-        this.addHitTarget(panel, 0, 0, 420, 64, () => this.callbacks.onRestart());
-        this.addHitTarget(panel, -230, -145, 200, 52, () => this.callbacks.onDifficulty('easy'));
-        this.addHitTarget(panel, 0, -145, 200, 52, () => this.callbacks.onDifficulty('normal'));
-        this.addHitTarget(panel, 230, -145, 200, 52, () => this.callbacks.onDifficulty('hard'));
+        this.addHitTarget(panel, 0, 190, 420, 64, () => this.callbacks.onSettings());
+        this.addHitTarget(panel, 0, 100, 420, 64, () => this.callbacks.onRestart());
+        this.addHitTarget(panel, -230, -75, 200, 52, () => this.callbacks.onDifficulty('easy'));
+        this.addHitTarget(panel, 0, -75, 200, 52, () => this.callbacks.onDifficulty('normal'));
+        this.addHitTarget(panel, 230, -75, 200, 52, () => this.callbacks.onDifficulty('hard'));
         this.addHitTarget(panel, 0, -340, 360, 62, () => this.callbacks.onResume());
         this.pauseRoot.active = false;
 
@@ -228,23 +226,45 @@ export class HudView {
     }
 
     toast(text: string, duration = 2): void {
-        const token = ++this.toastToken;
-        this.toastLabel.string = text;
-        this.toastNode.active = true;
-        this.scheduleOnce(() => {
-            if (token === this.toastToken) this.toastNode.active = false;
+        this.enqueueBottom(() => {
+            this.tutorialNode.active = false;
+            this.toastLabel.string = text;
+            this.toastNode.active = true;
         }, duration);
     }
 
     showTutorial(type: ItemType, text: string): void {
-        const token = ++this.tutorialToken;
-        this.tutorialIcon.string = locale.itemShort(type);
-        this.tutorialTitle.string = locale.t('hud.tutorial', { name: locale.itemName(type) });
-        this.tutorialBody.string = text;
-        this.tutorialNode.active = true;
-        this.scheduleOnce(() => {
-            if (token === this.tutorialToken) this.tutorialNode.active = false;
+        this.enqueueBottom(() => {
+            this.toastNode.active = false;
+            this.tutorialIcon.string = locale.itemShort(type);
+            this.tutorialTitle.string = locale.t('hud.tutorial', { name: locale.itemName(type) });
+            this.tutorialBody.string = text;
+            this.tutorialNode.active = true;
         }, 2.8);
+    }
+
+    private enqueueBottom(show: () => void, duration: number): void {
+        const item = { show, duration };
+        if (this.bottomBusy) {
+            this.bottomQueue.push(item);
+            if (this.bottomQueue.length > 4) this.bottomQueue.shift();
+            return;
+        }
+        this.playBottom(item);
+    }
+
+    private playBottom(item: { show: () => void; duration: number }): void {
+        this.bottomBusy = true;
+        this.toastNode.active = false;
+        this.tutorialNode.active = false;
+        item.show();
+        this.scheduleOnce(() => {
+            this.bottomBusy = false;
+            this.toastNode.active = false;
+            this.tutorialNode.active = false;
+            const next = this.bottomQueue.shift();
+            if (next) this.playBottom(next);
+        }, item.duration);
     }
 
     showPausePanel(): void {
@@ -280,14 +300,14 @@ export class HudView {
         this.overlayRoot.active = false;
     }
 
-    setMuted(muted: boolean): void {
-        this.pauseMuteLabel.string = muted ? locale.t('hud.mute') : locale.t('hud.sound');
-        this.pauseMuteLabel.color = muted ? Theme.rose : Theme.cream;
+    setMuted(_muted: boolean): void {
+        // Mute is still available from Settings and the V shortcut; the pause
+        // panel no longer duplicates it.
     }
 
     dispose(): void {
-        this.toastToken++;
-        this.tutorialToken++;
+        this.bottomBusy = false;
+        this.bottomQueue.length = 0;
         if (this.root?.isValid) this.root.destroy();
     }
 
@@ -382,6 +402,7 @@ export class HudView {
         return sprite;
     }
 }
+
 
 
 
