@@ -19,14 +19,17 @@ $native = Join-Path $Project 'native\engine\harmonyos-next'
 $hapUnsigned = Join-Path $native 'entry\build\default\outputs\default\entry-default-unsigned.hap'
 $hapSigned = Join-Path $native 'entry\build\default\outputs\default\entry-default-signed.hap'
 $outDir = Join-Path $Project 'build-harmony'
-$outUnsigned = Join-Path $outDir 'MeowloCorridor-1.0.0-unsigned.hap'
-$outSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-1.0.0-release-signed.hap' } else { 'MeowloCorridor-1.0.0-signed.hap' })
+$outUnsigned = Join-Path $outDir 'MeowloCorridor-2.0.0-unsigned.hap'
+$outSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-2.0.0-release-signed.hap' } else { 'MeowloCorridor-2.0.0-signed.hap' })
 $appDir = Join-Path $native 'build\outputs\default'
 $appUnsigned = Join-Path $appDir 'harmonyos-next-default-unsigned.app'
 $appSigned = Join-Path $appDir 'harmonyos-next-default-signed.app'
-$outAppUnsigned = Join-Path $outDir 'MeowloCorridor-1.0.0-unsigned.app'
-$outAppSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-1.0.0-release-signed.app' } else { 'MeowloCorridor-1.0.0-debug-signed.app' })
+$outAppUnsigned = Join-Path $outDir 'MeowloCorridor-2.0.0-unsigned.app'
+$outAppSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-2.0.0-release-signed.app' } else { 'MeowloCorridor-2.0.0-debug-signed.app' })
 $buildMode = if ($Release) { 'release' } else { 'debug' }
+$appVersion = '2.0.0'
+$appVersionCode = 2000000
+$signingBackup = Join-Path $Project 'temp\harmony-signing-backup.json5'
 
 if (-not $CltPath) { $CltPath = 'C:\command-line-tools' }
 $hvigor = Join-Path $CltPath 'bin\hvigorw.bat'
@@ -51,6 +54,10 @@ if ($SkipCocos) {
     }
 }
 
+if (Test-Path (Join-Path $native 'build-profile.json5')) {
+    Copy-Item (Join-Path $native 'build-profile.json5') $signingBackup -Force
+}
+
 if ($runCocos) {
     if (-not (Test-Path $CocosCreator)) { throw "CocosCreator not found: $CocosCreator" }
     Write-Host '[1/5] Cocos harmonyos-next build...'
@@ -70,9 +77,14 @@ if ($runCocos) {
 }
 
 Write-Host '[2/5] Patch generated HarmonyOS project...'
+if (Test-Path $signingBackup) {
+    Copy-Item $signingBackup (Join-Path $native 'build-profile.json5') -Force
+}
 $appFile = Join-Path $native 'AppScope\app.json5'
 $app = Get-Content -LiteralPath $appFile -Raw -Encoding UTF8
 $app = $app.Replace('com.cocos.test', 'com.meowlo.corridor').Replace('"vendor": "example"', '"vendor": "Meowlo"')
+$app = [regex]::Replace($app, '("versionName"\s*:\s*")[^"]*(")', ('${1}' + $appVersion + '${2}'))
+$app = [regex]::Replace($app, '("versionCode"\s*:\s*)\d+', ('${1}' + $appVersionCode))
 Write-Utf8NoBom $appFile $app
 
 $appString = Join-Path $native 'AppScope\resources\base\element\string.json'
