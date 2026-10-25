@@ -1,4 +1,4 @@
-﻿import {
+import {
     Color,
     EventMouse,
     EventTouch,
@@ -182,7 +182,6 @@ export class HudView {
         addLabel(panel, 'PauseBody', locale.t('game.pauseBody'), 20, Theme.dim, 0, 280, 680, 36);
         this.createButton(panel, 'Settings', locale.t('settings.title'), 0, 200, 420, 64, () => this.callbacks.onSettings(), 'art/ui/pause/pause_button/spriteFrame');
         this.createButton(panel, 'Restart', locale.t('game.restart'), 0, 120, 420, 64, () => this.callbacks.onRestart(), 'art/ui/pause/pause_button/spriteFrame');
-        this.createButton(panel, 'BackToMenu', locale.t('game.backToMenu'), 0, 40, 420, 64, () => this.callbacks.onBackToMenu(), 'art/ui/pause/pause_button/spriteFrame');
 
         addLabel(panel, 'DifficultyTitle', locale.t('menu.subtitle'), 17, Theme.dim, 0, -50, 420, 30);
         this.createButton(panel, 'Easy', locale.difficultyName('easy'), -230, -115, 200, 52, () => this.callbacks.onDifficulty('easy'), 'art/ui/pause/pause_button_small/spriteFrame');
@@ -194,7 +193,9 @@ export class HudView {
         // the touch target on device, so keep explicit transparent buttons.
         this.addHitTarget(panel, 0, 200, 420, 64, () => this.callbacks.onSettings());
         this.addHitTarget(panel, 0, 120, 420, 64, () => this.callbacks.onRestart());
-        this.addHitTarget(panel, 0, 40, 420, 64, () => this.callbacks.onBackToMenu());
+        // Match the working result-screen button: parent it to PauseRoot,
+        // not to the panel skin/Graphics subtree.
+        this.createButton(this.pauseRoot, 'PauseBackToMenu', locale.t('game.backToMenu'), 0, 40, 420, 64, () => this.callbacks.onBackToMenu(), 'art/ui/pause/pause_button/spriteFrame');
         this.addHitTarget(panel, -230, -115, 200, 52, () => this.callbacks.onDifficulty('easy'));
         this.addHitTarget(panel, 0, -115, 200, 52, () => this.callbacks.onDifficulty('normal'));
         this.addHitTarget(panel, 230, -115, 200, 52, () => this.callbacks.onDifficulty('hard'));
