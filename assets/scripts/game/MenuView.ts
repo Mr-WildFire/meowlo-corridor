@@ -61,6 +61,11 @@ export class MenuView {
             this.addButton(LEVELS[id], 80 - index * 132);
         });
 
+        const hintBg = makeNode('MenuHintBg', this.root, 0, -screenH * 0.5 + 90, 820, 42);
+        const hintG = hintBg.addComponent(Graphics);
+        hintG.fillColor = new Color(8, 6, 14, 190);
+        hintG.roundRect(-410, -21, 820, 42, 16);
+        hintG.fill();
         addLabel(
             this.root,
             'MenuHint',
