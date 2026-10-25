@@ -75,7 +75,7 @@ export class MenuView {
             36,
         );
 
-        const settings = makeNode('MenuSettings', this.root, screenW * 0.5 - 64, screenH * 0.5 - 80, 50, 50);
+        const settings = makeNode('MenuSettings', this.root, screenW * 0.5 - 350, screenH * 0.5 - 80, 50, 50);
         const sg = settings.addComponent(Graphics);
         sg.fillColor = new Color(40, 31, 54, 220);
         sg.strokeColor = new Color(170, 158, 145, 180);
@@ -152,6 +152,7 @@ export class MenuView {
         node.on(Node.EventType.MOUSE_UP, press, this);
     }
 }
+
 
 
 

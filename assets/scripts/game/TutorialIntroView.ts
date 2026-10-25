@@ -46,6 +46,20 @@ export class TutorialIntroView {
         this.video.trim = false;
         videoNode.getComponent(UITransform)!.setContentSize(screenW, screenH);
 
+        const skip = makeNode('TutorialSkip', this.root, screenW * 0.5 - 300, -screenH * 0.5 + 62, 180, 52);
+        const sg = skip.addComponent(Graphics);
+        sg.fillColor = new Color(12, 9, 18, 205);
+        sg.strokeColor = new Color(216, 178, 122, 130);
+        sg.lineWidth = 1;
+        sg.roundRect(-90, -26, 180, 52, 14);
+        sg.fill();
+        sg.stroke();
+        addLabel(skip, 'TutorialSkipLabel', locale.t('tutorial.skip'), 17, Theme.cream, 0, 0, 170, 46);
+        skip.on(Node.EventType.TOUCH_END, (event: EventTouch) => {
+            event.propagationStopped = true;
+            this.finish();
+        }, this);
+
         this.loadFrames();
     }
 
@@ -124,3 +138,4 @@ export class TutorialIntroView {
         if (this.root?.isValid) this.root.destroy();
     }
 }
+
