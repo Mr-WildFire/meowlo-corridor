@@ -976,7 +976,7 @@ export class DemoGame extends Component {
             () => this.toggleVibration(),
             () => this.progress.resetRecords(),
             () => this.openTutorialFromSettings(),
-            () => this.closeSettings(),
+            () => this.openMenu(),
         );
     }
 
@@ -1110,6 +1110,7 @@ export class DemoGame extends Component {
         }
     }
 }
+
 
 
 

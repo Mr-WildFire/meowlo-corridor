@@ -1,4 +1,4 @@
-import { Color, EventMouse, EventTouch, Graphics, Label, Node, UITransform, Vec3 } from 'cc';
+﻿import { Color, EventMouse, EventTouch, Graphics, Label, Node, UITransform, Vec3 } from 'cc';
 import { locale } from '../core/Locale';
 import { Theme, addLabel, makeNode } from './UiKit';
 import { UiFonts } from './UiFonts';
@@ -100,7 +100,7 @@ export class SettingsView {
         cg.roundRect(-180, -31, 360, 62, 16);
         cg.fill();
         cg.stroke();
-        addLabel(close, 'SettingsCloseLabel', locale.t('settings.close'), 22, Theme.cream, 0, 0, 360, 62);
+        addLabel(close, 'SettingsCloseLabel', locale.t('game.backToMenu'), 22, Theme.cream, 0, 0, 360, 62);
 
         this.bindPress(close, () => this.onClose());
         // Rely on the same root-local hit test pattern as the ending buttons.
@@ -239,4 +239,5 @@ export class SettingsView {
         }
     }
 }
+
 
