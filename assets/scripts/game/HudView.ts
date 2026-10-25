@@ -158,6 +158,8 @@ export class HudView {
         dim.fillColor = new Color(4, 3, 8, 225);
         dim.rect(-screenW * 0.5, -screenH * 0.5, screenW, screenH);
         dim.fill();
+        // Sprite versions are used on device; Graphics above remains a fallback.
+        this.addHudSprite(this.pauseRoot, 'PauseDimSkin', 'art/ui/pause/pause_dim/spriteFrame', 0, 0, screenW, screenH);
         // Match the menu-page settings panel: same 820x820 footprint, same
         // aubergine fill, same muted border and button rhythm.
         const panel = makeNode('PausePanel', this.pauseRoot, 0, 0, 820, 820);
@@ -168,20 +170,30 @@ export class HudView {
         pg.roundRect(-410, -410, 820, 820, 24);
         pg.fill();
         pg.stroke();
+        this.addHudSprite(panel, 'PausePanelSkin', 'art/ui/pause/pause_panel/spriteFrame', 0, 0, 820, 820);
         const pauseTitle = addLabel(panel, 'PauseTitle', locale.t('game.pauseTitle'), 40, Theme.cream, 0, 330, 720, 60);
         UiFonts.titleLabel(pauseTitle);
         addLabel(panel, 'PauseBody', locale.t('game.pauseBody'), 20, Theme.dim, 0, 280, 680, 36);
-        this.createButton(panel, 'Settings', locale.t('settings.title'), 0, 170, 420, 64, () => this.callbacks.onSettings());
-        const muteButton = this.createButton(panel, 'Mute', locale.t('hud.sound'), 0, 85, 420, 64, () => this.callbacks.onMute());
+        this.createButton(panel, 'Settings', locale.t('settings.title'), 0, 170, 420, 64, () => this.callbacks.onSettings(), 'art/ui/pause/pause_button/spriteFrame');
+        const muteButton = this.createButton(panel, 'Mute', locale.t('hud.sound'), 0, 85, 420, 64, () => this.callbacks.onMute(), 'art/ui/pause/pause_button/spriteFrame');
         this.pauseMuteLabel = muteButton.getComponentInChildren(Label)!;
-        this.createButton(panel, 'Restart', locale.t('game.restart'), 0, 0, 420, 64, () => this.callbacks.onRestart());
+        this.createButton(panel, 'Restart', locale.t('game.restart'), 0, 0, 420, 64, () => this.callbacks.onRestart(), 'art/ui/pause/pause_button/spriteFrame');
 
         addLabel(panel, 'DifficultyTitle', locale.t('menu.subtitle'), 17, Theme.dim, 0, -80, 420, 30);
-        this.createButton(panel, 'Easy', locale.difficultyName('easy'), -230, -145, 200, 52, () => this.callbacks.onDifficulty('easy'));
-        this.createButton(panel, 'Normal', locale.difficultyName('normal'), 0, -145, 200, 52, () => this.callbacks.onDifficulty('normal'));
-        this.createButton(panel, 'Hard', locale.difficultyName('hard'), 230, -145, 200, 52, () => this.callbacks.onDifficulty('hard'));
+        this.createButton(panel, 'Easy', locale.difficultyName('easy'), -230, -145, 200, 52, () => this.callbacks.onDifficulty('easy'), 'art/ui/pause/pause_button_small/spriteFrame');
+        this.createButton(panel, 'Normal', locale.difficultyName('normal'), 0, -145, 200, 52, () => this.callbacks.onDifficulty('normal'), 'art/ui/pause/pause_button_small/spriteFrame');
+        this.createButton(panel, 'Hard', locale.difficultyName('hard'), 230, -145, 200, 52, () => this.callbacks.onDifficulty('hard'), 'art/ui/pause/pause_button_small/spriteFrame');
         addLabel(panel, 'PauseHint', locale.t('game.pauseHint'), 15, Theme.dim, 0, -255, 680, 30);
-        this.createButton(panel, 'ResumeBottom', locale.t('game.resume'), 0, -340, 360, 62, () => this.callbacks.onResume());
+        this.createButton(panel, 'ResumeBottom', locale.t('game.resume'), 0, -340, 360, 62, () => this.callbacks.onResume(), 'art/ui/pause/pause_button_wide/spriteFrame');
+        // Native hit targets above the skin sprites. Sprite children can become
+        // the touch target on device, so keep explicit transparent buttons.
+        this.addHitTarget(panel, 0, 170, 420, 64, () => this.callbacks.onSettings());
+        this.addHitTarget(panel, 0, 85, 420, 64, () => this.callbacks.onMute());
+        this.addHitTarget(panel, 0, 0, 420, 64, () => this.callbacks.onRestart());
+        this.addHitTarget(panel, -230, -145, 200, 52, () => this.callbacks.onDifficulty('easy'));
+        this.addHitTarget(panel, 0, -145, 200, 52, () => this.callbacks.onDifficulty('normal'));
+        this.addHitTarget(panel, 230, -145, 200, 52, () => this.callbacks.onDifficulty('hard'));
+        this.addHitTarget(panel, 0, -340, 360, 62, () => this.callbacks.onResume());
         this.pauseRoot.active = false;
 
         this.overlayRoot = makeNode('Overlay', this.root, 0, 0, screenW, screenH);
@@ -288,6 +300,7 @@ export class HudView {
         w: number,
         h: number,
         onClick: () => void,
+        skinPath?: string,
     ): Node {
         const node = makeNode(name, parent, x, y, w, h);
         const g = node.addComponent(Graphics);
@@ -297,15 +310,20 @@ export class HudView {
         g.roundRect(-w * 0.5, -h * 0.5, w, h, 16);
         g.fill();
         g.stroke();
+        const touchChildren: Node[] = [];
+        if (skinPath) {
+            const skin = this.addHudSprite(node, 'ButtonSkin', skinPath, 0, 0, w, h);
+            touchChildren.push(skin.node);
+        }
         const buttonLabel = addLabel(node, name + 'Label', text, w >= 400 ? 22 : 18, Theme.cream, 0, 0, w - 12, h);
         if (text !== '≡') UiFonts.titleLabel(buttonLabel);
-        const menuChildren: Node[] = [];
+        touchChildren.push(buttonLabel.node);
         if (name === 'MenuButton') {
             const skin = this.addHudSprite(node, 'MenuSkin', 'art/ui/hud/hud_menu_normal/spriteFrame', 0, 0, w, h);
             const icon = this.addHudSprite(node, 'MenuIcon', 'art/ui/hud/hud_menu_icon/spriteFrame', 0, 0, 30, 30, () => {
                 buttonLabel.node.active = false;
             });
-            menuChildren.push(skin.node, icon.node);
+            touchChildren.push(skin.node, icon.node);
         }
         const press = (event: EventTouch | EventMouse): void => {
             event.propagationStopped = true;
@@ -313,13 +331,26 @@ export class HudView {
         };
         node.on(Node.EventType.TOUCH_END, press, this);
         node.on(Node.EventType.MOUSE_UP, press, this);
-        // The skin and icon are child sprites and become the actual hit target.
-        // Forward their touch events to the same button handler.
-        for (const child of menuChildren) {
+        // Child sprites/labels are the actual hit target; forward their events.
+        for (const child of touchChildren) {
             child.on(Node.EventType.TOUCH_END, press, this);
             child.on(Node.EventType.MOUSE_UP, press, this);
         }
         return node;
+    }
+
+    private addHitTarget(parent: Node, x: number, y: number, w: number, h: number, onClick: () => void): void {
+        const node = makeNode('HitTarget', parent, x, y, w, h);
+        const g = node.addComponent(Graphics);
+        g.fillColor = new Color(0, 0, 0, 1);
+        g.rect(-w * 0.5, -h * 0.5, w, h);
+        g.fill();
+        const press = (event: EventTouch | EventMouse): void => {
+            event.propagationStopped = true;
+            onClick();
+        };
+        node.on(Node.EventType.TOUCH_END, press, this);
+        node.on(Node.EventType.MOUSE_UP, press, this);
     }
 
     private addHudSprite(
@@ -351,6 +382,7 @@ export class HudView {
         return sprite;
     }
 }
+
 
 
 
