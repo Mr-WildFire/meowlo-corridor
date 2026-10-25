@@ -1,4 +1,4 @@
-import {
+﻿import {
     Color,
     EventMouse,
     EventTouch,
@@ -9,6 +9,7 @@ import {
     Sprite,
     SpriteFrame,
     UITransform,
+    Vec3,
 } from 'cc';
 import { locale } from '../core/Locale';
 import { UiFonts } from './UiFonts';
@@ -172,7 +173,9 @@ export class HudView {
         pg.roundRect(-410, -410, 820, 820, 24);
         pg.fill();
         pg.stroke();
-        this.addHudSprite(panel, 'PausePanelSkin', 'art/ui/pause/pause_panel/spriteFrame', 0, 0, 820, 820);
+        const panelSkin = this.addHudSprite(panel, 'PausePanelSkin', 'art/ui/pause/pause_panel/spriteFrame', 0, 0, 820, 820);
+        panelSkin.node.on(Node.EventType.TOUCH_END, (event: EventTouch) => this.handlePauseTouch(event, panel), this);
+        panelSkin.node.on(Node.EventType.MOUSE_UP, (event: EventMouse) => this.handlePauseTouch(event, panel), this);
         const pauseTitle = addLabel(panel, 'PauseTitle', locale.t('game.pauseTitle'), 40, Theme.cream, 0, 330, 720, 60);
         UiFonts.titleLabel(pauseTitle);
         addLabel(panel, 'PauseBody', locale.t('game.pauseBody'), 20, Theme.dim, 0, 280, 680, 36);
@@ -195,6 +198,10 @@ export class HudView {
         this.addHitTarget(panel, 0, -115, 200, 52, () => this.callbacks.onDifficulty('normal'));
         this.addHitTarget(panel, 230, -115, 200, 52, () => this.callbacks.onDifficulty('hard'));
         this.addHitTarget(panel, 0, -340, 360, 62, () => this.callbacks.onResume());
+        // Last-resort UI hit test: any tap on the pause overlay is converted to
+        // panel-local coordinates, so it does not depend on child sprite targets.
+        this.pauseRoot.on(Node.EventType.TOUCH_END, (event: EventTouch) => this.handlePauseTouch(event, panel), this);
+        this.pauseRoot.on(Node.EventType.MOUSE_UP, (event: EventMouse) => this.handlePauseTouch(event, panel), this);
         this.pauseRoot.active = false;
 
         this.overlayRoot = makeNode('Overlay', this.root, 0, 0, screenW, screenH);
@@ -314,6 +321,21 @@ export class HudView {
         if (this.root?.isValid) this.root.destroy();
     }
 
+    private handlePauseTouch(event: EventTouch | EventMouse, panel: Node): void {
+        const ui = event.getUILocation();
+        const local = panel.getComponent(UITransform)!.convertToNodeSpaceAR(new Vec3(ui.x, ui.y, 0));
+        const hit = (x: number, y: number, w: number, h: number): boolean =>
+            Math.abs(local.x - x) <= w * 0.5 && Math.abs(local.y - y) <= h * 0.5;
+        event.propagationStopped = true;
+        if (hit(0, 200, 420, 64)) this.callbacks.onSettings();
+        else if (hit(0, 120, 420, 64)) this.callbacks.onRestart();
+        else if (hit(0, 40, 420, 64)) this.callbacks.onBackToMenu();
+        else if (hit(-230, -115, 200, 52)) this.callbacks.onDifficulty('easy');
+        else if (hit(0, -115, 200, 52)) this.callbacks.onDifficulty('normal');
+        else if (hit(230, -115, 200, 52)) this.callbacks.onDifficulty('hard');
+        else if (hit(0, -340, 360, 62)) this.callbacks.onResume();
+    }
+
     private createButton(
         parent: Node,
         name: string,
@@ -405,6 +427,8 @@ export class HudView {
         return sprite;
     }
 }
+
+
 
 
 
