@@ -47,26 +47,26 @@ function loadSprite(path: string): Promise<SpriteFrame | null> {
  * Every field can be null, in which case the caller keeps its Graphics fallback.
  */
 export async function loadArtAssets(): Promise<ArtAssets> {
-    const catPaths: Array<[CatDir, number, string]> = [];
-    for (const dir of CAT_DIRS) {
-        for (let i = 0; i < 4; i++) {
-            catPaths.push([dir, i, `art/cat/cat_${dir}_${i}/spriteFrame`]);
-        }
-    }
+    // One static 512x512 drawing per direction. CatView tolerates a single
+    // frame, so the supplied front/side/back art can be used directly.
+    const catPaths = CAT_DIRS.map((dir) => ({
+        dir,
+        path: `art/cat/cat_${dir}_0/spriteFrame`,
+    }));
 
-    const catAssets = await Promise.all(catPaths.map(async ([dir, i, path]) => {
+    const catAssets = await Promise.all(catPaths.map(async ({ dir, path }) => {
         const frame = await loadSprite(path);
-        return { dir, i, frame };
+        return { dir, frame };
     }));
 
     const cat: CatFrames | null = CAT_DIRS.every((dir) =>
-        catAssets.filter((x) => x.dir === dir && !!x.frame).length === 4,
+        catAssets.some((x) => x.dir === dir && !!x.frame),
     )
         ? {
-              down: catAssets.filter((x) => x.dir === 'down').sort((a, b) => a.i - b.i).map((x) => x.frame!),
-              up: catAssets.filter((x) => x.dir === 'up').sort((a, b) => a.i - b.i).map((x) => x.frame!),
-              left: catAssets.filter((x) => x.dir === 'left').sort((a, b) => a.i - b.i).map((x) => x.frame!),
-              right: catAssets.filter((x) => x.dir === 'right').sort((a, b) => a.i - b.i).map((x) => x.frame!),
+              down: [catAssets.find((x) => x.dir === 'down')!.frame!],
+              up: [catAssets.find((x) => x.dir === 'up')!.frame!],
+              left: [catAssets.find((x) => x.dir === 'left')!.frame!],
+              right: [catAssets.find((x) => x.dir === 'right')!.frame!],
           }
         : null;
 
