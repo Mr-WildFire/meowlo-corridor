@@ -222,10 +222,14 @@ export class DemoGame extends Component {
         this.level = TUTORIAL_LEVEL;
         this.tutorialIntro?.dispose();
         this.tutorialIntro = null;
+        this.settings?.dispose();
+        this.settings = null;
+        this.hud?.dispose();
         if (this.menu) {
             this.menu.dispose();
             this.menu = null;
         }
+        this.state = 'playing';
         this.build();
     }
 

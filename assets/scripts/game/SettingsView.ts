@@ -92,7 +92,7 @@ export class SettingsView {
         const tutorialLabel = this.addButton(panel, -250, 420);
         tutorialLabel.string = locale.t('tutorial.settings');
 
-        const close = makeNode('SettingsClose', panel, 0, -350, 360, 62);
+        const close = makeNode('SettingsClose', this.root, 0, -350, 360, 62);
         const cg = close.addComponent(Graphics);
         cg.fillColor = new Color(45, 34, 58, 240);
         cg.strokeColor = Theme.wall;
@@ -103,6 +103,9 @@ export class SettingsView {
         addLabel(close, 'SettingsCloseLabel', locale.t('settings.close'), 22, Theme.cream, 0, 0, 360, 62);
 
         this.bindPress(close, () => this.onClose());
+        // Rely on the same root-local hit test pattern as the ending buttons.
+        this.root.on(Node.EventType.TOUCH_END, (event: EventTouch) => this.handleSettingsTouch(event), this);
+        this.root.on(Node.EventType.MOUSE_UP, (event: EventMouse) => this.handleSettingsTouch(event), this);
 
         this.bindPress(this.muteLabel.node.parent!, () => this.setMuted(this.onToggleMute()));
         this.bindPress(this.languageLabel.node.parent!, () => this.onToggleLanguage());
@@ -203,6 +206,15 @@ export class SettingsView {
         g.fill();
         g.stroke();
         return addLabel(node, 'SettingsButtonLabel', '', 22, Theme.cream, 0, 0, width, 54);
+    }
+
+    private handleSettingsTouch(event: EventTouch | EventMouse): void {
+        const ui = event.getUILocation();
+        const local = this.root.getComponent(UITransform)!.convertToNodeSpaceAR(new Vec3(ui.x, ui.y, 0));
+        if (Math.abs(local.x) <= 180 && Math.abs(local.y + 350) <= 31) {
+            event.propagationStopped = true;
+            this.onClose();
+        }
     }
 
     private bindPress(node: Node, action: () => void): void {

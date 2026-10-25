@@ -1,4 +1,4 @@
-﻿import { Color, EventMouse, EventTouch, Graphics, Node, resources, Sprite, SpriteFrame, UITransform } from 'cc';
+import { Color, EventMouse, EventTouch, Graphics, Node, resources, Sprite, SpriteFrame, UITransform, Vec3 } from 'cc';
 import { locale } from '../core/Locale';
 import { Theme, addLabel, makeNode } from './UiKit';
 import { UiFonts } from './UiFonts';
@@ -58,6 +58,16 @@ export class TutorialIntroView {
         skip.on(Node.EventType.TOUCH_END, (event: EventTouch) => {
             event.propagationStopped = true;
             this.finish();
+        }, this);
+        this.root.on(Node.EventType.TOUCH_END, (event: EventTouch) => {
+            const local = this.root.getComponent(UITransform)!.convertToNodeSpaceAR(
+                new Vec3(event.getUILocation().x, event.getUILocation().y, 0),
+            );
+            if (Math.abs(local.x - (this.screenW * 0.5 - 300)) <= 90 &&
+                Math.abs(local.y - (-this.screenH * 0.5 + 62)) <= 26) {
+                event.propagationStopped = true;
+                this.finish();
+            }
         }, this);
 
         this.loadFrames();
