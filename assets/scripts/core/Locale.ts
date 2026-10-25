@@ -1,4 +1,4 @@
-import { ItemType } from '../game/DemoTypes';
+﻿import { ItemType } from '../game/DemoTypes';
 import { Difficulty } from '../game/LevelConfig';
 
 export type Language = 'zh' | 'en';
@@ -28,7 +28,7 @@ const DICT: Record<Language, Record<string, string>> = {
         'hud.timeLeft': '剩余 {time}',
         'hud.timeCaption': '剩余',
         'hud.musicComplete': '音乐完整',
-        'hud.steps': '步数 {steps}　用时 {time}',
+        'hud.steps': '步数 {steps}',
         'hud.none': '无道具效果',
         'hud.seed': '种子 {seed} · {level} · {cols}×{rows} · {time}',
         'hud.help': 'WASD / 滑动移动　P 暂停　R 重开　M 难度　V 静音　O 设置',
@@ -136,7 +136,7 @@ const DICT: Record<Language, Record<string, string>> = {
         'hud.timeLeft': '{time} left',
         'hud.timeCaption': 'LEFT',
         'hud.musicComplete': 'Music complete',
-        'hud.steps': 'Steps {steps} · {time}',
+        'hud.steps': 'Steps {steps}',
         'hud.none': 'No effects',
         'hud.seed': 'Seed {seed} · {level} · {cols}×{rows} · {time}',
         'hud.help': 'WASD / swipe　P pause　R restart　M difficulty　V mute　O settings',
@@ -281,3 +281,4 @@ class Locale {
 }
 
 export const locale = new Locale();
+
