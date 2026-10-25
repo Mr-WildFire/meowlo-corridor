@@ -106,6 +106,17 @@ export class SettingsView {
         // Rely on the same root-local hit test pattern as the ending buttons.
         this.root.on(Node.EventType.TOUCH_END, (event: EventTouch) => this.handleSettingsTouch(event), this);
         this.root.on(Node.EventType.MOUSE_UP, (event: EventMouse) => this.handleSettingsTouch(event), this);
+        const closeHit = makeNode('SettingsCloseHit', this.root, 0, -350, 380, 76);
+        const chg = closeHit.addComponent(Graphics);
+        chg.fillColor = new Color(0, 0, 0, 1);
+        chg.rect(-190, -38, 380, 76);
+        chg.fill();
+        const closeHitPress = (event: EventTouch | EventMouse): void => {
+            event.propagationStopped = true;
+            this.onClose();
+        };
+        closeHit.on(Node.EventType.TOUCH_END, closeHitPress, this);
+        closeHit.on(Node.EventType.MOUSE_UP, closeHitPress, this);
 
         this.bindPress(this.muteLabel.node.parent!, () => this.setMuted(this.onToggleMute()));
         this.bindPress(this.languageLabel.node.parent!, () => this.onToggleLanguage());

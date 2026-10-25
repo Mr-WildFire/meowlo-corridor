@@ -1,4 +1,4 @@
-import { Color, EventMouse, EventTouch, Graphics, Node, resources, Sprite, SpriteFrame, UITransform, Vec3 } from 'cc';
+﻿import { Color, EventMouse, EventTouch, Graphics, Node, resources, Sprite, SpriteFrame, UITransform, Vec3 } from 'cc';
 import { locale } from '../core/Locale';
 import { Theme, addLabel, makeNode } from './UiKit';
 import { UiFonts } from './UiFonts';
@@ -77,6 +77,17 @@ export class TutorialIntroView {
             event.propagationStopped = true;
             this.finish();
         }, this);
+        const skipHit = makeNode('TutorialSkipHit', this.root, screenW * 0.5 - 300, -screenH * 0.5 + 62, 200, 60);
+        const shg = skipHit.addComponent(Graphics);
+        shg.fillColor = new Color(0, 0, 0, 1);
+        shg.rect(-100, -30, 200, 60);
+        shg.fill();
+        const skipPress = (event: EventTouch | EventMouse): void => {
+            event.propagationStopped = true;
+            this.finish();
+        };
+        skipHit.on(Node.EventType.TOUCH_END, skipPress, this);
+        skipHit.on(Node.EventType.MOUSE_UP, skipPress, this);
         this.root.on(Node.EventType.TOUCH_END, (event: EventTouch) => {
             const local = this.root.getComponent(UITransform)!.convertToNodeSpaceAR(
                 new Vec3(event.getUILocation().x, event.getUILocation().y, 0),
@@ -166,4 +177,5 @@ export class TutorialIntroView {
         if (this.root?.isValid) this.root.destroy();
     }
 }
+
 

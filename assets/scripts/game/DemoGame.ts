@@ -1,4 +1,4 @@
-import {
+﻿import {
     _decorator,
     Camera,
     Component,
@@ -68,6 +68,7 @@ export class DemoGame extends Component {
     private screenH = 1920;
     private lastPauseToggleAt = 0;
     private lastPauseActionAt = 0;
+    private ignoreTapUntil = 0;
     private safeTop = 0;
     private safeBottom = 0;
     private safeLeft = 0;
@@ -216,6 +217,7 @@ export class DemoGame extends Component {
     }
 
     private startTutorial(): void {
+        this.ignoreTapUntil = Date.now() + 600;
         this.sfx?.click();
         this.tutorialMode = true;
         this.difficulty = 'easy';
@@ -235,6 +237,7 @@ export class DemoGame extends Component {
 
     private openMenu(): void {
         if (this.state === 'finale') return;
+        this.ignoreTapUntil = Date.now() + 400;
         if (this.settings) {
             this.settings.dispose();
             this.settings = null;
@@ -979,6 +982,7 @@ export class DemoGame extends Component {
 
     private closeSettings(): void {
         if (!this.settings) return;
+        this.ignoreTapUntil = Date.now() + 400;
         const fromMenu = this.state === 'menu';
         this.settings.dispose();
         this.settings = null;
@@ -1021,6 +1025,7 @@ export class DemoGame extends Component {
     }
 
     private handleTapAt(x: number, y: number): void {
+        if (Date.now() < this.ignoreTapUntil) return;
         const inMenuX = x >= this.screenW - 420 && x <= this.screenW - 275;
         const inMenuY = y >= this.screenH - 100 || y <= 100;
         if (inMenuX && inMenuY) {
@@ -1105,6 +1110,7 @@ export class DemoGame extends Component {
         }
     }
 }
+
 
 
 
