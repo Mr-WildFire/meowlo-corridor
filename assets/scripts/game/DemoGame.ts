@@ -850,7 +850,7 @@ export class DemoGame extends Component {
                 best: newBest ? locale.t('game.newRecord') : '',
             }),
             locale.t('game.winHint'),
-            this.art?.cd ?? null,
+            this.art?.owner ?? this.art?.cd ?? null,
             stars,
         );
     }
@@ -1027,6 +1027,7 @@ export class DemoGame extends Component {
         }
     }
 }
+
 
 
 
