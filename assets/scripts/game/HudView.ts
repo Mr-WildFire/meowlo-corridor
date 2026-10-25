@@ -1,10 +1,11 @@
-import {
+﻿import {
     Color,
     EventMouse,
     EventTouch,
     Graphics,
     Label,
     Node,
+    resources,
     Sprite,
     SpriteFrame,
     UITransform,
@@ -88,6 +89,10 @@ export class HudView {
         bg.lineTo(screenW * 0.5, -36);
         bg.stroke();
 
+        // Formal HUD skin. The Graphics above stays as a fallback while the
+        // texture is loading (or if the asset is missing).
+        this.addHudSprite(bar, 'TopBarSkin', 'art/ui/hud/hud_bar/spriteFrame', 0, 0, screenW, 72);
+
         // Keep the strip inside the central 1440px so it also fits 4:3
         // Cocos preview windows, not only a 16:9 device.
         this.trackLabel = addLabel(bar, 'Track', '', 21, Theme.cream, -520, 0, 340, 44);
@@ -96,6 +101,10 @@ export class HudView {
         UiFonts.numberLabel(this.timerLabel);
         this.stepLabel = addLabel(bar, 'Steps', '', 19, Theme.cream, 30, 0, 220, 44);
         this.seedLabel = addLabel(bar, 'Seed', '', 14, Theme.dim, 330, 0, 330, 40);
+
+        this.addHudSprite(bar, 'HudIconTrack', 'art/ui/hud/hud_icon_track/spriteFrame', -660, 0, 44, 44);
+        this.addHudSprite(bar, 'HudIconTime', 'art/ui/hud/hud_icon_time/spriteFrame', -310, 0, 44, 44);
+
         this.createButton(bar, 'MenuButton', '≡', 610, 0, 58, 50, () => this.callbacks.onMenu());
 
         this.toastNode = makeNode('Toast', this.root, 0, -screenH * 0.5 + 88, 980, 48);
@@ -271,6 +280,12 @@ export class HudView {
         g.stroke();
         const buttonLabel = addLabel(node, name + 'Label', text, 20, Theme.cream, 0, 0, w - 12, h);
         if (text !== '≡') UiFonts.titleLabel(buttonLabel);
+        if (name === 'MenuButton') {
+            this.addHudSprite(node, 'MenuSkin', 'art/ui/hud/hud_menu_normal/spriteFrame', 0, 0, w, h);
+            this.addHudSprite(node, 'MenuIcon', 'art/ui/hud/hud_menu_icon/spriteFrame', 0, 0, 30, 30, () => {
+                buttonLabel.node.active = false;
+            });
+        }
         const press = (event: EventTouch | EventMouse): void => {
             event.propagationStopped = true;
             onClick();
@@ -279,4 +294,34 @@ export class HudView {
         node.on(Node.EventType.MOUSE_UP, press, this);
         return node;
     }
+
+    private addHudSprite(
+        parent: Node,
+        name: string,
+        path: string,
+        x: number,
+        y: number,
+        w: number,
+        h: number,
+        onLoaded?: () => void,
+    ): Sprite {
+        const node = makeNode(name, parent, x, y, w, h);
+        const ut = node.getComponent(UITransform)!;
+        ut.setContentSize(w, h);
+        const sprite = node.addComponent(Sprite);
+        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+        sprite.type = Sprite.Type.SIMPLE;
+        sprite.trim = false;
+        resources.load(path, SpriteFrame, (err, frame) => {
+            if (err || !frame || !sprite.isValid) {
+                if (err) console.warn('[HudView] missing skin:', path, err);
+                return;
+            }
+            sprite.spriteFrame = frame;
+            ut.setContentSize(w, h);
+            onLoaded?.();
+        });
+        return sprite;
+    }
 }
+
