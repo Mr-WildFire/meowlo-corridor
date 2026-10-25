@@ -1,4 +1,4 @@
-import { Color, EventMouse, EventTouch, Graphics, Node, resources, Sprite, SpriteFrame, UITransform, VideoClip, VideoPlayer } from 'cc';
+import { Color, EventMouse, EventTouch, Graphics, Node, resources, Sprite, SpriteFrame, sys, UITransform, VideoClip, VideoPlayer } from 'cc';
 import { locale } from '../core/Locale';
 import { Theme, addLabel, makeNode } from './UiKit';
 import { UiFonts } from './UiFonts';
@@ -51,16 +51,19 @@ export class TutorialIntroView {
             const vp = this.videoNode!.addComponent(VideoPlayer);
             this.video = vp;
             vp.resourceType = VideoPlayer.ResourceType.LOCAL;
-            vp.videoClip = clip;
+            vp.clip = clip;
             vp.playOnAwake = false;
             vp.loop = false;
-            vp.mute = false;
+            // Browsers block unmuted autoplay; start muted on web so the
+            // intro always plays, then keep the overlay for unmuted replay.
+            vp.mute = sys.isBrowser;
             vp.volume = 1;
             vp.fullScreenOnPlaying = false;
             vp.stayOnTop = false;
             vp.node.on(VideoPlayer.EventType.PLAYING, () => {
                 if (this.playOverlay?.isValid) this.playOverlay.active = false;
             }, this);
+            vp.node.on(VideoPlayer.EventType.CLICKED, () => { vp.mute = false; }, this);
             vp.node.on(VideoPlayer.EventType.COMPLETED, () => this.finish(), this);
             vp.node.on(VideoPlayer.EventType.ERROR, () => this.showFallback(), this);
             vp.play();
