@@ -1,4 +1,4 @@
-import { Color, EventMouse, EventTouch, Graphics, Label, Node, resources, Sprite, SpriteFrame, UITransform } from 'cc';
+﻿import { Color, EventMouse, EventTouch, Graphics, Label, Node, resources, Sprite, SpriteFrame, UITransform } from 'cc';
 import { locale } from '../core/Locale';
 import type { BestRecord } from '../core/ProgressStore';
 import { DIFFICULTY_ORDER, Difficulty, LEVELS, LevelConfig } from './LevelConfig';
@@ -48,12 +48,12 @@ export class MenuView {
         // Keep the illustrated corridor visible at the edges, but give the
         // three difficulty cards a quiet, opaque column so the cat/record
         // do not show through the text.
-        const panel = makeNode('MenuPanel', this.root, 185, -50, 640, 480);
+        const panel = makeNode('MenuPanel', this.root, 0, -50, 560, 480);
         const panelG = panel.addComponent(Graphics);
         panelG.fillColor = new Color(12, 9, 18, 210);
         panelG.strokeColor = new Color(216, 178, 122, 90);
         panelG.lineWidth = 1;
-        panelG.roundRect(-320, -240, 640, 480, 24);
+        panelG.roundRect(-280, -240, 560, 480, 24);
         panelG.fill();
         panelG.stroke();
 
@@ -132,12 +132,12 @@ export class MenuView {
     }
 
     private addButton(level: LevelConfig, y: number): void {
-        const node = makeNode('Menu_' + level.id, this.root, 185, y, 560, 112);
+        const node = makeNode('Menu_' + level.id, this.root, 0, y, 520, 112);
         const g = node.addComponent(Graphics);
         g.fillColor = new Color(38, 28, 50, 252);
         g.strokeColor = level.id === 'hard' ? Theme.rose : Theme.wall;
         g.lineWidth = 2;
-        g.roundRect(-280, -56, 560, 112, 18);
+        g.roundRect(-260, -56, 520, 112, 18);
         g.fill();
         g.stroke();
 
@@ -187,3 +187,5 @@ export class MenuView {
         node.on(Node.EventType.MOUSE_UP, press, this);
     }
 }
+
+
