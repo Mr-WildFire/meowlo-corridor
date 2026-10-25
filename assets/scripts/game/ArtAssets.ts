@@ -1,4 +1,4 @@
-import { resources, SpriteFrame } from 'cc';
+﻿import { resources, SpriteFrame } from 'cc';
 import { ItemType } from './DemoTypes';
 
 export type CatDir = 'down' | 'up' | 'left' | 'right';
@@ -48,7 +48,7 @@ function loadSprite(path: string): Promise<SpriteFrame | null> {
  * Every field can be null, in which case the caller keeps its Graphics fallback.
  */
 export async function loadArtAssets(): Promise<ArtAssets> {
-    // Eight frames per direction, extracted from the 8-frame / 8-direction
+    // Six walking frames per direction (frames 1..6; 0 and 7 are seated\n    // transitions in the supplied sequence).
     // turnaround sheet.
     const catPaths: Array<{ dir: CatDir; index: number; path: string }> = [];
     for (const dir of CAT_DIRS) {
@@ -66,10 +66,10 @@ export async function loadArtAssets(): Promise<ArtAssets> {
         catAssets.filter((x) => x.dir === dir && !!x.frame).length === 8,
     )
         ? {
-              down: catAssets.filter((x) => x.dir === 'down').sort((a, b) => a.index - b.index).map((x) => x.frame!),
-              up: catAssets.filter((x) => x.dir === 'up').sort((a, b) => a.index - b.index).map((x) => x.frame!),
-              left: catAssets.filter((x) => x.dir === 'left').sort((a, b) => a.index - b.index).map((x) => x.frame!),
-              right: catAssets.filter((x) => x.dir === 'right').sort((a, b) => a.index - b.index).map((x) => x.frame!),
+              down: catAssets.filter((x) => x.dir === 'down').sort((a, b) => a.index - b.index).slice(1, 7).map((x) => x.frame!),
+              up: catAssets.filter((x) => x.dir === 'up').sort((a, b) => a.index - b.index).slice(1, 7).map((x) => x.frame!),
+              left: catAssets.filter((x) => x.dir === 'left').sort((a, b) => a.index - b.index).slice(1, 7).map((x) => x.frame!),
+              right: catAssets.filter((x) => x.dir === 'right').sort((a, b) => a.index - b.index).slice(1, 7).map((x) => x.frame!),
           }
         : null;
 
@@ -109,4 +109,6 @@ export async function loadArtAssets(): Promise<ArtAssets> {
     });
     return result;
 }
+
+
 
