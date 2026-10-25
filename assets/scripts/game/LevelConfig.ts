@@ -89,3 +89,21 @@ export const LEVELS: Record<Difficulty, LevelConfig> = {
 };
 
 export const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'normal', 'hard'];
+
+/** Small teaching maze: 2 shards, 2 items. */
+export const TUTORIAL_LEVEL: LevelConfig = {
+    id: 'easy',
+    label: '新手教程',
+    subtitle: '跟着蝙蝠进入回廊',
+    cols: 7,
+    rows: 7,
+    fragments: 2,
+    timeLimit: 300,
+    braid: 0.18,
+    exitMin: 1,
+    exitMax: 2,
+    itemCounts: {
+        butterfly: 1,
+        firefly: 1,
+    },
+};

@@ -13,6 +13,7 @@ interface SaveData {
     volume: number;
     language: Language;
     vibration: boolean;
+    tutorialDone: boolean;
 }
 
 const KEY = 'meowlo.progress.v1';
@@ -22,7 +23,7 @@ const KEY = 'meowlo.progress.v1';
  * Uses Cocos localStorage so it works in browser and native WebView.
  */
 export class ProgressStore {
-    private data: SaveData = { best: {}, muted: false, volume: 0.7, language: 'zh', vibration: true };
+    private data: SaveData = { best: {}, muted: false, volume: 0.7, language: 'zh', vibration: true, tutorialDone: false };
 
     constructor() {
         this.load();
@@ -64,6 +65,15 @@ export class ProgressStore {
         this.save();
     }
 
+    get tutorialDone(): boolean {
+        return this.data.tutorialDone;
+    }
+
+    setTutorialDone(done: boolean): void {
+        this.data.tutorialDone = done;
+        this.save();
+    }
+
     resetRecords(): void {
         this.data.best = {};
         this.save();
@@ -98,9 +108,10 @@ export class ProgressStore {
                 this.data.volume = Math.max(0, Math.min(1, Number(parsed.volume ?? 0.7)));
                 this.data.language = parsed.language === 'en' ? 'en' : 'zh';
                 this.data.vibration = parsed.vibration !== false;
+                this.data.tutorialDone = parsed.tutorialDone === true;
             }
         } catch {
-            this.data = { best: {}, muted: false, volume: 0.7, language: 'zh', vibration: true };
+            this.data = { best: {}, muted: false, volume: 0.7, language: 'zh', vibration: true, tutorialDone: false };
         }
     }
 

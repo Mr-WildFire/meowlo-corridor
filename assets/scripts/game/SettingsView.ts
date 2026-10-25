@@ -1,4 +1,4 @@
-﻿import { Color, EventMouse, EventTouch, Graphics, Label, Node, UITransform, Vec3 } from 'cc';
+import { Color, EventMouse, EventTouch, Graphics, Label, Node, UITransform, Vec3 } from 'cc';
 import { locale } from '../core/Locale';
 import { Theme, addLabel, makeNode } from './UiKit';
 import { UiFonts } from './UiFonts';
@@ -36,6 +36,7 @@ export class SettingsView {
         private readonly onToggleLanguage: () => void,
         private readonly onToggleVibration: () => boolean,
         private readonly onResetRecords: () => void,
+        private readonly onTutorial: () => void,
         private readonly onClose: () => void,
     ) {
         this.volume = Math.max(0, Math.min(1, volume));
@@ -88,9 +89,11 @@ export class SettingsView {
         this.languageLabel = this.addButton(panel, -20, 420);
         this.vibrationLabel = this.addButton(panel, -110, 420);
         this.resetLabel = this.addButton(panel, -200, 420);
-        addLabel(panel, 'LanguageHint', locale.t('settings.languageHint'), 13, Theme.dim, 0, -260, 720, 28);
+        const tutorialLabel = this.addButton(panel, -290, 420);
+        tutorialLabel.string = locale.t('tutorial.settings');
+        addLabel(panel, 'LanguageHint', locale.t('settings.languageHint'), 13, Theme.dim, 0, -235, 720, 28);
 
-        const close = makeNode('SettingsClose', panel, 0, -340, 360, 62);
+        const close = makeNode('SettingsClose', panel, 0, -355, 360, 62);
         const cg = close.addComponent(Graphics);
         cg.fillColor = new Color(45, 34, 58, 240);
         cg.strokeColor = Theme.wall;
@@ -111,6 +114,7 @@ export class SettingsView {
         this.bindPress(this.languageLabel.node.parent!, () => this.onToggleLanguage());
         this.bindPress(this.vibrationLabel.node.parent!, () => this.setVibration(this.onToggleVibration()));
         this.bindPress(this.resetLabel.node.parent!, () => this.pressReset());
+        this.bindPress(tutorialLabel.node.parent!, () => this.onTutorial());
 
         const drag = (event: EventTouch | EventMouse): void => {
             event.propagationStopped = true;

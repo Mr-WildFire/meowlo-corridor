@@ -30,7 +30,8 @@ import { FinaleView } from './FinaleView';
 import { FogView } from './FogView';
 import { GuideView } from './GuideView';
 import { InputRouter } from './InputRouter';
-import { Difficulty, LEVELS, LevelConfig } from './LevelConfig';
+import { Difficulty, LEVELS, LevelConfig, TUTORIAL_LEVEL } from './LevelConfig';
+import { TutorialIntroView } from './TutorialIntroView';
 import { MenuView } from './MenuView';
 import { UiFonts } from './UiFonts';
 import { SettingsView } from './SettingsView';
@@ -60,6 +61,8 @@ export class DemoGame extends Component {
     private difficulty: Difficulty = 'normal';
     private level: LevelConfig = LEVELS.normal;
     private menu: MenuView | null = null;
+    private tutorialIntro: TutorialIntroView | null = null;
+    private tutorialMode = false;
 
     private screenW = 1080;
     private screenH = 1920;
@@ -171,7 +174,59 @@ export class DemoGame extends Component {
         this.music.setVolume(this.volume);
         this.tone.setMuted(this.muted);
         this.tone.setVolume(this.volume);
-        this.openMenu();
+        if (!this.progress.tutorialDone) {
+            this.openTutorialIntro();
+        } else {
+            this.openMenu();
+        }
+    }
+
+    private openTutorialIntro(): void {
+        if (this.settings) {
+            this.settings.dispose();
+            this.settings = null;
+        }
+        this.hud?.dispose();
+        if (this.menu) {
+            this.menu.dispose();
+            this.menu = null;
+        }
+        this.tutorialIntro?.dispose();
+        this.music.stop();
+        this.state = 'menu';
+        this.tutorialMode = false;
+        this.tutorialIntro = new TutorialIntroView(
+            this.node,
+            this.screenW,
+            this.screenH,
+            () => {
+                this.tutorialIntro?.dispose();
+                this.tutorialIntro = null;
+                this.startTutorial();
+            },
+        );
+    }
+
+    private openTutorialFromSettings(): void {
+        if (this.settings) {
+            this.settings.dispose();
+            this.settings = null;
+        }
+        this.openTutorialIntro();
+    }
+
+    private startTutorial(): void {
+        this.sfx?.click();
+        this.tutorialMode = true;
+        this.difficulty = 'easy';
+        this.level = TUTORIAL_LEVEL;
+        this.tutorialIntro?.dispose();
+        this.tutorialIntro = null;
+        if (this.menu) {
+            this.menu.dispose();
+            this.menu = null;
+        }
+        this.build();
     }
 
     private openMenu(): void {
@@ -180,6 +235,9 @@ export class DemoGame extends Component {
             this.settings.dispose();
             this.settings = null;
         }
+        this.tutorialIntro?.dispose();
+        this.tutorialIntro = null;
+        this.tutorialMode = false;
         this.state = 'menu';
         this.finale = false;
         this.ending = false;
@@ -216,6 +274,8 @@ export class DemoGame extends Component {
         this.settings = null;
         this.finaleView?.dispose();
         this.finaleView = null;
+        this.tutorialIntro?.dispose();
+        this.tutorialIntro = null;
         this.fog?.dispose();
         this.guide?.dispose();
         if (this.menu) this.menu.dispose();
@@ -783,7 +843,7 @@ export class DemoGame extends Component {
             seed: this.seed,
             cols: this.level.cols,
             rows: this.level.rows,
-            levelLabel: locale.difficultyName(this.level.id),
+            levelLabel: this.tutorialMode ? locale.t('tutorial.label') : locale.difficultyName(this.level.id),
             timeLimit: this.level.timeLimit,
         });
     }
@@ -833,6 +893,18 @@ export class DemoGame extends Component {
         this.music.stop();
         this.tone.climax();
         this.sfx?.win();
+
+        if (this.tutorialMode) {
+            this.progress.setTutorialDone(true);
+            this.hud.showOverlay(
+                locale.t('tutorial.completeTitle'),
+                locale.t('tutorial.completeBody'),
+                '',
+                this.art?.owner ?? null,
+                0,
+            );
+            return;
+        }
 
         const ratio = this.timeLeft / this.level.timeLimit;
         const stars = ratio >= 0.4 ? 3 : ratio >= 0.15 ? 2 : 1;
@@ -896,6 +968,7 @@ export class DemoGame extends Component {
             () => this.toggleLanguage(),
             () => this.toggleVibration(),
             () => this.progress.resetRecords(),
+            () => this.openTutorialFromSettings(),
             () => this.closeSettings(),
         );
     }
@@ -1028,6 +1101,7 @@ export class DemoGame extends Component {
         }
     }
 }
+
 
 
 

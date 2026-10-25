@@ -5,6 +5,14 @@ export type Language = 'zh' | 'en';
 
 const DICT: Record<Language, Record<string, string>> = {
     zh: {
+        'tutorial.title': '新手教程',
+        'tutorial.video': '教学视频待接入',
+        'tutorial.body': '老八追着蝙蝠进入了喵音回廊。先找回 2 块碎片，再找到出口。',
+        'tutorial.start': '开始教学',
+        'tutorial.label': '新手教程',
+        'tutorial.completeTitle': '教学完成',
+        'tutorial.completeBody': '你已经学会移动、拾取碎片和使用道具，回主菜单开始正式冒险吧。',
+        'tutorial.settings': '新手教程',
         'menu.title': '喵音回廊',
         'menu.subtitle': '选择难度',
         'menu.hint': '点击难度开始',
@@ -115,6 +123,14 @@ const DICT: Record<Language, Record<string, string>> = {
         'item.feather.tut': '蝙蝠黑羽会减少 10 秒倒计时。',
     },
     en: {
+        'tutorial.title': 'Tutorial',
+        'tutorial.video': 'Tutorial video coming soon',
+        'tutorial.body': 'Lao Ba chased the bat into Meowlo Corridor. Find 2 shards, then find the exit.',
+        'tutorial.start': 'Start tutorial',
+        'tutorial.label': 'Tutorial',
+        'tutorial.completeTitle': 'Tutorial complete',
+        'tutorial.completeBody': 'You learned movement, shard pickup and items. Return to the main menu and begin.',
+        'tutorial.settings': 'Tutorial',
         'menu.title': 'Meowlo Corridor',
         'menu.subtitle': 'SELECT DIFFICULTY',
         'menu.hint': 'Tap a difficulty',
@@ -285,6 +301,7 @@ class Locale {
 }
 
 export const locale = new Locale();
+
 
 
 
