@@ -86,14 +86,13 @@ export class SettingsView {
         kg.stroke();
 
         this.muteLabel = this.addButton(panel, 70, 420);
-        this.languageLabel = this.addButton(panel, -20, 420);
-        this.vibrationLabel = this.addButton(panel, -110, 420);
-        this.resetLabel = this.addButton(panel, -200, 420);
-        const tutorialLabel = this.addButton(panel, -290, 420);
+        this.languageLabel = this.addButton(panel, -10, 420);
+        this.vibrationLabel = this.addButton(panel, -90, 420);
+        this.resetLabel = this.addButton(panel, -170, 420);
+        const tutorialLabel = this.addButton(panel, -250, 420);
         tutorialLabel.string = locale.t('tutorial.settings');
-        addLabel(panel, 'LanguageHint', locale.t('settings.languageHint'), 13, Theme.dim, 0, -235, 720, 28);
 
-        const close = makeNode('SettingsClose', panel, 0, -355, 360, 62);
+        const close = makeNode('SettingsClose', panel, 0, -350, 360, 62);
         const cg = close.addComponent(Graphics);
         cg.fillColor = new Color(45, 34, 58, 240);
         cg.strokeColor = Theme.wall;

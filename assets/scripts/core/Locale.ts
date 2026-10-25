@@ -7,8 +7,10 @@ const DICT: Record<Language, Record<string, string>> = {
     zh: {
         'tutorial.title': '新手教程',
         'tutorial.video': '教学视频待接入',
-        'tutorial.body': '老八追着蝙蝠进入了喵音回廊。先找回 2 块碎片，再找到出口。',
+        'tutorial.body': '蝙蝠把妈妈的唱片抢走了，钻进迷宫深处。小八要集齐碎片，再走出迷宫，路上可以使用各种道具。',
         'tutorial.start': '开始教学',
+        'tutorial.tapToPlay': '点击播放',
+        'tutorial.skip': '跳过视频',
         'tutorial.label': '新手教程',
         'tutorial.completeTitle': '教学完成',
         'tutorial.completeBody': '你已经学会移动、拾取碎片和使用道具，回主菜单开始正式冒险吧。',
@@ -125,8 +127,10 @@ const DICT: Record<Language, Record<string, string>> = {
     en: {
         'tutorial.title': 'Tutorial',
         'tutorial.video': 'Tutorial video coming soon',
-        'tutorial.body': 'Lao Ba chased the bat into Meowlo Corridor. Find 2 shards, then find the exit.',
+        'tutorial.body': 'The bat stole Mom’s record and fled into the maze. Lao Ba must gather the shards, use items, and find the way out.',
         'tutorial.start': 'Start tutorial',
+        'tutorial.tapToPlay': 'Tap to play',
+        'tutorial.skip': 'Skip video',
         'tutorial.label': 'Tutorial',
         'tutorial.completeTitle': 'Tutorial complete',
         'tutorial.completeBody': 'You learned movement, shard pickup and items. Return to the main menu and begin.',
@@ -301,6 +305,8 @@ class Locale {
 }
 
 export const locale = new Locale();
+
+
 
 
 
