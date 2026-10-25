@@ -1,4 +1,4 @@
-# 喵音回廊 · 玩法骨架 Demo
+﻿# 喵音回廊 · 玩法骨架 Demo
 
 Cocos Creator **3.8.8** 的 2D 玩法骨架，对应开发文档的 **M0/M0.5（迷宫整体 + 可玩骨架补强）**。
 当前美术是脚本生成的**扁平占位 PNG**（老八、地板、墙、碎片、道具、出口），HUD 仍用 `Graphics + Label`；音乐是脚本生成的 6 层占位 WAV（AudioSource），缺失时回退 WebAudio；音效由 WebAudio 合成。没有使用任何外部美术/音频素材。
@@ -136,6 +136,7 @@ docs/prompts/老八三视图-prompt.md   # 布偶猫参考的三视图/单视角
 docs/prompts/横屏菜单背景-prompt.md # 1920×1080 纸雕回廊菜单背景 prompt
 docs/prompts/回廊地块与黑胶碎片-prompt.md # 地板/墙/黑胶碎片/出口 prompt
 docs/prompts/回廊地块与道具-prompt-v2.md # 修正边框/高光/钉子后的 v2 prompt
+docs/prompts/八道具图标-prompt.md # 8 个道具图标 prompt
 ```
 
 占位图由 `tools/gen_placeholder_art.py` 生成，占位音乐由 `tools/gen_placeholder_audio.py` 生成，占位音效由 `tools/gen_placeholder_sfx.py` 生成；正式资源到位后按同名路径替换即可。
@@ -148,6 +149,7 @@ docs/prompts/回廊地块与道具-prompt-v2.md # 修正边框/高光/钉子后�
 - 遮罩优先使用 `resources/effects/fog.effect` 的 Shader；如果设备/构建不支持自定义材质，会自动回退到格子遮罩，保证仍可玩。
 - 音乐与 SFX 均走 `AudioSource`，HAP 内已打包；鸿蒙真机的 WAV 解码/延迟/音频焦点仍未验证。
 - 场景通过脚本 UUID 绑定组件：`assets/scripts/game/DemoGame.ts.meta` 中的 UUID 与 `Main.scene` 里的压缩 UUID 必须保持一致；不要手动改其中一个。
+
 
 
 
