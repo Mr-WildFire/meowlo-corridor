@@ -83,10 +83,10 @@ const DICT: Record<Language, Record<string, string>> = {
         'game.restart': '重开',
         'hud.menu': '菜单',
         'game.ownerDoor': '主人推门进来了……',
-        'game.timeoutTitle': '被主人抱回家  ☆☆☆',
+        'game.timeoutTitle': '被主人抱回家',
         'game.timeoutBody': '音轨 {n}/{total}　用时 {time}\n主人循着猫叫找到了回廊深处。',
         'game.timeoutHint': '按 R 重开　M 选难度　或点击屏幕再试一次',
-        'game.winTitle': '带回家了  {stars}',
+        'game.winTitle': '带回家了',
         'game.winBody': '音轨 {n}/{total}　步数 {steps}　用时 {time}{best}\n主人把 CD 放进了唱机。',
         'game.winHint': '按 R 重开　M 选难度　或点击屏幕再走一次',
         'game.newRecord': '　新纪录！',
@@ -192,10 +192,10 @@ const DICT: Record<Language, Record<string, string>> = {
         'game.restart': 'Restart',
         'hud.menu': 'MENU',
         'game.ownerDoor': 'The owner opens the door…',
-        'game.timeoutTitle': 'Carried home  ☆☆☆',
+        'game.timeoutTitle': 'Carried home',
         'game.timeoutBody': 'Tracks {n}/{total}　Time {time}\nThe owner followed the meows into the corridor.',
         'game.timeoutHint': 'R restart　M difficulty　or tap to try again',
-        'game.winTitle': 'Home at last  {stars}',
+        'game.winTitle': 'Home at last',
         'game.winBody': 'Tracks {n}/{total}　Steps {steps}　Time {time}{best}\nThe owner puts the CD back on.',
         'game.winHint': 'R restart　M difficulty　or tap to run again',
         'game.newRecord': '  New record!',
@@ -283,6 +283,7 @@ class Locale {
 }
 
 export const locale = new Locale();
+
 
 
 

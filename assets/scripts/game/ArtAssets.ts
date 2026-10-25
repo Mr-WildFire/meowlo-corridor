@@ -1,4 +1,4 @@
-import { resources, SpriteFrame } from 'cc';
+﻿import { resources, SpriteFrame } from 'cc';
 import { ItemType } from './DemoTypes';
 
 export type CatDir = 'down' | 'up' | 'left' | 'right';
@@ -13,6 +13,7 @@ export interface ArtAssets {
     exit: SpriteFrame | null;
     cd: SpriteFrame | null;
     owner: SpriteFrame | null;
+    ownerTimeout: SpriteFrame | null;
     items: Partial<Record<ItemType, SpriteFrame>>;
 }
 
@@ -70,13 +71,14 @@ export async function loadArtAssets(): Promise<ArtAssets> {
           }
         : null;
 
-    const [floor, wall, fragment, exit, cd, owner] = await Promise.all([
+    const [floor, wall, fragment, exit, cd, owner, ownerTimeout] = await Promise.all([
         loadSprite('art/board/floor/spriteFrame'),
         loadSprite('art/board/wall/spriteFrame'),
         loadSprite('art/props/fragment/spriteFrame'),
         loadSprite('art/props/exit/spriteFrame'),
         loadSprite('art/props/cd/spriteFrame'),
         loadSprite('art/props/owner/spriteFrame'),
+        loadSprite('art/props/owner_timeout/spriteFrame'),
     ]);
 
     const itemEntries = await Promise.all(
@@ -91,7 +93,7 @@ export async function loadArtAssets(): Promise<ArtAssets> {
         if (frame) items[type] = frame;
     }
 
-    const result: ArtAssets = { cat, floor, wall, fragment, exit, cd, owner, items };
+    const result: ArtAssets = { cat, floor, wall, fragment, exit, cd, owner, ownerTimeout, items };
     console.log('[ArtAssets] loaded', {
         cat: !!cat,
         floor: !!floor,
@@ -100,7 +102,9 @@ export async function loadArtAssets(): Promise<ArtAssets> {
         exit: !!exit,
         cd: !!cd,
         owner: !!owner,
+        ownerTimeout: !!ownerTimeout,
         items: Object.keys(items).length,
     });
     return result;
 }
+

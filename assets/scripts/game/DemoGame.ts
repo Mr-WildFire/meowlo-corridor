@@ -823,7 +823,7 @@ export class DemoGame extends Component {
                     time: this.timeText(this.elapsed),
                 }),
                 locale.t('game.timeoutHint'),
-                this.art?.owner ?? null,
+                this.art?.ownerTimeout ?? this.art?.owner ?? null,
             );
         }, 1.5);
     }
@@ -838,11 +838,10 @@ export class DemoGame extends Component {
 
         const ratio = this.timeLeft / this.level.timeLimit;
         const stars = ratio >= 0.4 ? 3 : ratio >= 0.15 ? 2 : 1;
-        const starText = '★'.repeat(stars) + '☆'.repeat(3 - stars);
         const newBest = this.progress.submitWin(this.level.id, stars, this.elapsed);
 
         this.hud.showOverlay(
-            locale.t('game.winTitle', { stars: starText }),
+            locale.t('game.winTitle'),
             locale.t('game.winBody', {
                 n: this.collected,
                 total: this.level.fragments,
@@ -852,6 +851,7 @@ export class DemoGame extends Component {
             }),
             locale.t('game.winHint'),
             this.art?.cd ?? null,
+            stars,
         );
     }
 
@@ -1027,5 +1027,6 @@ export class DemoGame extends Component {
         }
     }
 }
+
 
 

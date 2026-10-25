@@ -62,6 +62,7 @@ export class HudView {
     private readonly pauseRoot: Node;
     private readonly overlayRoot: Node;
     private readonly overlayArt: Sprite;
+    private readonly overlayStars: Sprite[] = [];
     private readonly overlayTitle: Label;
     private readonly overlayBody: Label;
     private readonly overlayHint: Label;
@@ -209,12 +210,28 @@ export class HudView {
         overlayBg.fillColor = new Color(4, 3, 8, 225);
         overlayBg.rect(-screenW * 0.5, -screenH * 0.5, screenW, screenH);
         overlayBg.fill();
-        const artNode = makeNode('OverlayArt', this.overlayRoot, 0, 255, 220, 220);
+        const overlayPanel = makeNode('OverlayPanel', this.overlayRoot, 0, 0, 900, 640);
+        const opg = overlayPanel.addComponent(Graphics);
+        opg.fillColor = new Color(28, 20, 38, 250);
+        opg.strokeColor = Theme.wall;
+        opg.lineWidth = 2;
+        opg.roundRect(-450, -320, 900, 640, 24);
+        opg.fill();
+        opg.stroke();
+        this.addHudSprite(overlayPanel, 'OverlayPanelSkin', 'art/props/result_panel/spriteFrame', 0, 0, 900, 640);
+
+        for (let i = 0; i < 3; i++) {
+            const star = this.addHudSprite(this.overlayRoot, 'OverlayStar' + i, 'art/props/star/spriteFrame', -58 + i * 58, 205, 48, 48);
+            star.node.active = false;
+            this.overlayStars.push(star);
+        }
+
+        const artNode = makeNode('OverlayArt', this.overlayRoot, 0, 30, 260, 260);
         this.overlayArt = artNode.addComponent(Sprite);
-        this.overlayTitle = addLabel(this.overlayRoot, 'OverlayTitle', '', 40, Theme.cream, 0, 90, 1100, 70);
+        this.overlayTitle = addLabel(this.overlayRoot, 'OverlayTitle', '', 36, Theme.cream, 0, 270, 1100, 70);
         UiFonts.titleLabel(this.overlayTitle);
-        this.overlayBody = addLabel(this.overlayRoot, 'OverlayBody', '', 23, Theme.cream, 0, 10, 1100, 90);
-        this.overlayHint = addLabel(this.overlayRoot, 'OverlayHint', '', 18, Theme.dim, 0, -80, 1100, 50);
+        this.overlayBody = addLabel(this.overlayRoot, 'OverlayBody', '', 21, Theme.cream, 0, -140, 900, 86);
+        this.overlayHint = addLabel(this.overlayRoot, 'OverlayHint', '', 17, Theme.dim, 0, -220, 1000, 46);
         this.overlayRoot.active = false;
     }
 
@@ -286,12 +303,15 @@ export class HudView {
         this.pauseRoot.active = false;
     }
 
-    showOverlay(title: string, body: string, hint: string, art: SpriteFrame | null = null): void {
+    showOverlay(title: string, body: string, hint: string, art: SpriteFrame | null = null, stars = 0): void {
         this.pauseRoot.active = false;
         this.overlayTitle.string = title;
         this.overlayBody.string = body;
         this.overlayHint.string = hint;
         this.setOverlayArt(art);
+        this.overlayStars.forEach((star, i) => {
+            star.node.active = i < stars;
+        });
         this.overlayRoot.active = true;
     }
 
@@ -302,7 +322,7 @@ export class HudView {
             return;
         }
         this.overlayArt.spriteFrame = frame;
-        node.getComponent(UITransform)!.setContentSize(220, 220);
+        node.getComponent(UITransform)!.setContentSize(260, 260);
         node.active = true;
     }
 
@@ -427,6 +447,7 @@ export class HudView {
         return sprite;
     }
 }
+
 
 
 
