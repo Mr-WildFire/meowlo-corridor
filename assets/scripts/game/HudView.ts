@@ -174,9 +174,7 @@ export class HudView {
         pg.roundRect(-410, -410, 820, 820, 24);
         pg.fill();
         pg.stroke();
-        const panelSkin = this.addHudSprite(panel, 'PausePanelSkin', 'art/ui/pause/pause_panel/spriteFrame', 0, 0, 820, 820);
-        panelSkin.node.on(Node.EventType.TOUCH_END, (event: EventTouch) => this.handlePauseTouch(event, panel), this);
-        panelSkin.node.on(Node.EventType.MOUSE_UP, (event: EventMouse) => this.handlePauseTouch(event, panel), this);
+        this.addHudSprite(panel, 'PausePanelSkin', 'art/ui/pause/pause_panel/spriteFrame', 0, 0, 820, 820);
         const pauseTitle = addLabel(panel, 'PauseTitle', locale.t('game.pauseTitle'), 40, Theme.cream, 0, 330, 720, 60);
         UiFonts.titleLabel(pauseTitle);
         addLabel(panel, 'PauseBody', locale.t('game.pauseBody'), 20, Theme.dim, 0, 280, 680, 36);
