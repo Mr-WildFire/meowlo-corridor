@@ -38,6 +38,7 @@ export interface HudCallbacks {
     onSettings(): void;
     onMute(): void;
     onRestart(): void;
+    onBackToMenu(): void;
     onDifficulty(difficulty: Difficulty): void;
 }
 
@@ -175,22 +176,24 @@ export class HudView {
         const pauseTitle = addLabel(panel, 'PauseTitle', locale.t('game.pauseTitle'), 40, Theme.cream, 0, 330, 720, 60);
         UiFonts.titleLabel(pauseTitle);
         addLabel(panel, 'PauseBody', locale.t('game.pauseBody'), 20, Theme.dim, 0, 280, 680, 36);
-        this.createButton(panel, 'Settings', locale.t('settings.title'), 0, 190, 420, 64, () => this.callbacks.onSettings(), 'art/ui/pause/pause_button/spriteFrame');
-        this.createButton(panel, 'Restart', locale.t('game.restart'), 0, 100, 420, 64, () => this.callbacks.onRestart(), 'art/ui/pause/pause_button/spriteFrame');
+        this.createButton(panel, 'Settings', locale.t('settings.title'), 0, 200, 420, 64, () => this.callbacks.onSettings(), 'art/ui/pause/pause_button/spriteFrame');
+        this.createButton(panel, 'Restart', locale.t('game.restart'), 0, 120, 420, 64, () => this.callbacks.onRestart(), 'art/ui/pause/pause_button/spriteFrame');
+        this.createButton(panel, 'BackToMenu', locale.t('game.backToMenu'), 0, 40, 420, 64, () => this.callbacks.onBackToMenu(), 'art/ui/pause/pause_button/spriteFrame');
 
-        addLabel(panel, 'DifficultyTitle', locale.t('menu.subtitle'), 17, Theme.dim, 0, -10, 420, 30);
-        this.createButton(panel, 'Easy', locale.difficultyName('easy'), -230, -75, 200, 52, () => this.callbacks.onDifficulty('easy'), 'art/ui/pause/pause_button_small/spriteFrame');
-        this.createButton(panel, 'Normal', locale.difficultyName('normal'), 0, -75, 200, 52, () => this.callbacks.onDifficulty('normal'), 'art/ui/pause/pause_button_small/spriteFrame');
-        this.createButton(panel, 'Hard', locale.difficultyName('hard'), 230, -75, 200, 52, () => this.callbacks.onDifficulty('hard'), 'art/ui/pause/pause_button_small/spriteFrame');
-        addLabel(panel, 'PauseHint', locale.t('game.pauseHint'), 15, Theme.dim, 0, -190, 680, 30);
+        addLabel(panel, 'DifficultyTitle', locale.t('menu.subtitle'), 17, Theme.dim, 0, -50, 420, 30);
+        this.createButton(panel, 'Easy', locale.difficultyName('easy'), -230, -115, 200, 52, () => this.callbacks.onDifficulty('easy'), 'art/ui/pause/pause_button_small/spriteFrame');
+        this.createButton(panel, 'Normal', locale.difficultyName('normal'), 0, -115, 200, 52, () => this.callbacks.onDifficulty('normal'), 'art/ui/pause/pause_button_small/spriteFrame');
+        this.createButton(panel, 'Hard', locale.difficultyName('hard'), 230, -115, 200, 52, () => this.callbacks.onDifficulty('hard'), 'art/ui/pause/pause_button_small/spriteFrame');
+        addLabel(panel, 'PauseHint', locale.t('game.pauseHint'), 15, Theme.dim, 0, -215, 680, 30);
         this.createButton(panel, 'ResumeBottom', locale.t('game.resume'), 0, -340, 360, 62, () => this.callbacks.onResume(), 'art/ui/pause/pause_button_wide/spriteFrame');
         // Native hit targets above the skin sprites. Sprite children can become
         // the touch target on device, so keep explicit transparent buttons.
-        this.addHitTarget(panel, 0, 190, 420, 64, () => this.callbacks.onSettings());
-        this.addHitTarget(panel, 0, 100, 420, 64, () => this.callbacks.onRestart());
-        this.addHitTarget(panel, -230, -75, 200, 52, () => this.callbacks.onDifficulty('easy'));
-        this.addHitTarget(panel, 0, -75, 200, 52, () => this.callbacks.onDifficulty('normal'));
-        this.addHitTarget(panel, 230, -75, 200, 52, () => this.callbacks.onDifficulty('hard'));
+        this.addHitTarget(panel, 0, 200, 420, 64, () => this.callbacks.onSettings());
+        this.addHitTarget(panel, 0, 120, 420, 64, () => this.callbacks.onRestart());
+        this.addHitTarget(panel, 0, 40, 420, 64, () => this.callbacks.onBackToMenu());
+        this.addHitTarget(panel, -230, -115, 200, 52, () => this.callbacks.onDifficulty('easy'));
+        this.addHitTarget(panel, 0, -115, 200, 52, () => this.callbacks.onDifficulty('normal'));
+        this.addHitTarget(panel, 230, -115, 200, 52, () => this.callbacks.onDifficulty('hard'));
         this.addHitTarget(panel, 0, -340, 360, 62, () => this.callbacks.onResume());
         this.pauseRoot.active = false;
 

@@ -1,4 +1,4 @@
-import {
+﻿import {
     _decorator,
     Camera,
     Component,
@@ -355,6 +355,7 @@ export class DemoGame extends Component {
                 onSettings: () => this.openSettings(),
                 onMute: () => this.toggleMute(),
                 onRestart: () => this.restart(),
+                onBackToMenu: () => this.openMenu(),
                 onDifficulty: (difficulty) => this.startLevel(difficulty),
             },
             (cb, delay) => this.scheduleOnce(cb, delay),
@@ -1024,3 +1025,4 @@ export class DemoGame extends Component {
         }
     }
 }
+

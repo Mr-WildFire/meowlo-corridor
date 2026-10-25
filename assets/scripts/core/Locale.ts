@@ -78,6 +78,7 @@ const DICT: Record<Language, Record<string, string>> = {
         'game.pauseTitle': '暂停',
         'game.pauseBody': '倒计时与道具效果已冻结。',
         'game.pauseHint': '按 P 继续　R 重开　V 静音',
+        'game.backToMenu': '返回菜单',
         'game.resume': '继续',
         'game.restart': '重开',
         'hud.menu': '菜单',
@@ -186,6 +187,7 @@ const DICT: Record<Language, Record<string, string>> = {
         'game.pauseTitle': 'Paused',
         'game.pauseBody': 'Timer and item effects are frozen.',
         'game.pauseHint': 'P resume　R restart　V mute',
+        'game.backToMenu': 'Back to menu',
         'game.resume': 'Resume',
         'game.restart': 'Restart',
         'hud.menu': 'MENU',
@@ -281,4 +283,5 @@ class Locale {
 }
 
 export const locale = new Locale();
+
 
