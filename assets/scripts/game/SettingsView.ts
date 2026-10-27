@@ -1,4 +1,4 @@
-﻿import { Color, EventMouse, EventTouch, Graphics, Label, Node, UITransform, Vec3 } from 'cc';
+import { Color, EventMouse, EventTouch, Graphics, Label, Node, UITransform, Vec3 } from 'cc';
 import { locale } from '../core/Locale';
 import { Theme, addLabel, makeNode } from './UiKit';
 import { UiFonts } from './UiFonts';
@@ -117,6 +117,25 @@ export class SettingsView {
         };
         closeHit.on(Node.EventType.TOUCH_END, closeHitPress, this);
         closeHit.on(Node.EventType.MOUSE_UP, closeHitPress, this);
+
+        // Sprite/Label children may steal the touch target on device. Give each
+        // setting row a topmost transparent hit layer, matching the result
+        // screen's button treatment.
+        const hitRows: Array<[string, number, () => void]> = [
+            ['Mute', 70, () => this.setMuted(this.onToggleMute())],
+            ['Language', -10, () => this.onToggleLanguage()],
+            ['Vibration', -90, () => this.setVibration(this.onToggleVibration())],
+            ['Reset', -170, () => this.pressReset()],
+            ['Tutorial', -250, () => this.onTutorial()],
+        ];
+        for (const [name, y, action] of hitRows) {
+            const hit = makeNode('Settings' + name + 'Hit', this.root, 0, y, 440, 76);
+            const hg = hit.addComponent(Graphics);
+            hg.fillColor = new Color(0, 0, 0, 1);
+            hg.rect(-220, -38, 440, 76);
+            hg.fill();
+            this.bindPress(hit, action);
+        }
 
         this.bindPress(this.muteLabel.node.parent!, () => this.setMuted(this.onToggleMute()));
         this.bindPress(this.languageLabel.node.parent!, () => this.onToggleLanguage());
