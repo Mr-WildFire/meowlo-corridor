@@ -1084,7 +1084,7 @@ export class DemoGame extends Component {
         }
         this.refreshHud();
         if (this.collected >= this.level.fragments) {
-            this.music.start();
+            this.music.climax();
             this.startFinale();
         }
     }
