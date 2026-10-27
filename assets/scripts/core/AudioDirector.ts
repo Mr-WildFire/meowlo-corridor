@@ -1,4 +1,4 @@
-﻿import { AudioClip, AudioSource, Node, resources } from 'cc';
+import { AudioClip, AudioSource, Node, resources } from 'cc';
 import { MusicDirector } from './MusicDirector';
 
 type MusicDifficulty = 'easy' | 'normal' | 'hard';
@@ -51,10 +51,15 @@ export class AudioDirector {
     }
 
     async loadSong(difficulty: MusicDifficulty): Promise<boolean> {
-        if (this.loaded && this.current === difficulty) return true;
+        if (this.loaded && this.current === difficulty) {
+            this.stop();
+            this.unlocked = 0;
+            return true;
+        }
 
         this.stop();
         this.clearSources();
+        this.unlocked = 0;
         this.current = difficulty;
         const config = SONGS[difficulty];
 
@@ -141,6 +146,20 @@ export class AudioDirector {
         this.fallback.setVolume(this.volume);
     }
 
+    /** Stop the loops immediately, leaving 1.5s of silence before the chorus. */
+    silence(): void {
+        for (const source of this.stems) {
+            try {
+                source.stop();
+                source.volume = 0;
+            } catch {
+                // ignore
+            }
+        }
+        this.stemStarted = false;
+        this.chorusPlaying = false;
+    }
+
     /** The final shard: stop layers and play the original chorus from sample 0. */
     climax(): void {
         console.log('[AudioDirector] climax', this.current);
@@ -188,6 +207,7 @@ export class AudioDirector {
     }
 
     stop(): void {
+        this.unlocked = 0;
         this.stemStarted = false;
         this.chorusPlaying = false;
         this.climaxRequested = false;

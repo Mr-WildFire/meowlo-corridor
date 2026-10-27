@@ -633,13 +633,18 @@ export class DemoGame extends Component {
             this.hud.toast(locale.t('fragment.final'), 1.1);
             this.finale = true;
             this.timerStopped = true;
-            this.music.climax();
+            this.music.silence();
             // Let the "终于收集完了" toast be readable before the CD cinematic.
             this.scheduleOnce(() => {
                 if (this.state !== 'playing') return;
                 this.finale = false;
                 this.startFinale();
             }, 0.9);
+            // 1.5s of silence after the last shard, then the original chorus.
+            this.scheduleOnce(() => {
+                if (this.state !== 'finale') return;
+                this.music.climax();
+            }, 1.5);
         } else {
             const stems = ['vocals', 'drums', 'bass', 'other'];
             const stem = stems[this.collected - 1] ?? 'other';
@@ -1084,7 +1089,11 @@ export class DemoGame extends Component {
         }
         this.refreshHud();
         if (this.collected >= this.level.fragments) {
-            this.music.climax();
+            this.music.silence();
+            this.scheduleOnce(() => {
+                if (this.state !== 'finale') return;
+                this.music.climax();
+            }, 1.5);
             this.startFinale();
         }
     }
