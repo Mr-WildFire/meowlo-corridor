@@ -640,11 +640,11 @@ export class DemoGame extends Component {
                 this.finale = false;
                 this.startFinale();
             }, 0.9);
-            // 1.5s of silence after the last shard, then the original chorus.
+            // 2.5s of silence after the last shard, then the original chorus.
             this.scheduleOnce(() => {
                 if (this.state !== 'finale') return;
                 this.music.climax();
-            }, 1.5);
+            }, 2.5);
         } else {
             const stems = ['vocals', 'drums', 'bass', 'other'];
             const stem = stems[this.collected - 1] ?? 'other';
@@ -1093,7 +1093,7 @@ export class DemoGame extends Component {
             this.scheduleOnce(() => {
                 if (this.state !== 'finale') return;
                 this.music.climax();
-            }, 1.5);
+            }, 2.5);
             this.startFinale();
         }
     }
