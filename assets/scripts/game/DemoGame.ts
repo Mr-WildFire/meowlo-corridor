@@ -643,6 +643,7 @@ export class DemoGame extends Component {
         } else {
             const stems = ['vocals', 'drums', 'bass', 'other'];
             const stem = stems[this.collected - 1] ?? 'other';
+            this.music.setUnlocked(this.collected);
             this.hud.toast(locale.t('fragment.' + stem), 2.2);
         }
     }
