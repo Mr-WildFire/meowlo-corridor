@@ -2,17 +2,8 @@ import { AudioClip, AudioSource, Node, resources } from 'cc';
 import { MusicDirector } from './MusicDirector';
 
 type MusicDifficulty = 'easy' | 'normal' | 'hard';
-type Stem = 'vocals' | 'drums' | 'bass' | 'other';
 
-const STEMS: Stem[] = ['vocals', 'drums', 'bass', 'other'];
-const STEM_FILES: Record<Stem, string> = {
-    vocals: 'vocals',
-    drums: 'drums',
-    bass: 'bass',
-    other: 'other',
-};
-
-/** Each difficulty owns one four-stem song and one chorus timestamp. */
+/** Each difficulty owns one mixed four-stem song and one chorus timestamp. */
 const SONGS: Record<MusicDifficulty, { folder: string; chorus: number }> = {
     easy: { folder: 'audio/music/easy/', chorus: 58 },
     normal: { folder: 'audio/music/normal/', chorus: 58 },
@@ -33,11 +24,12 @@ function loadClip(path: string): Promise<AudioClip | null> {
 }
 
 /**
- * Four-stem soundtrack.
+ * Four-stem soundtrack mixed into one WAV.
  *
- * All four stems start together only after the last shard is collected, so the
- * song stays perfectly aligned. When the CD has been assembled, each source is
- * seeked to the configured chorus timestamp and the four stems are unmuted.
+ * The OHOS native audio backend only ships a WAV decoder, so MP3 stems are
+ * pre-mixed offline into `mix.wav` (16kHz mono). One AudioSource avoids
+ * multi-source native decoder/channel issues. The song starts after the last
+ * shard; after CD assembly it seeks to the chorus timestamp.
  */
 export class AudioDirector {
     private root: Node | null = null;
@@ -53,8 +45,6 @@ export class AudioDirector {
     private readonly fallback = new MusicDirector();
 
     async load(parent: Node): Promise<boolean> {
-        // The old ambient WAVs are intentionally not loaded here. Songs are
-        // loaded per difficulty in loadSong(), which keeps memory reasonable.
         this.parent = parent;
         return true;
     }
@@ -68,10 +58,8 @@ export class AudioDirector {
         const config = SONGS[difficulty];
         this.chorus = config.chorus;
 
-        const clips = await Promise.all(
-            STEMS.map((stem) => loadClip(config.folder + STEM_FILES[stem])),
-        );
-        if (clips.some((clip) => !clip) || !this.parent) {
+        const clip = await loadClip(config.folder + 'mix');
+        if (!clip || !this.parent) {
             console.warn('[AudioDirector] song missing:', difficulty);
             return false;
         }
@@ -79,16 +67,14 @@ export class AudioDirector {
         const root = new Node('MusicRoot_' + difficulty);
         root.parent = this.parent;
         this.root = root;
-        this.sources = clips.map((clip, i) => {
-            const node = new Node('Music_' + STEMS[i]);
-            node.parent = root;
-            const source = node.addComponent(AudioSource);
-            source.clip = clip;
-            source.loop = true;
-            source.playOnAwake = false;
-            source.volume = 0;
-            return source;
-        });
+        const node = new Node('Music_Mix');
+        node.parent = root;
+        const source = node.addComponent(AudioSource);
+        source.clip = clip;
+        source.loop = true;
+        source.playOnAwake = false;
+        source.volume = 0;
+        this.sources = [source];
         this.loaded = true;
         this.applyVolumes();
         if (this.requested) this.startLoaded();
@@ -97,9 +83,7 @@ export class AudioDirector {
 
     start(): void {
         this.requested = true;
-        if (this.loaded) {
-            this.startLoaded();
-        }
+        if (this.loaded) this.startLoaded();
     }
 
     private startLoaded(): void {
@@ -117,10 +101,8 @@ export class AudioDirector {
         this.applyVolumes();
     }
 
-    /** Kept for compatibility with the old layered music API. */
     setUnlocked(_n: number): void {
-        // The four stems are not progressively revealed: the completed song
-        // starts only after all shards are collected.
+        // The song is not progressively revealed; it starts after all shards.
     }
 
     setMuted(muted: boolean): void {
@@ -190,10 +172,9 @@ export class AudioDirector {
     }
 
     private applyVolumes(): void {
-        const bases = [0.30, 0.22, 0.24, 0.20];
-        this.sources.forEach((source, i) => {
-            source.volume = this.silent || this.muted ? 0 : bases[i] * this.volume;
-        });
+        for (const source of this.sources) {
+            source.volume = this.silent || this.muted ? 0 : 0.65 * this.volume;
+        }
     }
 
     private clearSources(): void {
