@@ -1,4 +1,4 @@
-import { sys } from 'cc';
+﻿import { sys } from 'cc';
 import type { Language } from './Locale';
 import { Difficulty } from '../game/LevelConfig';
 
@@ -14,6 +14,7 @@ interface SaveData {
     language: Language;
     vibration: boolean;
     tutorialDone: boolean;
+    muteVersion?: number;
 }
 
 const KEY = 'meowlo.progress.v1';
@@ -23,7 +24,7 @@ const KEY = 'meowlo.progress.v1';
  * Uses Cocos localStorage so it works in browser and native WebView.
  */
 export class ProgressStore {
-    private data: SaveData = { best: {}, muted: false, volume: 0.7, language: 'zh', vibration: true, tutorialDone: false };
+    private data: SaveData = { best: {}, muted: false, volume: 0.7, language: 'zh', vibration: true, tutorialDone: false, muteVersion: 1 };
 
     constructor() {
         this.load();
@@ -104,14 +105,19 @@ export class ProgressStore {
             const parsed = JSON.parse(raw) as Partial<SaveData>;
             if (parsed && typeof parsed === 'object') {
                 this.data.best = parsed.best ?? {};
-                this.data.muted = !!parsed.muted;
+                // Migrate old test saves that left mute ON. After this one-time
+                // migration, an explicit user mute choice persists normally.
+                const muteVersion = Number(parsed.muteVersion ?? 0);
+                this.data.muted = muteVersion >= 1 ? !!parsed.muted : false;
+                this.data.muteVersion = 1;
                 this.data.volume = Math.max(0, Math.min(1, Number(parsed.volume ?? 0.7)));
                 this.data.language = parsed.language === 'en' ? 'en' : 'zh';
                 this.data.vibration = parsed.vibration !== false;
                 this.data.tutorialDone = parsed.tutorialDone === true;
+                if (muteVersion < 1) this.save();
             }
         } catch {
-            this.data = { best: {}, muted: false, volume: 0.7, language: 'zh', vibration: true, tutorialDone: false };
+            this.data = { best: {}, muted: false, volume: 0.7, language: 'zh', vibration: true, tutorialDone: false, muteVersion: 1 };
         }
     }
 
@@ -123,3 +129,5 @@ export class ProgressStore {
         }
     }
 }
+
+
