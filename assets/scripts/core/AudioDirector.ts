@@ -1,4 +1,4 @@
-import { AudioClip, AudioSource, Node, resources } from 'cc';
+﻿import { AudioClip, AudioSource, Node, resources } from 'cc';
 import { MusicDirector } from './MusicDirector';
 
 type MusicDifficulty = 'easy' | 'normal' | 'hard';
@@ -59,6 +59,7 @@ export class AudioDirector {
         this.chorus = config.chorus;
 
         const clip = await loadClip(config.folder + 'mix');
+        console.log('[AudioDirector] loadSong', difficulty, 'clip=', !!clip, 'duration=', clip?.duration);
         if (!clip || !this.parent) {
             console.warn('[AudioDirector] song missing:', difficulty);
             return false;
@@ -87,6 +88,7 @@ export class AudioDirector {
     }
 
     private startLoaded(): void {
+        console.log('[AudioDirector] start', this.current, 'sources=', this.sources.length);
         this.silent = false;
         for (const source of this.sources) {
             try {
@@ -125,6 +127,7 @@ export class AudioDirector {
 
     /** Jump to the chorus after the CD assembly animation. */
     climax(): void {
+        console.log('[AudioDirector] climax', this.current, 'seek=', this.chorus);
         if (!this.loaded) {
             this.fallback.climax();
             return;
