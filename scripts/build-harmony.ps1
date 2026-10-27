@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
     [string]$Project = (Split-Path -Parent $PSScriptRoot),
     [string]$CocosCreator = 'D:\Tools\CocosCreator\Creator\CocosCreator-v3.8.8-win-121518\CocosCreator.exe',
@@ -11,6 +11,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# V3.0 delivery policy: debug builds only.
+if ($Release) {
+    throw 'Release packaging is disabled. Run without -Release to produce a debug build.'
+}
+
 function Write-Utf8NoBom([string]$Path, [string]$Text) {
     [System.IO.File]::WriteAllText($Path, $Text, (New-Object System.Text.UTF8Encoding($false)))
 }
@@ -19,16 +24,16 @@ $native = Join-Path $Project 'native\engine\harmonyos-next'
 $hapUnsigned = Join-Path $native 'entry\build\default\outputs\default\entry-default-unsigned.hap'
 $hapSigned = Join-Path $native 'entry\build\default\outputs\default\entry-default-signed.hap'
 $outDir = Join-Path $Project 'build-harmony'
-$outUnsigned = Join-Path $outDir 'MeowloCorridor-2.11.0-unsigned.hap'
-$outSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-2.11.0-release-signed.hap' } else { 'MeowloCorridor-2.11.0-signed.hap' })
+$outUnsigned = Join-Path $outDir 'MeowloCorridor-3.0.0-unsigned.hap'
+$outSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-3.0.0-release-signed.hap' } else { 'MeowloCorridor-3.0.0-debug-signed.hap' })
 $appDir = Join-Path $native 'build\outputs\default'
 $appUnsigned = Join-Path $appDir 'harmonyos-next-default-unsigned.app'
 $appSigned = Join-Path $appDir 'harmonyos-next-default-signed.app'
-$outAppUnsigned = Join-Path $outDir 'MeowloCorridor-2.11.0-unsigned.app'
-$outAppSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-2.11.0-release-signed.app' } else { 'MeowloCorridor-2.11.0-debug-signed.app' })
+$outAppUnsigned = Join-Path $outDir 'MeowloCorridor-3.0.0-unsigned.app'
+$outAppSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-3.0.0-release-signed.app' } else { 'MeowloCorridor-3.0.0-debug-signed.app' })
 $buildMode = if ($Release) { 'release' } else { 'debug' }
-$appVersion = '2.11.0'
-$appVersionCode = 21100000
+$appVersion = '3.0.0'
+$appVersionCode = 3000000
 $signingBackup = Join-Path $Project 'temp\harmony-signing-backup.json5'
 
 if (-not $CltPath) { $CltPath = 'C:\command-line-tools' }
@@ -259,6 +264,8 @@ $appDest = if ($appIsSigned) { $outAppSigned } else { $outAppUnsigned }
 Copy-Item $appSource $appDest -Force
 $appSize = [math]::Round((Get-Item $appDest).Length / 1MB, 1)
 Write-Host "OK: $appDest ($appSize MB, $(if ($appIsSigned) { 'signed' } else { 'unsigned' }))"
+
+
 
 
 
