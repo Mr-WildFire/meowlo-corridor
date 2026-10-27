@@ -1,4 +1,4 @@
-import {
+﻿import {
     _decorator,
     Camera,
     Component,
@@ -1083,9 +1083,11 @@ export class DemoGame extends Component {
             this.collected++;
             this.tone.pickup(this.collected - 1);
         }
-        this.music.setUnlocked(this.collected);
         this.refreshHud();
-        if (this.collected >= this.level.fragments) this.startFinale();
+        if (this.collected >= this.level.fragments) {
+            this.music.start();
+            this.startFinale();
+        }
     }
 
     private debugSubtractTime(): void {
@@ -1124,6 +1126,7 @@ export class DemoGame extends Component {
         }
     }
 }
+
 
 
 
