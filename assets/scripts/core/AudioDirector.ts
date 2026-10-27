@@ -58,7 +58,7 @@ export class AudioDirector {
         const config = SONGS[difficulty];
         this.chorus = config.chorus;
 
-        const clip = await loadClip(config.folder + 'mix');
+        const clip = await loadClip(config.folder + 'song');
         console.log('[AudioDirector] loadSong', difficulty, 'clip=', !!clip, 'duration=', clip?.duration);
         if (!clip || !this.parent) {
             console.warn('[AudioDirector] song missing:', difficulty);
@@ -195,3 +195,4 @@ export class AudioDirector {
         this.fallback.dispose();
     }
 }
+

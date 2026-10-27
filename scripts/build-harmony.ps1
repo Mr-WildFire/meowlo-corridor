@@ -19,16 +19,16 @@ $native = Join-Path $Project 'native\engine\harmonyos-next'
 $hapUnsigned = Join-Path $native 'entry\build\default\outputs\default\entry-default-unsigned.hap'
 $hapSigned = Join-Path $native 'entry\build\default\outputs\default\entry-default-signed.hap'
 $outDir = Join-Path $Project 'build-harmony'
-$outUnsigned = Join-Path $outDir 'MeowloCorridor-2.4.0-unsigned.hap'
-$outSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-2.4.0-release-signed.hap' } else { 'MeowloCorridor-2.4.0-signed.hap' })
+$outUnsigned = Join-Path $outDir 'MeowloCorridor-2.5.0-unsigned.hap'
+$outSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-2.5.0-release-signed.hap' } else { 'MeowloCorridor-2.5.0-signed.hap' })
 $appDir = Join-Path $native 'build\outputs\default'
 $appUnsigned = Join-Path $appDir 'harmonyos-next-default-unsigned.app'
 $appSigned = Join-Path $appDir 'harmonyos-next-default-signed.app'
-$outAppUnsigned = Join-Path $outDir 'MeowloCorridor-2.4.0-unsigned.app'
-$outAppSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-2.4.0-release-signed.app' } else { 'MeowloCorridor-2.4.0-debug-signed.app' })
+$outAppUnsigned = Join-Path $outDir 'MeowloCorridor-2.5.0-unsigned.app'
+$outAppSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-2.5.0-release-signed.app' } else { 'MeowloCorridor-2.5.0-debug-signed.app' })
 $buildMode = if ($Release) { 'release' } else { 'debug' }
-$appVersion = '2.4.0'
-$appVersionCode = 2400000
+$appVersion = '2.5.0'
+$appVersionCode = 2500000
 $signingBackup = Join-Path $Project 'temp\harmony-signing-backup.json5'
 
 if (-not $CltPath) { $CltPath = 'C:\command-line-tools' }
@@ -259,6 +259,7 @@ $appDest = if ($appIsSigned) { $outAppSigned } else { $outAppUnsigned }
 Copy-Item $appSource $appDest -Force
 $appSize = [math]::Round((Get-Item $appDest).Length / 1MB, 1)
 Write-Host "OK: $appDest ($appSize MB, $(if ($appIsSigned) { 'signed' } else { 'unsigned' }))"
+
 
 
 
