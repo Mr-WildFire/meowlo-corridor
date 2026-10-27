@@ -11,6 +11,11 @@ const DICT: Record<Language, Record<string, string>> = {
         'tutorial.start': '开始教学',
         'tutorial.tapToPlay': '点击播放',
         'tutorial.skip': '跳过视频',
+        'fragment.vocals': '收集到了歌声碎片',
+        'fragment.drums': '收集到了鼓点碎片',
+        'fragment.bass': '收集到了低音碎片',
+        'fragment.other': '收集到奇特的碎片',
+        'fragment.final': '终于收集完了',
         'tutorial.label': '新手教程',
         'tutorial.completeTitle': '教学完成',
         'tutorial.completeBody': '你已经学会移动、拾取碎片和使用道具，回主菜单开始正式冒险吧。',
@@ -131,6 +136,11 @@ const DICT: Record<Language, Record<string, string>> = {
         'tutorial.start': 'Start tutorial',
         'tutorial.tapToPlay': 'Tap to play',
         'tutorial.skip': 'Skip video',
+        'fragment.vocals': 'Collected a vocal shard',
+        'fragment.drums': 'Collected a drum shard',
+        'fragment.bass': 'Collected a bass shard',
+        'fragment.other': 'Collected a strange shard',
+        'fragment.final': 'Finally, every shard is collected',
         'tutorial.label': 'Tutorial',
         'tutorial.completeTitle': 'Tutorial complete',
         'tutorial.completeBody': 'You learned movement, shard pickup and items. Return to the main menu and begin.',
@@ -305,6 +315,7 @@ class Locale {
 }
 
 export const locale = new Locale();
+
 
 
 

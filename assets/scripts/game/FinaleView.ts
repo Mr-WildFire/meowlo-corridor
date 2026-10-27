@@ -32,7 +32,7 @@ export class FinaleView {
         bg.fill();
 
         addLabel(this.root, 'FinaleKicker', 'CD', 18, Theme.cyan, 0, 500, 400, 30);
-        this.title = addLabel(this.root, 'FinaleTitle', locale.t('finale.title'), 38, Theme.cream, 0, 430, 980, 60);
+        this.title = addLabel(this.root, 'FinaleTitle', locale.t('fragment.final'), 38, Theme.cream, 0, 430, 980, 60);
         UiFonts.titleLabel(this.title);
         this.subtitle = addLabel(this.root, 'FinaleSub', locale.t('finale.subtitle'), 20, Theme.dim, 0, 365, 980, 40);
 

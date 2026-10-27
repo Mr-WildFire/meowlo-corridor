@@ -1,22 +1,29 @@
 import { AudioClip, AudioSource, Node, resources } from 'cc';
 import { MusicDirector } from './MusicDirector';
 
-const LAYER_FILES = [
-    'ambient',
-    'bass',
-    'rhythm',
-    'melody',
-    'harmony',
-    'counter',
-] as const;
+type MusicDifficulty = 'easy' | 'normal' | 'hard';
+type Stem = 'vocals' | 'drums' | 'bass' | 'other';
 
-const BASE_PATH = 'audio/music/music_';
+const STEMS: Stem[] = ['vocals', 'drums', 'bass', 'other'];
+const STEM_FILES: Record<Stem, string> = {
+    vocals: 'vocals',
+    drums: 'drums',
+    bass: 'bass',
+    other: 'other',
+};
 
-function loadClip(name: string): Promise<AudioClip | null> {
+/** Each difficulty owns one four-stem song and one chorus timestamp. */
+const SONGS: Record<MusicDifficulty, { folder: string; chorus: number }> = {
+    easy: { folder: 'audio/music/easy/', chorus: 58 },
+    normal: { folder: 'audio/music/normal/', chorus: 58 },
+    hard: { folder: 'audio/music/hard/', chorus: 65 },
+};
+
+function loadClip(path: string): Promise<AudioClip | null> {
     return new Promise((resolve) => {
-        resources.load(BASE_PATH + name, AudioClip, (err, clip) => {
+        resources.load(path, AudioClip, (err, clip) => {
             if (err || !clip) {
-                console.warn('[AudioDirector] missing clip:', name, err);
+                console.warn('[AudioDirector] missing clip:', path, err);
                 resolve(null);
                 return;
             }
@@ -26,144 +33,151 @@ function loadClip(name: string): Promise<AudioClip | null> {
 }
 
 /**
- * AudioSource-based layered music.
- * Uses placeholder WAV loops now; replacing them with OGG files only changes
- * the resource import, not this class. Falls back to the older procedural
- * MusicDirector if clips are unavailable.
+ * Four-stem soundtrack.
+ *
+ * All four stems start together only after the last shard is collected, so the
+ * song stays perfectly aligned. When the CD has been assembled, each source is
+ * seeked to the configured chorus timestamp and the four stems are unmuted.
  */
 export class AudioDirector {
     private root: Node | null = null;
+    private parent: Node | null = null;
     private sources: AudioSource[] = [];
-    private climaxSource: AudioSource | null = null;
-    private climaxClip: AudioClip | null = null;
     private loaded = false;
-    private unlocked = 0;
+    private requested = false;
+    private current: MusicDifficulty | null = null;
+    private chorus = 0;
     private muted = false;
     private silent = true;
     private volume = 0.7;
     private readonly fallback = new MusicDirector();
 
     async load(parent: Node): Promise<boolean> {
-        const clips = await Promise.all(LAYER_FILES.map((name) => loadClip(name)));
-        const climax = await loadClip('climax');
-        if (clips.some((c) => !c) || !climax) {
-            console.warn('[AudioDirector] WAV layers unavailable; using procedural fallback');
+        // The old ambient WAVs are intentionally not loaded here. Songs are
+        // loaded per difficulty in loadSong(), which keeps memory reasonable.
+        this.parent = parent;
+        return true;
+    }
+
+    async loadSong(difficulty: MusicDifficulty): Promise<boolean> {
+        if (this.loaded && this.current === difficulty) return true;
+
+        this.stop();
+        this.clearSources();
+        this.current = difficulty;
+        const config = SONGS[difficulty];
+        this.chorus = config.chorus;
+
+        const clips = await Promise.all(
+            STEMS.map((stem) => loadClip(config.folder + STEM_FILES[stem])),
+        );
+        if (clips.some((clip) => !clip) || !this.parent) {
+            console.warn('[AudioDirector] song missing:', difficulty);
             return false;
         }
 
-        this.root = new Node('MusicRoot');
-        this.root.parent = parent;
+        const root = new Node('MusicRoot_' + difficulty);
+        root.parent = this.parent;
+        this.root = root;
         this.sources = clips.map((clip, i) => {
-            const n = new Node('Music_' + LAYER_FILES[i]);
-            n.parent = this.root;
-            const source = n.addComponent(AudioSource);
+            const node = new Node('Music_' + STEMS[i]);
+            node.parent = root;
+            const source = node.addComponent(AudioSource);
             source.clip = clip;
             source.loop = true;
             source.playOnAwake = false;
-            source.volume = i === 0 ? 0.5 : 0;
+            source.volume = 0;
             return source;
         });
-
-        const cn = new Node('Music_Climax');
-        cn.parent = this.root;
-        this.climaxSource = cn.addComponent(AudioSource);
-        this.climaxClip = climax;
         this.loaded = true;
+        this.applyVolumes();
+        if (this.requested) this.startLoaded();
         return true;
     }
 
     start(): void {
-        if (!this.loaded) {
-            this.fallback.start();
-            return;
+        this.requested = true;
+        if (this.loaded) {
+            this.startLoaded();
         }
+    }
+
+    private startLoaded(): void {
         this.silent = false;
-        this.unlocked = 0;
-        this.sources.forEach((source) => {
+        for (const source of this.sources) {
             try {
                 source.stop();
+                source.currentTime = 0;
                 source.loop = true;
-                source.volume = 0;
                 source.play();
             } catch {
                 // Audio is optional.
             }
-        });
+        }
         this.applyVolumes();
     }
 
-    setUnlocked(n: number): void {
-        this.unlocked = n;
-        if (!this.loaded) {
-            this.fallback.setUnlocked(n);
-            return;
-        }
-        this.applyVolumes();
+    /** Kept for compatibility with the old layered music API. */
+    setUnlocked(_n: number): void {
+        // The four stems are not progressively revealed: the completed song
+        // starts only after all shards are collected.
     }
 
     setMuted(muted: boolean): void {
         this.muted = muted;
         this.applyVolumes();
-        if (!this.loaded) this.fallback.setMuted(muted);
+        this.fallback.setMuted(muted);
     }
 
     setVolume(volume: number): void {
         this.volume = Math.max(0, Math.min(1, volume));
         this.applyVolumes();
-        if (!this.loaded) this.fallback.setVolume(this.volume);
+        this.fallback.setVolume(this.volume);
     }
 
-    silence(seconds: number): void {
+    silence(_seconds: number): void {
         this.silent = true;
-        if (!this.loaded) {
-            this.fallback.silence(seconds);
-            return;
-        }
         for (const source of this.sources) source.volume = 0;
+        this.fallback.silence(_seconds);
     }
 
+    /** Jump to the chorus after the CD assembly animation. */
     climax(): void {
-        this.silent = true;
         if (!this.loaded) {
             this.fallback.climax();
             return;
         }
+        this.silent = false;
         for (const source of this.sources) {
             try {
                 source.stop();
+                source.currentTime = this.chorus;
+                source.loop = true;
+                source.play();
             } catch {
                 // ignore
             }
         }
-        if (!this.muted && this.volume > 0 && this.climaxSource && this.climaxClip) {
-            this.climaxSource.playOneShot(this.climaxClip, 0.95 * this.volume);
-        }
-    }
-
-    pause(): void {
-        if (!this.loaded) {
-            this.fallback.pause();
-            return;
-        }
-        for (const source of this.sources) source.pause();
-    }
-
-    resume(): void {
-        if (!this.loaded) {
-            this.fallback.resume();
-            return;
-        }
-        this.silent = false;
-        for (const source of this.sources) source.play();
         this.applyVolumes();
     }
 
-    stop(): void {
-        this.silent = true;
-        if (!this.loaded) {
-            this.fallback.stop();
-            return;
+    pause(): void {
+        for (const source of this.sources) source.pause();
+        this.fallback.pause();
+    }
+
+    resume(): void {
+        if (this.requested && this.loaded) {
+            this.silent = false;
+            for (const source of this.sources) source.play();
+            this.applyVolumes();
         }
+        this.fallback.resume();
+    }
+
+    stop(): void {
+        this.requested = false;
+        this.silent = true;
         for (const source of this.sources) {
             try {
                 source.stop();
@@ -172,25 +186,28 @@ export class AudioDirector {
                 // ignore
             }
         }
-        if (this.climaxSource) this.climaxSource.stop();
+        this.fallback.stop();
     }
 
     private applyVolumes(): void {
-        if (!this.loaded) return;
+        const bases = [0.30, 0.22, 0.24, 0.20];
         this.sources.forEach((source, i) => {
-            const base = i === 0 ? 0.5 : i <= this.unlocked ? 0.32 : 0;
-            source.volume = this.silent || this.muted ? 0 : base * this.volume;
+            source.volume = this.silent || this.muted ? 0 : bases[i] * this.volume;
         });
+    }
+
+    private clearSources(): void {
+        this.loaded = false;
+        this.sources = [];
+        if (this.root?.isValid) this.root.destroy();
+        this.root = null;
     }
 
     dispose(): void {
         this.stop();
+        this.clearSources();
+        this.current = null;
+        this.parent = null;
         this.fallback.dispose();
-        if (this.root?.isValid) this.root.destroy();
-        this.root = null;
-        this.sources = [];
-        this.climaxSource = null;
-        this.climaxClip = null;
-        this.loaded = false;
     }
 }

@@ -1,4 +1,4 @@
-﻿import {
+import {
     _decorator,
     Camera,
     Component,
@@ -433,7 +433,7 @@ export class DemoGame extends Component {
         this.refreshGuide();
         this.refreshHud();
         this.hud.toast(locale.t('game.fragmentHint', { n: this.level.fragments }), 3.2);
-        this.music.start();
+        void this.music.loadSong(this.difficulty);
     }
 
     private placeFragments(occupied: Set<string>): void {
@@ -626,11 +626,25 @@ export class DemoGame extends Component {
         this.tone.pickup(this.collected - 1);
         this.sfx?.pickup();
         this.vibration.pickup();
-        this.music.setUnlocked(this.collected);
-        this.hud.toast(locale.t('game.fragmentProgress', { n: this.collected, total: this.level.fragments }), 2.2);
         this.refreshHud();
 
-        if (this.collected >= this.level.fragments) this.startFinale();
+        const finalShard = this.collected >= this.level.fragments;
+        if (finalShard) {
+            this.hud.toast(locale.t('fragment.final'), 1.1);
+            this.finale = true;
+            this.timerStopped = true;
+            this.music.start();
+            // Let the "终于收集完了" toast be readable before the CD cinematic.
+            this.scheduleOnce(() => {
+                if (this.state !== 'playing') return;
+                this.finale = false;
+                this.startFinale();
+            }, 0.9);
+        } else {
+            const stems = ['vocals', 'drums', 'bass', 'other'];
+            const stem = stems[this.collected - 1] ?? 'other';
+            this.hud.toast(locale.t('fragment.' + stem), 2.2);
+        }
     }
 
     private startFinale(): void {
@@ -1110,6 +1124,7 @@ export class DemoGame extends Component {
         }
     }
 }
+
 
 
 
