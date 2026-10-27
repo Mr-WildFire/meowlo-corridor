@@ -1,4 +1,4 @@
-﻿import { AudioClip, AudioSource, Node, resources } from 'cc';
+import { AudioClip, AudioSource, Node, resources } from 'cc';
 import { MusicDirector } from './MusicDirector';
 
 type MusicDifficulty = 'easy' | 'normal' | 'hard';
@@ -37,6 +37,8 @@ export class AudioDirector {
     private sources: AudioSource[] = [];
     private loaded = false;
     private requested = false;
+    private climaxRequested = false;
+    private climaxTimer: ReturnType<typeof setTimeout> | null = null;
     private current: MusicDifficulty | null = null;
     private chorus = 0;
     private muted = false;
@@ -58,7 +60,7 @@ export class AudioDirector {
         const config = SONGS[difficulty];
         this.chorus = config.chorus;
 
-        const clip = await loadClip(config.folder + 'song');
+        const clip = await loadClip(config.folder + 'chorus');
         console.log('[AudioDirector] loadSong', difficulty, 'clip=', !!clip, 'duration=', clip?.duration);
         if (!clip || !this.parent) {
             console.warn('[AudioDirector] song missing:', difficulty);
@@ -78,7 +80,11 @@ export class AudioDirector {
         this.sources = [source];
         this.loaded = true;
         this.applyVolumes();
-        if (this.requested) this.startLoaded();
+        if (this.climaxRequested) {
+            this.climax();
+        } else if (this.requested) {
+            this.startLoaded();
+        }
         return true;
     }
 
@@ -125,25 +131,15 @@ export class AudioDirector {
         this.fallback.silence(_seconds);
     }
 
-    /** Jump to the chorus after the CD assembly animation. */
+    /** Start the pre-trimmed chorus immediately, from the first sample. */
     climax(): void {
-        console.log('[AudioDirector] climax', this.current, 'seek=', this.chorus);
+        console.log('[AudioDirector] climax', this.current);
         if (!this.loaded) {
-            this.fallback.climax();
+            this.climaxRequested = true;
             return;
         }
-        this.silent = false;
-        for (const source of this.sources) {
-            try {
-                source.stop();
-                source.currentTime = this.chorus;
-                source.loop = true;
-                source.play();
-            } catch {
-                // ignore
-            }
-        }
-        this.applyVolumes();
+        this.climaxRequested = false;
+        this.startLoaded();
     }
 
     pause(): void {
@@ -162,6 +158,11 @@ export class AudioDirector {
 
     stop(): void {
         this.requested = false;
+        this.climaxRequested = false;
+        if (this.climaxTimer !== null) {
+            clearTimeout(this.climaxTimer);
+            this.climaxTimer = null;
+        }
         this.silent = true;
         for (const source of this.sources) {
             try {

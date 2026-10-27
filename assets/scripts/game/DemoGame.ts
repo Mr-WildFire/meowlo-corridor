@@ -1,4 +1,4 @@
-﻿import {
+import {
     _decorator,
     Camera,
     Component,
@@ -633,7 +633,7 @@ export class DemoGame extends Component {
             this.hud.toast(locale.t('fragment.final'), 1.1);
             this.finale = true;
             this.timerStopped = true;
-            this.music.start();
+            this.music.climax();
             // Let the "终于收集完了" toast be readable before the CD cinematic.
             this.scheduleOnce(() => {
                 if (this.state !== 'playing') return;
@@ -667,12 +667,10 @@ export class DemoGame extends Component {
             this.art?.cd ?? null,
             () => {
                 if (this.state !== 'finale') return;
-                // Keep this second completely silent: no SFX over the music gap.
-                this.music.silence(1.0);
+                // The chorus started as soon as the last shard was collected.
             },
             () => {
                 if (this.state !== 'finale') return;
-                this.music.climax();
                 this.clearTemporaryEffects();
                 this.spawnExit();
                 this.refreshHud();
