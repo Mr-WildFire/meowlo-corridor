@@ -102,16 +102,15 @@ export class HudView {
         this.timerLabel = addLabel(bar, 'Timer', '', 30, Theme.amber, -150, 0, 160, 48);
         UiFonts.numberLabel(this.timerLabel);
         this.stepLabel = addLabel(bar, 'Steps', '', 19, Theme.cream, 130, 0, 180, 44);
-        this.seedLabel = addLabel(bar, 'Seed', '', 13, Theme.dim, 430, 0, 300, 40);
-        // Seed/level/size fit on one line at 14px; the time limit is already
-        // represented by the countdown, so it is omitted here.
-        this.seedLabel.fontSize = 14;
-        this.seedLabel.lineHeight = 17;
+        this.seedLabel = addLabel(bar, 'Seed', '', 13, Theme.dim, 420, 0, 350, 44);
+        // Seed/level/size at 20px; the countdown already carries the time limit.
+        this.seedLabel.fontSize = 20;
+        this.seedLabel.lineHeight = 23;
 
         this.addHudSprite(bar, 'HudIconTrack', 'art/ui/hud/hud_icon_track/spriteFrame', -700, 0, 44, 44);
         this.addHudSprite(bar, 'HudIconTime', 'art/ui/hud/hud_icon_time/spriteFrame', -320, 0, 44, 44);
         this.addHudSprite(bar, 'HudIconSteps', 'art/ui/hud/hud_icon_steps/spriteFrame', 5, 0, 44, 44);
-        this.addHudSprite(bar, 'HudIconSeed', 'art/ui/hud/hud_icon_seed/spriteFrame', 250, 0, 44, 44);
+        this.addHudSprite(bar, 'HudIconSeed', 'art/ui/hud/hud_icon_seed/spriteFrame', 220, 0, 44, 44);
 
         this.createButton(bar, 'MenuButton', '≡', 610, 0, 58, 50, () => this.callbacks.onMenu());
         // The skin/icon sprites are the visual layer; this transparent hit area
