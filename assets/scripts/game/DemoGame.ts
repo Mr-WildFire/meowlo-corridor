@@ -108,6 +108,7 @@ export class DemoGame extends Component {
     private settings: SettingsView | null = null;
     private settingsWasPlaying = false;
     private finaleView: FinaleView | null = null;
+    private menuBuildToken = 0;
 
     onLoad(): void {
         // Fixed landscape stage. The world camera follows the cat; UI is fixed.
@@ -256,14 +257,22 @@ export class DemoGame extends Component {
         this.hud?.dispose();
         if (this.demoRoot) this.demoRoot.active = false;
         if (this.menu) this.menu.dispose();
-        this.menu = new MenuView(
-            this.node,
-            this.screenW,
-            this.screenH,
-            this.progress.allBest(),
-            (difficulty) => this.startLevel(difficulty),
-            () => this.openSettings(),
-        );
+        this.menu = null;
+        // Do not create the menu synchronously inside the pause/back button's
+        // mouse-up event: the newly created difficulty card can sit under the
+        // same pointer and immediately restart the level ("refresh").
+        const token = ++this.menuBuildToken;
+        this.scheduleOnce(() => {
+            if (token !== this.menuBuildToken || this.state !== 'menu') return;
+            this.menu = new MenuView(
+                this.node,
+                this.screenW,
+                this.screenH,
+                this.progress.allBest(),
+                (difficulty) => this.startLevel(difficulty),
+                () => this.openSettings(),
+            );
+        }, 0.12);
     }
 
     private startLevel(difficulty: Difficulty): void {
