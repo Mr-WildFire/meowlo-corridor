@@ -1,4 +1,4 @@
-﻿import { Color, EventMouse, EventTouch, Graphics, Node, resources, Sprite, SpriteFrame, UITransform, Vec3 } from 'cc';
+import { Color, EventMouse, EventTouch, Graphics, Node, Rect, resources, Size, Sprite, SpriteFrame, Texture2D, UITransform, Vec3 } from 'cc';
 import { locale } from '../core/Locale';
 import { Theme, addLabel, makeNode } from './UiKit';
 import { UiFonts } from './UiFonts';
@@ -103,27 +103,31 @@ export class TutorialIntroView {
     }
 
     private loadFrames(): void {
-        const total = 101;
-        const loadAt = (index: number): void => {
-            if (!this.root.isValid) return;
-            if (index >= total) {
-                this.video.spriteFrame = this.frames[0];
-                this.video.node.getComponent(UITransform)!.setContentSize(this.screenW, this.screenH);
-                this.timer = setInterval(() => this.tick(), 100);
+        // One texture instead of 101 separate resource loads. On native this
+        // removes the long black/loading gap before the first frame appears.
+        resources.load('art/ui/tutorial_sheet/texture', Texture2D, (err, texture) => {
+            if (err || !texture || !this.root.isValid) {
+                this.showFallback();
                 return;
             }
-            const name = `frame_${String(index).padStart(3, '0')}`;
-            resources.load(`art/ui/tutorial_frames/${name}/spriteFrame`, SpriteFrame, (err, frame) => {
-                if (err || !frame) {
-                    this.showFallback();
-                    return;
-                }
+            const total = 101;
+            const cellW = 384;
+            const cellH = 216;
+            const cols = 10;
+            const texH = texture.height;
+            for (let i = 0; i < total; i++) {
+                const frame = new SpriteFrame();
+                frame.texture = texture;
+                const col = i % cols;
+                const row = Math.floor(i / cols);
+                frame.rect = new Rect(col * cellW, texH - (row + 1) * cellH, cellW, cellH);
+                frame.originalSize = new Size(cellW, cellH);
                 this.frames.push(frame);
-                if (index === 0) this.video.spriteFrame = frame;
-                loadAt(index + 1);
-            });
-        };
-        loadAt(0);
+            }
+            this.video.spriteFrame = this.frames[0];
+            this.video.node.getComponent(UITransform)!.setContentSize(this.screenW, this.screenH);
+            this.timer = setInterval(() => this.tick(), 100);
+        });
     }
     private tick(): void {
         if (!this.root.isValid) return;
