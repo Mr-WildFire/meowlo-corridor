@@ -103,6 +103,10 @@ export class HudView {
         UiFonts.numberLabel(this.timerLabel);
         this.stepLabel = addLabel(bar, 'Steps', '', 19, Theme.cream, 130, 0, 180, 44);
         this.seedLabel = addLabel(bar, 'Seed', '', 13, Theme.dim, 430, 0, 300, 40);
+        // The seed/difficulty string is long; keep it compact after the global
+        // UI scale so it cannot run into the pause button.
+        this.seedLabel.fontSize = 10;
+        this.seedLabel.lineHeight = 12;
 
         this.addHudSprite(bar, 'HudIconTrack', 'art/ui/hud/hud_icon_track/spriteFrame', -700, 0, 44, 44);
         this.addHudSprite(bar, 'HudIconTime', 'art/ui/hud/hud_icon_time/spriteFrame', -320, 0, 44, 44);

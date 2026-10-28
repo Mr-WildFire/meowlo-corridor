@@ -1,6 +1,9 @@
 import { Color, Graphics, Label, Layers, Node, UITransform } from 'cc';
 import { UiFonts } from './UiFonts';
 
+/** Global UI text scale: feedback and HUD labels were too small at 1080p. */
+const UI_TEXT_SCALE = 1.2;
+
 export const Theme = {
     bg: new Color(11, 9, 18, 255),
     floor: new Color(26, 19, 34, 255),
@@ -62,8 +65,9 @@ export function addLabel(
     const n = makeNode(name, parent, x, y, width, height);
     const label = n.addComponent(Label);
     label.string = text;
-    label.fontSize = fontSize;
-    label.lineHeight = Math.round(fontSize * 1.25);
+    const scaledSize = Math.round(fontSize * UI_TEXT_SCALE);
+    label.fontSize = scaledSize;
+    label.lineHeight = Math.round(scaledSize * 1.25);
     label.color = color;
     label.horizontalAlign = Label.HorizontalAlign.CENTER;
     label.verticalAlign = Label.VerticalAlign.CENTER;
