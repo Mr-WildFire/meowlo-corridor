@@ -236,6 +236,7 @@ export class DemoGame extends Component {
         }
         this.state = 'playing';
         this.build();
+        this.hud.showSwipeGuide();
     }
 
     private openMenu(): void {
@@ -587,6 +588,7 @@ export class DemoGame extends Component {
 
     private async tryMove(dir: Dir): Promise<void> {
         if (this.state !== 'playing' || this.finale || this.player.moving) return;
+        this.hud.hideSwipeGuide();
         const actual: Dir = this.wine > 0 ? (((dir + 2) % 4) as Dir) : dir;
         this.catView?.setDirection(actual);
         this.catView?.setMoving(true);

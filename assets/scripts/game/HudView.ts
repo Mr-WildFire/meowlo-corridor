@@ -65,6 +65,7 @@ export class HudView {
     private readonly overlayStars: Sprite[] = [];
     private readonly overlayTitle: Label;
     private readonly overlayBody: Label;
+    private swipeGuide: Node | null = null;
     private readonly overlayHint: Label;
     private bottomBusy = false;
     private readonly bottomQueue: Array<{ show: () => void; duration: number }> = [];
@@ -330,7 +331,30 @@ export class HudView {
         // panel no longer duplicates it.
     }
 
+    /** First-run tutorial: explain that the cat is moved by swiping. */
+    showSwipeGuide(): void {
+        if (this.swipeGuide || !this.root.isValid) return;
+        const panel = makeNode('SwipeGuide', this.root, 0, -255, 680, 150);
+        const g = panel.addComponent(Graphics);
+        g.fillColor = new Color(22, 16, 30, 235);
+        g.strokeColor = new Color(242, 179, 92, 190);
+        g.lineWidth = 2;
+        g.roundRect(-340, -75, 680, 150, 22);
+        g.fill();
+        g.stroke();
+        addLabel(panel, 'SwipeGuideText', locale.t('tutorial.swipe'), 26, Theme.cream, 0, 28, 620, 58);
+        addLabel(panel, 'SwipeGuideArrows', '←      →', 34, Theme.amber, 0, -38, 560, 52);
+        this.swipeGuide = panel;
+    }
+
+    hideSwipeGuide(): void {
+        if (!this.swipeGuide) return;
+        if (this.swipeGuide.isValid) this.swipeGuide.destroy();
+        this.swipeGuide = null;
+    }
+
     dispose(): void {
+        this.hideSwipeGuide();
         this.bottomBusy = false;
         this.bottomQueue.length = 0;
         if (this.root?.isValid) this.root.destroy();
