@@ -364,7 +364,18 @@ export class DemoGame extends Component {
         this.seed = nowSeed();
         this.rng = new Rng(this.seed);
         // Separate RNG stream so random stem order cannot change maze layout.
-        this.trackOrder = new Rng((this.seed ^ 0x9e3779b9) >>> 0).shuffle([0, 1, 2, 3]);
+        const trackRng = new Rng((this.seed ^ 0x9e3779b9) >>> 0);
+        const order = trackRng.shuffle([0, 1, 2, 3]);
+        // Never repeat the previous run's first stem. This keeps consecutive
+        // playtests visibly varied while preserving random order within a run.
+        if (order[0] === this.progress.lastFirstTrack) {
+            const swap = 1 + trackRng.int(3);
+            const tmp = order[0];
+            order[0] = order[swap];
+            order[swap] = tmp;
+        }
+        this.trackOrder = order;
+        this.progress.setLastFirstTrack(order[0]);
         this.model = new MazeModel(
             generateMaze(this.level.cols, this.level.rows, this.seed, this.level.braid),
         );

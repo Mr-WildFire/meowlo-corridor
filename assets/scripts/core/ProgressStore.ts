@@ -1,4 +1,4 @@
-﻿import { sys } from 'cc';
+import { sys } from 'cc';
 import type { Language } from './Locale';
 import { Difficulty } from '../game/LevelConfig';
 
@@ -15,6 +15,7 @@ interface SaveData {
     vibration: boolean;
     tutorialDone: boolean;
     muteVersion?: number;
+    lastFirstTrack?: number;
 }
 
 const KEY = 'meowlo.progress.v1';
@@ -24,7 +25,7 @@ const KEY = 'meowlo.progress.v1';
  * Uses Cocos localStorage so it works in browser and native WebView.
  */
 export class ProgressStore {
-    private data: SaveData = { best: {}, muted: false, volume: 0.7, language: 'zh', vibration: true, tutorialDone: false, muteVersion: 1 };
+    private data: SaveData = { best: {}, muted: false, volume: 0.7, language: 'zh', vibration: true, tutorialDone: false, muteVersion: 1, lastFirstTrack: -1 };
 
     constructor() {
         this.load();
@@ -63,6 +64,15 @@ export class ProgressStore {
 
     setVibration(enabled: boolean): void {
         this.data.vibration = enabled;
+        this.save();
+    }
+
+    get lastFirstTrack(): number {
+        return this.data.lastFirstTrack ?? -1;
+    }
+
+    setLastFirstTrack(index: number): void {
+        this.data.lastFirstTrack = index;
         this.save();
     }
 
@@ -114,10 +124,13 @@ export class ProgressStore {
                 this.data.language = parsed.language === 'en' ? 'en' : 'zh';
                 this.data.vibration = parsed.vibration !== false;
                 this.data.tutorialDone = parsed.tutorialDone === true;
+                this.data.lastFirstTrack = Number.isInteger(parsed.lastFirstTrack)
+                    ? Number(parsed.lastFirstTrack)
+                    : -1;
                 if (muteVersion < 1) this.save();
             }
         } catch {
-            this.data = { best: {}, muted: false, volume: 0.7, language: 'zh', vibration: true, tutorialDone: false, muteVersion: 1 };
+            this.data = { best: {}, muted: false, volume: 0.7, language: 'zh', vibration: true, tutorialDone: false, muteVersion: 1, lastFirstTrack: -1 };
         }
     }
 
