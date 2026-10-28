@@ -126,6 +126,7 @@ export class TutorialIntroView {
             }
             this.video.spriteFrame = this.frames[0];
             this.video.node.getComponent(UITransform)!.setContentSize(this.screenW, this.screenH);
+            this.applyMotion(0);
             this.timer = setInterval(() => this.tick(), 100);
         });
     }
@@ -137,6 +138,15 @@ export class TutorialIntroView {
             return;
         }
         this.video.spriteFrame = this.frames[this.index];
+        this.applyMotion(this.index / Math.max(1, this.frames.length - 1));
+    }
+
+    /** The source clip is a slow, nearly static shot; add a gentle push-in
+     *  so the intro visibly moves even on small native screens. */
+    private applyMotion(t: number): void {
+        const scale = 1.03 + t * 0.06;
+        this.video.node.setScale(scale, scale, 1);
+        this.video.node.setPosition((t - 0.5) * 12, (t - 0.5) * 16, 0);
     }
 
     private finish(): void {
