@@ -65,6 +65,9 @@ export class DemoGame extends Component {
     private menu: MenuView | null = null;
     private tutorialIntro: TutorialIntroView | null = null;
     private tutorialMode = false;
+    private tutorialGoalShown = false;
+    private tutorialFragmentShown = false;
+    private tutorialExitShown = false;
 
     private screenW = 1080;
     private screenH = 1920;
@@ -223,6 +226,9 @@ export class DemoGame extends Component {
         this.ignoreTapUntil = Date.now() + 600;
         this.sfx?.click();
         this.tutorialMode = true;
+        this.tutorialGoalShown = false;
+        this.tutorialFragmentShown = false;
+        this.tutorialExitShown = false;
         this.difficulty = 'easy';
         this.level = TUTORIAL_LEVEL;
         this.tutorialIntro?.dispose();
@@ -589,6 +595,10 @@ export class DemoGame extends Component {
     private async tryMove(dir: Dir): Promise<void> {
         if (this.state !== 'playing' || this.finale || this.player.moving) return;
         this.hud.hideSwipeGuide();
+        if (this.tutorialMode && !this.tutorialGoalShown) {
+            this.tutorialGoalShown = true;
+            this.hud.showCoach(locale.t('tutorial.goalTitle'), locale.t('tutorial.goalBody'));
+        }
         const actual: Dir = this.wine > 0 ? (((dir + 2) % 4) as Dir) : dir;
         this.catView?.setDirection(actual);
         this.catView?.setMoving(true);
@@ -676,6 +686,10 @@ export class DemoGame extends Component {
             const track = this.trackOrder[this.collected - 1] ?? 3;
             this.music.unlockTrack(track);
             this.hud.toast(locale.t('fragment.' + stems[track]), 2.2);
+            if (this.tutorialMode && !this.tutorialFragmentShown) {
+                this.tutorialFragmentShown = true;
+                this.hud.showCoach(locale.t('tutorial.fragmentTitle'), locale.t('tutorial.fragmentBody'));
+            }
         }
     }
 
@@ -749,6 +763,10 @@ export class DemoGame extends Component {
         this.exitPos = pos;
         this.renderer.showExit(pos);
         this.refreshGuide();
+        if (this.tutorialMode && !this.tutorialExitShown) {
+            this.tutorialExitShown = true;
+            this.hud.showCoach(locale.t('tutorial.exitTitle'), locale.t('tutorial.exitBody'));
+        }
     }
 
     private isBlockedForExit(p: GridPos): boolean {

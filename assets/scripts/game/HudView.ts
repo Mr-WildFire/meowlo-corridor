@@ -66,6 +66,8 @@ export class HudView {
     private readonly overlayTitle: Label;
     private readonly overlayBody: Label;
     private swipeGuide: Node | null = null;
+    private coachNode: Node | null = null;
+    private coachTimer: ReturnType<typeof setTimeout> | null = null;
     private readonly overlayHint: Label;
     private bottomBusy = false;
     private readonly bottomQueue: Array<{ show: () => void; duration: number }> = [];
@@ -353,8 +355,36 @@ export class HudView {
         this.swipeGuide = null;
     }
 
+    /** Short non-blocking tutorial card used for goal/fragment/exit steps. */
+    showCoach(title: string, body: string, duration = 4.5): void {
+        this.hideCoach();
+        if (!this.root.isValid) return;
+        const panel = makeNode('TutorialCoach', this.root, 0, -255, 760, 154);
+        const g = panel.addComponent(Graphics);
+        g.fillColor = new Color(22, 16, 30, 238);
+        g.strokeColor = new Color(143, 211, 214, 200);
+        g.lineWidth = 2;
+        g.roundRect(-380, -77, 760, 154, 22);
+        g.fill();
+        g.stroke();
+        addLabel(panel, 'CoachTitle', title, 22, Theme.cyan, 0, 36, 700, 44);
+        addLabel(panel, 'CoachBody', body, 19, Theme.cream, 0, -28, 700, 60);
+        this.coachNode = panel;
+        this.coachTimer = setTimeout(() => this.hideCoach(), duration * 1000);
+    }
+
+    hideCoach(): void {
+        if (this.coachTimer !== null) {
+            clearTimeout(this.coachTimer);
+            this.coachTimer = null;
+        }
+        if (this.coachNode?.isValid) this.coachNode.destroy();
+        this.coachNode = null;
+    }
+
     dispose(): void {
         this.hideSwipeGuide();
+        this.hideCoach();
         this.bottomBusy = false;
         this.bottomQueue.length = 0;
         if (this.root?.isValid) this.root.destroy();
