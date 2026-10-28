@@ -47,6 +47,8 @@ export class DemoGame extends Component {
 
     private seed = 0;
     private rng!: Rng;
+    /** Randomised stem order for this run: vocals/drums/bass/other indices. */
+    private trackOrder: number[] = [0, 1, 2, 3];
     private model!: MazeModel;
     private renderer!: MazeRenderer;
     private player!: PlayerController;
@@ -361,6 +363,8 @@ export class DemoGame extends Component {
         this.screenH = 1080;
         this.seed = nowSeed();
         this.rng = new Rng(this.seed);
+        // Separate RNG stream so random stem order cannot change maze layout.
+        this.trackOrder = new Rng((this.seed ^ 0x9e3779b9) >>> 0).shuffle([0, 1, 2, 3]);
         this.model = new MazeModel(
             generateMaze(this.level.cols, this.level.rows, this.seed, this.level.braid),
         );
@@ -647,9 +651,9 @@ export class DemoGame extends Component {
             }, 2.5);
         } else {
             const stems = ['vocals', 'drums', 'bass', 'other'];
-            const stem = stems[this.collected - 1] ?? 'other';
-            this.music.setUnlocked(this.collected);
-            this.hud.toast(locale.t('fragment.' + stem), 2.2);
+            const track = this.trackOrder[this.collected - 1] ?? 3;
+            this.music.unlockTrack(track);
+            this.hud.toast(locale.t('fragment.' + stems[track]), 2.2);
         }
     }
 

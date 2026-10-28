@@ -4,6 +4,7 @@ import { MusicDirector } from './MusicDirector';
 type MusicDifficulty = 'easy' | 'normal' | 'hard';
 
 const STEMS = ['vocals', 'drums', 'bass', 'other'] as const;
+// `chorus` is metadata only: chorus.wav is already trimmed to start there.
 const SONGS: Record<MusicDifficulty, { folder: string; chorus: number }> = {
     easy: { folder: 'audio/music/easy/', chorus: 58 },
     normal: { folder: 'audio/music/normal/', chorus: 58 },
@@ -38,6 +39,7 @@ export class AudioDirector {
     private loaded = false;
     private current: MusicDifficulty | null = null;
     private unlocked = 0;
+    private activeTracks = [false, false, false, false];
     private stemStarted = false;
     private chorusPlaying = false;
     private climaxRequested = false;
@@ -54,12 +56,14 @@ export class AudioDirector {
         if (this.loaded && this.current === difficulty) {
             this.stop();
             this.unlocked = 0;
+            this.activeTracks = [false, false, false, false];
             return true;
         }
 
         this.stop();
         this.clearSources();
         this.unlocked = 0;
+        this.activeTracks = [false, false, false, false];
         this.current = difficulty;
         const config = SONGS[difficulty];
 
@@ -106,8 +110,19 @@ export class AudioDirector {
         return true;
     }
 
-    /** Called after every non-final shard. */
+    /** Called after every non-final shard with the randomly chosen stem index. */
+    unlockTrack(index: number): void {
+        if (index < 0 || index >= STEMS.length) return;
+        this.activeTracks[index] = true;
+        this.unlocked = this.activeTracks.filter(Boolean).length;
+        if (!this.loaded || this.chorusPlaying) return;
+        if (!this.stemStarted) this.startStems();
+        this.applyVolumes();
+    }
+
+    /** Compatibility helper for older callers: first N stems in fixed order. */
     setUnlocked(n: number): void {
+        this.activeTracks = Array.from({ length: STEMS.length }, (_, i) => i < n);
         this.unlocked = Math.max(0, Math.min(STEMS.length, n));
         if (!this.loaded || this.chorusPlaying) return;
         if (this.unlocked > 0 && !this.stemStarted) this.startStems();
@@ -131,7 +146,10 @@ export class AudioDirector {
     }
 
     start(): void {
-        if (this.unlocked > 0) this.setUnlocked(this.unlocked);
+        if (this.unlocked > 0 && !this.chorusPlaying) {
+            if (!this.stemStarted) this.startStems();
+            this.applyVolumes();
+        }
     }
 
     setMuted(muted: boolean): void {
@@ -146,7 +164,7 @@ export class AudioDirector {
         this.fallback.setVolume(this.volume);
     }
 
-    /** Stop the loops immediately, leaving 1.5s of silence before the chorus. */
+    /** Stop the loops immediately; DemoGame owns the 2.5s silence before the chorus. */
     silence(): void {
         for (const source of this.stems) {
             try {
@@ -208,6 +226,7 @@ export class AudioDirector {
 
     stop(): void {
         this.unlocked = 0;
+        this.activeTracks = [false, false, false, false];
         this.stemStarted = false;
         this.chorusPlaying = false;
         this.climaxRequested = false;
@@ -230,7 +249,7 @@ export class AudioDirector {
     private applyVolumes(): void {
         const master = this.muted ? 0 : this.volume;
         this.stems.forEach((source, i) => {
-            source.volume = this.chorusPlaying || !this.stemStarted || i >= this.unlocked ? 0 : 0.16 * master;
+            source.volume = this.chorusPlaying || !this.stemStarted || !this.activeTracks[i] ? 0 : 0.16 * master;
         });
         if (this.chorusSource) {
             this.chorusSource.volume = this.chorusPlaying ? 0.82 * master : 0;
