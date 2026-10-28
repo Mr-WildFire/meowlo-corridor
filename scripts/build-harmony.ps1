@@ -11,7 +11,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# V3.0 delivery policy: debug builds only.
+# V4.0 delivery policy: debug builds only.
 if ($Release) {
     throw 'Release packaging is disabled. Run without -Release to produce a debug build.'
 }
@@ -24,16 +24,16 @@ $native = Join-Path $Project 'native\engine\harmonyos-next'
 $hapUnsigned = Join-Path $native 'entry\build\default\outputs\default\entry-default-unsigned.hap'
 $hapSigned = Join-Path $native 'entry\build\default\outputs\default\entry-default-signed.hap'
 $outDir = Join-Path $Project 'build-harmony'
-$outUnsigned = Join-Path $outDir 'MeowloCorridor-3.0.0-unsigned.hap'
-$outSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-3.0.0-release-signed.hap' } else { 'MeowloCorridor-3.0.0-debug-signed.hap' })
+$outUnsigned = Join-Path $outDir 'MeowloCorridor-4.0.0-unsigned.hap'
+$outSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-4.0.0-release-signed.hap' } else { 'MeowloCorridor-4.0.0-debug-signed.hap' })
 $appDir = Join-Path $native 'build\outputs\default'
 $appUnsigned = Join-Path $appDir 'harmonyos-next-default-unsigned.app'
 $appSigned = Join-Path $appDir 'harmonyos-next-default-signed.app'
-$outAppUnsigned = Join-Path $outDir 'MeowloCorridor-3.0.0-unsigned.app'
-$outAppSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-3.0.0-release-signed.app' } else { 'MeowloCorridor-3.0.0-debug-signed.app' })
+$outAppUnsigned = Join-Path $outDir 'MeowloCorridor-4.0.0-unsigned.app'
+$outAppSigned = Join-Path $outDir $(if ($Release) { 'MeowloCorridor-4.0.0-release-signed.app' } else { 'MeowloCorridor-4.0.0-debug-signed.app' })
 $buildMode = if ($Release) { 'release' } else { 'debug' }
-$appVersion = '3.0.0'
-$appVersionCode = 3000000
+$appVersion = '4.0.0'
+$appVersionCode = 4000000
 $signingBackup = Join-Path $Project 'temp\harmony-signing-backup.json5'
 
 if (-not $CltPath) { $CltPath = 'C:\command-line-tools' }
