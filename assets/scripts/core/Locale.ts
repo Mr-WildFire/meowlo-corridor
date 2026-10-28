@@ -1,4 +1,4 @@
-﻿import { ItemType } from '../game/DemoTypes';
+import { ItemType } from '../game/DemoTypes';
 import { Difficulty } from '../game/LevelConfig';
 
 export type Language = 'zh' | 'en';
@@ -45,7 +45,7 @@ const DICT: Record<Language, Record<string, string>> = {
         'hud.musicComplete': '音乐完整',
         'hud.steps': '步数 {steps}',
         'hud.none': '无道具效果',
-        'hud.seed': '种子 {seed} · {level} · {cols}×{rows} · {time}',
+        'hud.seed': '种子 {seed} · {level} · {cols}×{rows}',
         'hud.help': '',
         'hud.tutorial': '第一次遇到 · {name}',
         'hud.mute': '静',
@@ -170,7 +170,7 @@ const DICT: Record<Language, Record<string, string>> = {
         'hud.musicComplete': 'Music complete',
         'hud.steps': 'Steps {steps}',
         'hud.none': 'No effects',
-        'hud.seed': 'Seed {seed} · {level} · {cols}×{rows} · {time}',
+        'hud.seed': 'Seed {seed} · {level} · {cols}×{rows}',
         'hud.help': '',
         'hud.tutorial': 'First time · {name}',
         'hud.mute': 'MUTE',
