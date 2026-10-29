@@ -26,7 +26,7 @@ node_modules/
 build-demo/
 build-harmony/
 AppTest/
-art/
+/art/
 *.log
 
 # HarmonyOS signing material (never commit private keys / profiles)

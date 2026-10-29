@@ -70,6 +70,7 @@ export class HudView {
     private coachTimer: ReturnType<typeof setTimeout> | null = null;
     private readonly overlayHint: Label;
     private bottomBusy = false;
+    private bottomToken = 0;
     private readonly bottomQueue: Array<{ show: () => void; duration: number }> = [];
 
     constructor(
@@ -279,11 +280,13 @@ export class HudView {
     }
 
     private playBottom(item: { show: () => void; duration: number }): void {
+        const token = this.bottomToken;
         this.bottomBusy = true;
         this.toastNode.active = false;
         this.tutorialNode.active = false;
         item.show();
         this.scheduleOnce(() => {
+            if (token !== this.bottomToken) return;
             this.bottomBusy = false;
             this.toastNode.active = false;
             this.tutorialNode.active = false;
@@ -382,10 +385,22 @@ export class HudView {
         this.coachNode = null;
     }
 
+    /** Final shard: remove every tutorial/coach immediately. */
+    hideTutorials(): void {
+        this.hideSwipeGuide();
+        this.hideCoach();
+        this.bottomToken++;
+        this.bottomBusy = false;
+        this.bottomQueue.length = 0;
+        this.tutorialNode.active = false;
+        this.toastNode.active = false;
+    }
+
     dispose(): void {
         this.hideSwipeGuide();
         this.hideCoach();
         this.bottomBusy = false;
+        this.bottomToken++;
         this.bottomQueue.length = 0;
         if (this.root?.isValid) this.root.destroy();
     }

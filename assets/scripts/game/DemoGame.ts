@@ -5,6 +5,7 @@ import {
     Node,
     profiler,
     ResolutionPolicy,
+    SpriteFrame,
     tween,
     Tween,
     Vec3,
@@ -67,7 +68,6 @@ export class DemoGame extends Component {
     private tutorialMode = false;
     private tutorialGoalShown = false;
     private tutorialFragmentShown = false;
-    private tutorialExitShown = false;
 
     private screenW = 1080;
     private screenH = 1920;
@@ -228,7 +228,6 @@ export class DemoGame extends Component {
         this.tutorialMode = true;
         this.tutorialGoalShown = false;
         this.tutorialFragmentShown = false;
-        this.tutorialExitShown = false;
         this.difficulty = 'easy';
         this.level = TUTORIAL_LEVEL;
         this.tutorialIntro?.dispose();
@@ -666,6 +665,8 @@ export class DemoGame extends Component {
 
         const finalShard = this.collected >= this.level.fragments;
         if (finalShard) {
+            // CD is complete: no tutorial/coach card may linger into the finale.
+            this.hud.hideTutorials();
             this.hud.toast(locale.t('fragment.final'), 1.1);
             this.finale = true;
             this.timerStopped = true;
@@ -763,10 +764,6 @@ export class DemoGame extends Component {
         this.exitPos = pos;
         this.renderer.showExit(pos);
         this.refreshGuide();
-        if (this.tutorialMode && !this.tutorialExitShown) {
-            this.tutorialExitShown = true;
-            this.hud.showCoach(locale.t('tutorial.exitTitle'), locale.t('tutorial.exitBody'));
-        }
     }
 
     private isBlockedForExit(p: GridPos): boolean {
@@ -841,7 +838,18 @@ export class DemoGame extends Component {
                     return;
                 }
                 self.seenItems.add(type);
-                self.hud.showTutorial(type, text);
+                if (self.tutorialMode) {
+                    // One coach slot: the new item tutorial replaces the goal/
+                    // fragment card instead of queueing behind it. The first
+                    // item teaches the general item system, not just one item.
+                    self.hud.showCoach(
+                        locale.t('tutorial.itemTitle'),
+                        locale.t('tutorial.itemBody'),
+                        4.5,
+                    );
+                } else {
+                    self.hud.showTutorial(type, text);
+                }
             },
             refreshAll: () => {
                 self.refreshFog();
@@ -950,9 +958,20 @@ export class DemoGame extends Component {
                     time: this.timeText(this.elapsed),
                 }),
                 locale.t('game.timeoutHint'),
-                this.art?.ownerTimeout ?? this.art?.owner ?? null,
+                this.pickEndingArt(false),
             );
         }, 1.5);
+    }
+
+    /** Random success/fail illustration; old owner art is the fallback. */
+    private pickEndingArt(success: boolean): SpriteFrame | null {
+        const list = success ? this.art?.success : this.art?.fail;
+        if (list && list.length > 0) {
+            return list[Math.floor(Math.random() * list.length)];
+        }
+        return success
+            ? this.art?.owner ?? null
+            : this.art?.ownerTimeout ?? this.art?.owner ?? null;
     }
 
     private win(): void {
@@ -969,7 +988,7 @@ export class DemoGame extends Component {
                 locale.t('tutorial.completeTitle'),
                 locale.t('tutorial.completeBody'),
                 '',
-                this.art?.owner ?? null,
+                this.pickEndingArt(true),
                 0,
             );
             return;
@@ -989,7 +1008,7 @@ export class DemoGame extends Component {
                 best: newBest ? locale.t('game.newRecord') : '',
             }),
             locale.t('game.winHint'),
-            this.art?.owner ?? this.art?.cd ?? null,
+            this.pickEndingArt(true) ?? this.art?.cd ?? null,
             stars,
         );
     }
