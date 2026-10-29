@@ -1,8 +1,11 @@
 import { Font, Label, resources } from 'cc';
 
 /**
- * Single UI font for the whole game: BoukenGothic with missing simplified
- * Chinese glyphs merged from ZCOOL XiaoWei, then subset to the strings used.
+ * HarmonyOS/Web use the platform's system sans-serif for all UI labels.
+ * The previous subset font merged Latin and Chinese glyphs from two different
+ * typefaces; missing glyphs fell back per character, so one sentence could
+ * render with visibly different sizes on device. One system family keeps every
+ * glyph on the same baseline and metric.
  */
 export class UiFonts {
     static ui: Font | null = null;
@@ -25,13 +28,13 @@ export class UiFonts {
     }
 
     static apply(label: Label): void {
-        if (!UiFonts.ui) return;
-        label.useSystemFont = false;
-        label.font = UiFonts.ui;
+        label.useSystemFont = true;
+        label.fontFamily = 'sans-serif';
     }
 
     static titleLabel(label: Label): void {
         UiFonts.apply(label);
+        label.isBold = true;
     }
 
     static numberLabel(label: Label): void {
